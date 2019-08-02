@@ -1,8 +1,8 @@
 {
-  "name": "mqtt_insta",
+  "name": "instagram_mqtt",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
