@@ -12,15 +12,19 @@ export class Commands {
     }
 
     private async compressDeflate(data) {
-        return await Bluebird.fromCallback<Buffer>(cb => zlib.deflate(data, {level: 9}, cb));
+        return Bluebird.fromCallback<Buffer>(cb => zlib.deflate(data, {level: 9}, cb));
     }
 
-    private async publishToTopicAsync(topic: string, data: string | Buffer, qos: 0|1) {
-        return await Bluebird.fromCallback<Packet>(
-            cb => this.client.publish(topic, data,{qos}, cb));
+    private async publishToTopicAsync(topic: string, compressedData: string | Buffer, qos: 0|1) {
+        return Bluebird.fromCallback<Packet>(
+            cb => this.client.publish(topic, compressedData,{qos}, cb));
     }
 
     public async updateSubscriptions(options: { topic: Topic, data: {sub?: string[], unsub?: string[] }}) {
-        return await this.publishToTopicAsync(options.topic.id, await this.compressDeflate(JSON.stringify(options.data)), 1);
+        return this.publishToTopicAsync(options.topic.id, await this.compressDeflate(JSON.stringify(options.data)), 1);
+    }
+
+    public async fbnsMessage() {
+
     }
 }
