@@ -1,8 +1,8 @@
-import {RegionHintParser} from "./parsers/region-hint.parser";
-import {GraphqlParser} from "./parsers/graphql.parser";
-import {IrisParser} from "./parsers/iris.parser";
-import {JsonParser} from "./parsers/json.parser";
-import {SkywalkerParser} from "./parsers/skywalker.parser";
+import {RegionHintParser} from "./realtime/parsers/region-hint.parser";
+import {GraphqlParser} from "./realtime/parsers/graphql.parser";
+import {IrisParser} from "./realtime/parsers/iris.parser";
+import {JsonParser} from "./realtime/parsers/json.parser";
+import {SkywalkerParser} from "./realtime/parsers/skywalker.parser";
 
 export const Topics = {
     GRAPHQL: {
@@ -50,6 +50,10 @@ export const Topics = {
         path: '/t_region_hint',
         parser: new RegionHintParser(),
     },
+
+};
+
+export const FbnsTopics = {
     FBNS_MESSAGE: {
         id: '76', path: '/fbns_msg', parser: undefined
     },
@@ -63,13 +67,16 @@ export const Topics = {
         path: '/fbns_reg_resp',
         parser: undefined
     },
-
 };
 
 export const FBNS = {
     PACKAGE: 'com.instagram.android',
     APP_ID: '567310203415052',
     HOST_NAME_V6: 'mqtts://mqtt-mini.facebook.com:443',
+    CLIENT_CAPABILITIES: 439,
+    ENDPOINT_CAPABILITIES: 128,
+    CLIENT_STACK: 3,
+    PUBLISH_FORMAT: 1,
 };
 
 export const REALTIME = {

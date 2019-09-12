@@ -1,5 +1,5 @@
 import {IParser, ParsedMessage} from "./parser";
-import {Topic} from "../topic";
+import {Topic} from "../../topic";
 
 export class IrisParser implements IParser {
     parseMessage(topic: Topic, payload: Buffer): ParsedMessage[] {

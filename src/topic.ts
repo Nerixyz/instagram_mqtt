@@ -1,4 +1,4 @@
-import {IParser} from "./parsers/parser";
+import {IParser} from "./realtime/parsers/parser";
 
 export interface Topic {
     id: string;

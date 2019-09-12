@@ -14,6 +14,7 @@
     "@typescript-eslint/parser": "^1.13.0",
     "eslint": "^6.3.0",
     "instagram-private-api": "latest",
+    "lodash": "^4.16.6",
     "mqtt": "latest",
     "zlib": "^1.0.5"
   }

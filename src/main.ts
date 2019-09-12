@@ -1,15 +1,9 @@
 import {IgApiClient} from "instagram-private-api";
-import {PossibleTopics, Topics} from "./constants";
-import {fbnsRead} from "./fbns-reader";
-import {Commands} from "./commands/commands";
-import {GraphQLSubscription} from "./subscriptions/graphql.subscription";
+import {GraphQLSubscription} from "./realtime/subscriptions/graphql.subscription";
 import {RealtimeClient} from "./realtime/realtime.client";
 import {Topic} from "./topic";
-import {ParsedMessage} from "./parsers/parser";
-
-const mqtt = require('mqtt');
-const zlib = require('zlib');
-const {random} = require('lodash');
+import {ParsedMessage} from "./realtime/parsers/parser";
+import {FbnsClient} from "./fbns/fbns.client";
 
 const ig = new IgApiClient();
 ig.state.generateDevice(process.env.IG_USERNAME);
@@ -18,7 +12,7 @@ ig.state.generateDevice(process.env.IG_USERNAME);
 
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
 
-    const realtimeClient = new RealtimeClient(ig, [
+   const realtimeClient = new RealtimeClient(ig, [
         GraphQLSubscription.getAppPresenceSubscription(),
         GraphQLSubscription.getClientConfigUpdateSubscription(),
         GraphQLSubscription.getZeroProvisionSubscription(ig.state.deviceId),
@@ -30,4 +24,6 @@ ig.state.generateDevice(process.env.IG_USERNAME);
     });
     realtimeClient.on('error', console.error);
     realtimeClient.on('close', () => console.error('RealtimeClient closed'));
+   const fbClient = new FbnsClient(ig);
+
 })();
