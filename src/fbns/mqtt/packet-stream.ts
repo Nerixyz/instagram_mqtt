@@ -19,7 +19,7 @@ export class PacketStream {
     }
 
     get length(): number {
-        return this.data.length;
+        return Buffer.byteLength(this.data);
     }
 
     get remainingBytes(): number {
@@ -32,6 +32,7 @@ export class PacketStream {
 
     constructor(data?: string) {
         this._data = data || '';
+        this.position = 0;
     }
 
     private move(steps: number = 1): void {
@@ -54,7 +55,7 @@ export class PacketStream {
     // Write
 
     public write(data: string): this {
-        this.move(data.length);
+        this.move(Buffer.byteLength(data));
         this._data += data;
         return this;
     }
@@ -70,7 +71,7 @@ export class PacketStream {
     }
 
     public writeString(str: string): this {
-        this.writeWord(str.length);
+        this.writeWord(Buffer.byteLength(str));
         this.write(str);
         return this;
     }

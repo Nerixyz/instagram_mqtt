@@ -56,6 +56,39 @@ export class ConnectRequestPacket extends MqttPacket {
 
         stream.write(data.data);
     }
+
+    read(stream: PacketStream): void {
+        super.read(stream);
+        this.assertPacketFlags(0);
+        this.assertRemainingPacketLength();
+
+        this.options.protocolName = stream.readString();
+        this.assertValidString(this.options.protocolName);
+        this.options.protocolLevel = stream.readByte();
+        this.options.flags = stream.readByte();
+        this.options.keepAlive = stream.readWord();
+        this.options.clientId = stream.readString();
+        this.assertValidString(this.options.clientId);
+
+        if((this.options.flags & (0x1 << 2)) !== 0) {
+            this.options.will = {
+                topic: stream.readString(),
+                payload: stream.readString(),
+            };
+        }
+
+        if((this.options.flags & (0x1 << 7)) !== 0) {
+            this.options.username = stream.readString();
+            this.assertValidString(this.options.username);
+        }
+
+        if((this.options.flags & (0x1 << 6)) !== 0) {
+            this.options.password = stream.readString();
+            this.assertValidString(this.options.password);
+        }
+
+
+    }
 }
 
 export interface ConnectRequestOptions {

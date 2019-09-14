@@ -1,5 +1,5 @@
-import {Socket, createConnection} from "net";
 import {
+    ExecuteDelayed,
     ExecuteNextTick,
     ExecutePeriodically,
     MqttClientConstructorOptions,
@@ -26,15 +26,17 @@ import {OutgoingPingFlow} from "./flow/outgoing.ping.flow";
 import {MqttMessage} from "./mqtt.message";
 import {ConnectRequestPacket} from "./packets/connect.request.packet";
 import { Writable } from "stream";
+import { connect, TLSSocket } from "tls";
 
 export class MqttClient extends EventEmitter {
 
     public executeNextTick: ExecuteNextTick;
     public executePeriodically: ExecutePeriodically;
     public stopExecuting: StopExecuting;
+    public executeDelayed: ExecuteDelayed;
 
     public parser: MqttParser;
-    public socket: Socket;
+    public socket: TLSSocket;
     protected isConnected: boolean = false;
     protected isConnecting: boolean = false;
     protected isDisconnected: boolean = false;
@@ -47,6 +49,7 @@ export class MqttClient extends EventEmitter {
     protected connectionSettings: RegisterClientOptions;
 
     protected timers: any[] = [];
+    protected connectTimer: any;
 
     constructor(options: MqttClientConstructorOptions) {
         super();
@@ -56,6 +59,7 @@ export class MqttClient extends EventEmitter {
         try {
             this.executeNextTick = process.nextTick;
             this.executePeriodically = (ms, cb) => setInterval(cb, ms);
+            this.executeDelayed = (ms, cb) => setTimeout(cb, ms);
             this.stopExecuting = clearInterval;
         } catch (e) {
             // process isn't defined
@@ -67,11 +71,12 @@ export class MqttClient extends EventEmitter {
         if (this.isConnected || this.isConnecting) {
             throw new Error('This client is already in use.');
         }
-        this.socket = createConnection(Number(this.url.port), this.url.hostname, () => {
-            this.emitOpen();
-
-            this.registerClient(this.connectionSettings);
+        this.socket = connect({
+            host: this.url.hostname,
+            port: Number(this.url.port),
+            enableTrace: true,
         });
+        this.socket.setEncoding('utf8');
         this.setupListeners({registerOptions: options});
         this.setConnecting();
     }
@@ -92,6 +97,13 @@ export class MqttClient extends EventEmitter {
         this.socket.on('end', () => this.emit('end'));
         this.socket.on('close', () => {
             this.setDisconnected();
+        });
+        this.socket.on('OCSPResponse', (buf) => {
+            console.log('ocsp');
+        });
+        this.socket.on('secureConnect', () => {
+            this.emitOpen();
+            this.registerClient(this.connectionSettings);
         });
         this.socket.on('timeout', () => {
             this.setDisconnected();
@@ -119,12 +131,16 @@ export class MqttClient extends EventEmitter {
 
     protected registerClient(options: RegisterClientOptions) {
         this.startFlow(new OutgoingConnectFlow(options));
+        this.connectTimer = this.executeDelayed(2000, () => {
+            this.registerClient(options);
+        });
     }
 
     public startFlow(flow: PacketFlow<any>) {
         try {
             if (this.writtenFlow) {
                 this.sendingFlows.push(flow);
+                this.handleSendingFlows();
             } else {
                 const packet = flow.start();
                 if (packet) {
@@ -198,14 +214,14 @@ export class MqttClient extends EventEmitter {
         console.log('write');
         const stream = new PacketStream();
         packet.write(stream);
-        this.socket.write(Buffer.from(stream.data), (err) => {
+        this.socket.write(stream.data, 'utf8',(err) => {
             if (err) this.emitWarning(err);
         });
     }
 
     protected async handleData(data: Buffer): Promise<void> {
+        console.log(data.toString('hex'));
         try {
-
             const results = await this.parser.parse(data.toString('utf8'));
 
             if (results.length > 0) {
@@ -283,6 +299,7 @@ export class MqttClient extends EventEmitter {
         this.isConnecting = false;
         this.isConnected = true;
         this.isDisconnected = false;
+        this.stopExecuting(this.connectTimer);
         console.log('connect');
     }
 

@@ -24,6 +24,5 @@ ig.state.generateDevice(process.env.IG_USERNAME);
     });
     realtimeClient.on('error', console.error);
     realtimeClient.on('close', () => console.error('RealtimeClient closed'));
-   const fbClient = new FbnsClient(ig);
 
 })();
