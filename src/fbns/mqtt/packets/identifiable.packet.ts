@@ -35,7 +35,10 @@ export abstract class IdentifierPacket extends IdentifiableBasePacket {
 
     read(stream: PacketStream): void {
         super.read(stream);
-        this.assertPacketFlags(this.getExpectedPacketFlags());
+        if(this.getExpectedPacketFlags() !== 0)
+        {
+            this.assertPacketFlags(this.getExpectedPacketFlags());
+        }
         this.assertRemainingPacketLength();
 
         this.identifier = stream.readWord();

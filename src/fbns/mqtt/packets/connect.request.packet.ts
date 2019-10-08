@@ -44,7 +44,7 @@ export class ConnectRequestPacket extends MqttPacket {
 
     write(stream: PacketStream): void {
         const {protocolLevel, protocolName, flags, clientId, keepAlive, will, username, password} = this.options;
-        const data = new PacketStream().writeString(protocolName).writeByte(protocolLevel).writeByte(flags).writeWord(keepAlive).writeString(clientId);
+        const data = PacketStream.empty().writeString(protocolName).writeByte(protocolLevel).writeByte(flags).writeWord(keepAlive).writeString(clientId);
         if(will)
             data.writeString(will.topic).writeString(will.payload);
         if(username)

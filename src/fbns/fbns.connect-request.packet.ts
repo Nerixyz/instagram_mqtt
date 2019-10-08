@@ -56,16 +56,16 @@ export class FbnsConnectRequestPacket extends MqttPacket {
         this._keepAlive = stream.readWord();
 
         const payloadLength = this.remainingPacketLength - (stream.position - originalPosition);
-        this.payload = stream.read(payloadLength);
+        this.payload = stream.read(payloadLength).toString('utf8');
     }
 
     write(stream: PacketStream): void {
-        const data = new PacketStream()
+        const data = PacketStream.empty()
             .writeString(this._protocolName)
             .writeByte(this.protocolLevel)
             .writeByte(this._flags)
             .writeWord(this._keepAlive)
-            .write(this.payload);
+            .writeRawString(this.payload);
 
         this.remainingPacketLength = data.length;
         super.write(stream);

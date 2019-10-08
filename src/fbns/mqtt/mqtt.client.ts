@@ -74,7 +74,6 @@ export class MqttClient extends EventEmitter {
         this.socket = connect({
             host: this.url.hostname,
             port: Number(this.url.port),
-            enableTrace: true,
         });
         this.socket.setEncoding('utf8');
         this.setupListeners({registerOptions: options});
@@ -84,6 +83,7 @@ export class MqttClient extends EventEmitter {
     protected emitError: (e) => void = (e) => this.emit('error', e);
     protected emitWarning: (e) => void = (e) => this.emit('warning', e);
     protected emitOpen: () => void = () => this.emit('open');
+    protected emitConnect: () => void = () => this.emit('connect');
 
     protected emitFlow: (name: string, result: any) => void = (name, result) => this.emit(name, result);
 
@@ -97,9 +97,6 @@ export class MqttClient extends EventEmitter {
         this.socket.on('end', () => this.emit('end'));
         this.socket.on('close', () => {
             this.setDisconnected();
-        });
-        this.socket.on('OCSPResponse', (buf) => {
-            console.log('ocsp');
         });
         this.socket.on('secureConnect', () => {
             this.emitOpen();
@@ -211,21 +208,21 @@ export class MqttClient extends EventEmitter {
     }
 
     protected writePacketToSocket(packet: MqttPacket) {
-        console.log('write');
-        const stream = new PacketStream();
+        const stream = PacketStream.empty();
         packet.write(stream);
-        this.socket.write(stream.data, 'utf8',(err) => {
+        const data = stream.data;
+        console.log(Buffer.from(data).toString('hex'));
+        this.socket.write(data, 'utf8',(err) => {
             if (err) this.emitWarning(err);
         });
     }
 
-    protected async handleData(data: Buffer): Promise<void> {
-        console.log(data.toString('hex'));
+    protected async handleData(data: string): Promise<void> {
         try {
-            const results = await this.parser.parse(data.toString('utf8'));
+            const results = await this.parser.parse(Buffer.from(data));
 
             if (results.length > 0) {
-                results.forEach(this.handlePacket);
+                results.forEach(r => this.handlePacket(r));
             }
         }catch(e) {
             this.emitWarning(e);
@@ -233,7 +230,6 @@ export class MqttClient extends EventEmitter {
     }
 
     protected async handlePacket(packet: MqttPacket) {
-        console.log('handle');
         switch (packet.packetType) {
             case PacketTypes.TYPE_PUBLISH: {
                 const pub = packet as PublishRequestPacket;
@@ -256,6 +252,7 @@ export class MqttClient extends EventEmitter {
                     });
                     this.timers.push(ref);
                 }
+                break;
             }
             case PacketTypes.TYPE_PINGRESP:
             case PacketTypes.TYPE_SUBACK:
@@ -264,6 +261,7 @@ export class MqttClient extends EventEmitter {
             case PacketTypes.TYPE_PUBACK:
             case PacketTypes.TYPE_PUBREC:
             case PacketTypes.TYPE_PUBCOMP: {
+                console.log(JSON.stringify(packet, undefined, 2));
                 let flowFound = false;
                 let usedFlow = undefined;
                 for (const flow of this.receivingFlows) {
@@ -280,6 +278,11 @@ export class MqttClient extends EventEmitter {
                 } else {
                     this.emitWarning(new Error(`Unexpected packet: ${packet.packetType}`));
                 }
+                break;
+            }
+            case PacketTypes.TYPE_DISCONNECT: {
+                this.disconnect();
+                this.setDisconnected();
                 break;
             }
             default: {
@@ -300,6 +303,7 @@ export class MqttClient extends EventEmitter {
         this.isConnected = true;
         this.isDisconnected = false;
         this.stopExecuting(this.connectTimer);
+        this.emitConnect();
         console.log('connect');
     }
 

@@ -43,7 +43,7 @@ export class SubscribeResponsePacket extends IdentifiableBasePacket {
     }
 
     write(stream: PacketStream): void {
-        const data = new PacketStream().writeWord(this.generateIdentifier());
+        const data = PacketStream.empty().writeWord(this.generateIdentifier());
         this._returnCodes.forEach(c => data.writeByte(c));
 
         this.remainingPacketLength = data.length;

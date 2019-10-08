@@ -47,7 +47,7 @@ export abstract class MqttPacket {
     }
 
     private writeRemainingLength(stream: PacketStream): void {
-        let x = this.remainingPacketLength;
+        /*let x = this.remainingPacketLength;
         do {
             let encodedByte = x % 0x80;
             x = Math.floor(x / 0x80);
@@ -55,7 +55,17 @@ export abstract class MqttPacket {
                 encodedByte |= 0x80;
             }
             stream.writeByte(encodedByte);
-        }while (x > 0);
+        }while (x > 0);*/
+
+        let num = this.remainingPacketLength;
+        let digit = 0;
+        do {
+            digit = num % 128 | 0;
+            num = num / 128 | 0;
+            if (num > 0) digit = digit | 0x80;
+
+            stream.writeByte(digit);
+        } while (num > 0)
     }
 
     protected assertPacketFlags(flags): void {
@@ -94,8 +104,8 @@ export abstract class MqttPacket {
     }
 
     public toString(): string {
-        const stream = new PacketStream();
+        const stream = PacketStream.empty();
 
-        return stream.data;
+        return stream.data.toString('utf8');
     }
 }

@@ -45,7 +45,7 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket{
     }
 
     write(stream: PacketStream): void {
-        const data = new PacketStream().writeWord(this.generateIdentifier()).writeString(this._topic).writeByte(this._qosLevel);
+        const data = PacketStream.empty().writeWord(this.generateIdentifier()).writeString(this._topic).writeByte(this._qosLevel);
         this.remainingPacketLength = data.length;
         super.write(stream);
         stream.write(data.data);

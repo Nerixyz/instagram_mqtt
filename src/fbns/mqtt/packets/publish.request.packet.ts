@@ -68,16 +68,16 @@ export class PublishRequestPacket extends IdentifiableBasePacket {
         }
 
         const payloadLength = this.remainingPacketLength - (stream.position - lastPos);
-        this._payload = stream.read(payloadLength);
+        this._payload = stream.read(payloadLength).toString('utf8');
     }
 
     write(stream: PacketStream): void {
-        const data = new PacketStream().writeString(this._topic);
+        const data = PacketStream.empty().writeString(this._topic);
         if(this.qosLevel) {
             data.writeWord(this.generateIdentifier());
         }
 
-        data.write(this._payload);
+        data.writeRawString(this._payload);
         this.remainingPacketLength = data.length;
         super.write(stream);
         stream.write(data.data);

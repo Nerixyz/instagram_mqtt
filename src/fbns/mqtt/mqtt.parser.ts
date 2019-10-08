@@ -70,35 +70,43 @@ export class MqttParser {
     }];
 
     constructor(errorCallback?: (e: Error) => void) {
-        this.stream = new PacketStream();
+        this.stream = PacketStream.empty();
         this.errorCallback = errorCallback;
     }
 
-    public async parse(data: string): Promise<MqttPacket[]> {
+    public async parse(data: Buffer): Promise<MqttPacket[]> {
+        let startPos = this.stream.position;
+        console.log(startPos);
+        console.log(data.toString('hex'));
         this.stream.write(data);
 
+        this.stream.position = startPos;
         const results: MqttPacket[] = [];
         while (this.stream.remainingBytes > 0) {
             const type = this.stream.readByte() >> 4;
 
             let packet;
             try {
+                console.log(type);
                 packet = this.mapping.find(x => x.type === type).packet();
             } catch (e) {
-                this.errorCallback(e);
                 continue;
             }
 
             this.stream.seek(-1);
-            const lastPos = this.stream.position;
             await Bluebird.try(() => {
                 packet.read(this.stream);
                 results.push(packet);
                 this.stream.cut();
+                startPos = this.stream.position;
             }).catch(EndOfStreamError, (e) => {
-                this.stream.position = lastPos;
-            }).catch(MalformedPacketError, this.errorCallback);
+                this.stream.position = startPos;
+                console.log('end of stream');
+            }).catch((e) => {
+                this.errorCallback(e);
+            });
         }
+        console.log(results);
         return results;
     }
 

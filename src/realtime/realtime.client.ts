@@ -34,12 +34,13 @@ export class RealtimeClient extends EventEmitter {
         this.commands = new Commands(this.client);
 
         this.client.once('connect', async () => {
-            Object.values(PossibleTopics).map(topic => ({topic: topic.path})).forEach(t => this.client.subscribe(t));
-            await this.commands.updateSubscriptions({
+            console.log('rc connect');
+            Object.values(Topics).map(topic => ({topic: topic.path})).forEach(t => this.client.subscribe(t));
+            /*await this.commands.updateSubscriptions({
                 topic: Topics.REALTIME_SUB, data: {
                     sub: subs,
                 }
-            });
+            });*/
         });
 
         const topicsArray = Object.values(Topics);
