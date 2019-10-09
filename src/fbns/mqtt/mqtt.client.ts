@@ -75,7 +75,6 @@ export class MqttClient extends EventEmitter {
             host: this.url.hostname,
             port: Number(this.url.port),
         });
-        this.socket.setEncoding('utf8');
         this.setupListeners({registerOptions: options});
         this.setConnecting();
     }
@@ -146,6 +145,9 @@ export class MqttClient extends EventEmitter {
                 } else {
                     this.executeNextTick(() => this.finishFlow(flow));
                 }
+                if(flow.finished) {
+                    this.executeNextTick(() => this.finishFlow(flow));
+                }
             }
         } catch (e) {
             this.emitWarning(e);
@@ -179,6 +181,7 @@ export class MqttClient extends EventEmitter {
         } else {
             this.emitWarning(new Error(flow.error));
         }
+        this.writtenFlow = undefined;
     }
 
     protected handleSendingFlows() {
@@ -211,15 +214,14 @@ export class MqttClient extends EventEmitter {
         const stream = PacketStream.empty();
         packet.write(stream);
         const data = stream.data;
-        console.log(Buffer.from(data).toString('hex'));
         this.socket.write(data, 'utf8',(err) => {
             if (err) this.emitWarning(err);
         });
     }
 
-    protected async handleData(data: string): Promise<void> {
+    protected async handleData(data: Buffer): Promise<void> {
         try {
-            const results = await this.parser.parse(Buffer.from(data));
+            const results = await this.parser.parse(data);
 
             if (results.length > 0) {
                 results.forEach(r => this.handlePacket(r));
@@ -261,7 +263,6 @@ export class MqttClient extends EventEmitter {
             case PacketTypes.TYPE_PUBACK:
             case PacketTypes.TYPE_PUBREC:
             case PacketTypes.TYPE_PUBCOMP: {
-                console.log(JSON.stringify(packet, undefined, 2));
                 let flowFound = false;
                 let usedFlow = undefined;
                 for (const flow of this.receivingFlows) {
@@ -295,7 +296,6 @@ export class MqttClient extends EventEmitter {
         this.isConnecting = true;
         this.isConnected = false;
         this.isDisconnected = false;
-        console.log('connecting');
     }
 
     protected setConnected() {
@@ -304,7 +304,6 @@ export class MqttClient extends EventEmitter {
         this.isDisconnected = false;
         this.stopExecuting(this.connectTimer);
         this.emitConnect();
-        console.log('connect');
     }
 
     protected setDisconnected() {
@@ -312,6 +311,5 @@ export class MqttClient extends EventEmitter {
         this.isConnecting = false;
         this.isConnected = false;
         this.isDisconnected = true;
-        console.log('disconnect');
     }
 }

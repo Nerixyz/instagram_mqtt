@@ -3,7 +3,7 @@ import {PacketTypes} from "../mqtt.constants";
 import {PacketStream} from "../packet-stream";
 
 export class PublishRequestPacket extends IdentifiableBasePacket {
-    get payload(): string {
+    get payload(): Buffer {
         return this._payload;
     }
     get topic(): string {
@@ -49,26 +49,29 @@ export class PublishRequestPacket extends IdentifiableBasePacket {
     }
 
     private _topic: string;
-    private _payload: string;
+    private _payload: Buffer;
 
-    constructor(topic?: string, payload?: string) {
+    constructor(topic?: string, payload?: Buffer | string | undefined) {
         super(PacketTypes.TYPE_PUBLISH);
         this._topic = topic;
-        this._payload = payload;
+        this._payload = payload ? payload instanceof Buffer ? payload : Buffer.from(payload) : undefined;
     }
 
     read(stream: PacketStream): void {
         super.read(stream);
-        this.assertRemainingPacketLength();
+        //this.assertRemainingPacketLength();
         const lastPos = stream.position;
         this._topic = stream.readString();
-        this.identifier = undefined;
+        this.identifier = NaN;
         if(this.qosLevel) {
             this.identifier = stream.readWord();
         }
 
         const payloadLength = this.remainingPacketLength - (stream.position - lastPos);
-        this._payload = stream.read(payloadLength).toString('utf8');
+        if(payloadLength === 0)
+            return;
+
+        this._payload = stream.read(payloadLength);
     }
 
     write(stream: PacketStream): void {
@@ -77,7 +80,7 @@ export class PublishRequestPacket extends IdentifiableBasePacket {
             data.writeWord(this.generateIdentifier());
         }
 
-        data.writeRawString(this._payload);
+        data.write(this._payload);
         this.remainingPacketLength = data.length;
         super.write(stream);
         stream.write(data.data);

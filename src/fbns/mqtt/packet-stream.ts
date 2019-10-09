@@ -19,7 +19,7 @@ export class PacketStream {
     }
 
     get length(): number {
-        return Buffer.byteLength(this.data);
+        return this._data ? this._data.length : 0;
     }
 
     get remainingBytes(): number {
@@ -35,7 +35,7 @@ export class PacketStream {
         this.position = 0;
     }
 
-    public static fromlength(len: number) {
+    public static fromLength(len: number) {
         return new PacketStream(undefined, len, undefined);
     }
     public static fromBuffer(buf: Buffer) {
@@ -49,8 +49,16 @@ export class PacketStream {
     }
 
 
-    private move(steps: number = 1): void {
+    /**
+     *
+     * @param {number} steps - steps to move
+     * @returns {number} Position before moving
+     */
+    private move(steps: number = 1): number {
         this._position += steps;
+        if(this._position > this.length)
+            throw new EndOfStreamError('Reached end of stream');
+        return this._position - steps;
     }
 
     // General
@@ -69,15 +77,15 @@ export class PacketStream {
     // Write
 
     public write(data: Buffer): this {
-        this._position += data.length;
         if(this._data)
             this._data = Buffer.concat([this._data, data]);
         else
             this._data = data;
+        this.move(data.length);
         return this;
     }
     public writeRawString(data: string): this {
-        return  this.write(Buffer.from(data));
+        return this.write(Buffer.from(data));
     }
 
     public writeByte(num: number): this {
@@ -107,16 +115,26 @@ export class PacketStream {
         return buf;
     }
 
+    public readSlice(end: number) {
+        const buf = this._data.slice(this._position, end);
+        this.move(buf.length);
+        return buf;
+    }
+
     public readByte(): number {
-        return this.read(1).readUInt8(0);
+        return this._data.readUInt8(this.move(1));
     }
 
     public readWord(): number {
-       return this.read(2).readUInt16BE(0);
+       return this._data.readUInt16BE(this.move(2));
     }
 
     public readString(): string {
         const len = this.readWord();
         return this.read(len).toString('utf8');
+    }
+
+    public readStringAsBuffer(): Buffer {
+        return this.read(this.readWord());
     }
 }

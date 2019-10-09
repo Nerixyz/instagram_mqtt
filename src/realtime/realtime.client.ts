@@ -9,7 +9,18 @@ import {createUserAgent} from "../shared";
 import {MqttClient} from "../fbns/mqtt/mqtt.client";
 import {MqttPacket} from "../fbns/mqtt/mqtt.packet";
 import {MqttMessage} from "../fbns/mqtt/mqtt.message";
+import { Topic } from "../topic";
+import {RealtimeSubDirectMessage} from "./messages/realtime-sub.direct.message";
 const {random} = require('lodash');
+
+export declare interface RealtimeClient {
+    on(event: 'error', cb: (e: Error) => void);
+    on(event: 'receive', cb: (topic: Topic, messages?: ParsedMessage[]) => void);
+    on(event: 'close', cb: () => void);
+
+    on(event: 'realtimeSub', cb: (message: ParsedMessage) => void);
+    on(event: 'direct', cb: (directMessage: RealtimeSubDirectMessage) => void);
+}
 
 export declare type OnReceiveCallback = (messages: ParsedMessage[]) => void;
 export class RealtimeClient extends EventEmitter {
@@ -34,13 +45,12 @@ export class RealtimeClient extends EventEmitter {
         this.commands = new Commands(this.client);
 
         this.client.once('connect', async () => {
-            console.log('rc connect');
             Object.values(Topics).map(topic => ({topic: topic.path})).forEach(t => this.client.subscribe(t));
-            /*await this.commands.updateSubscriptions({
+            await this.commands.updateSubscriptions({
                 topic: Topics.REALTIME_SUB, data: {
                     sub: subs,
                 }
-            });*/
+            });
         });
 
         const topicsArray = Object.values(Topics);
@@ -58,9 +68,34 @@ export class RealtimeClient extends EventEmitter {
                 if (!err) {
                     const topic = topicsArray.find(t => t.id === packet.topic);
                     if (topic && topic.parser) {
-                        this.emit('receive', topic, topic.parser.parseMessage(topic, result));
+                        const parsedMessage = topic.parser.parseMessage(topic, result);
+                        switch (topic) {
+                            case Topics.REALTIME_SUB: {
+                                for(const msg of parsedMessage) {
+                                    switch (msg.data.topic) {
+                                        case 'direct': {
+                                            const parsed: RealtimeSubDirectMessage = JSON.parse(msg.data.payload.value);
+                                            parsed.data = parsed.data.map(e => {
+                                                if(typeof e.value === 'string'){
+                                                    e.value = JSON.parse(e.value);
+                                                }
+                                                return e;
+                                            });
+                                            this.emit('direct', parsed);
+                                            break;
+                                        } default: {
+                                            this.emit('realtimeSub', msg);
+                                        }
+                                    }
+                                }
+                                break;
+                            } default: {
+                                this.emit('receive', topic, parsedMessage);
+                                break;
+                            }
+                        }
                     } else {
-                        this.emit('receive', topic ,thriftRead(result));
+                        this.emit('receive', topic,thriftRead(result));
                     }
                 } else {
                     console.log(err);

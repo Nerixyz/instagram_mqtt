@@ -15,7 +15,7 @@ export class Commands {
     private async publishToTopic(topic: string, compressedData: string | Buffer, qos: 0|1) {
         this.client.publish({
             topic,
-            payload: compressedData.toString(),
+            payload: compressedData instanceof Buffer ? compressedData : Buffer.from(compressedData),
             qosLevel: qos,
         });
     }

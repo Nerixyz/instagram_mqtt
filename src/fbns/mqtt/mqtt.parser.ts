@@ -76,8 +76,6 @@ export class MqttParser {
 
     public async parse(data: Buffer): Promise<MqttPacket[]> {
         let startPos = this.stream.position;
-        console.log(startPos);
-        console.log(data.toString('hex'));
         this.stream.write(data);
 
         this.stream.position = startPos;
@@ -87,13 +85,13 @@ export class MqttParser {
 
             let packet;
             try {
-                console.log(type);
                 packet = this.mapping.find(x => x.type === type).packet();
             } catch (e) {
                 continue;
             }
 
             this.stream.seek(-1);
+            let exitParser = false;
             await Bluebird.try(() => {
                 packet.read(this.stream);
                 results.push(packet);
@@ -101,12 +99,13 @@ export class MqttParser {
                 startPos = this.stream.position;
             }).catch(EndOfStreamError, (e) => {
                 this.stream.position = startPos;
-                console.log('end of stream');
+                exitParser = true;
             }).catch((e) => {
                 this.errorCallback(e);
             });
+            if(exitParser)
+                break;
         }
-        console.log(results);
         return results;
     }
 

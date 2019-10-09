@@ -46,7 +46,7 @@ export class ConnectRequestPacket extends MqttPacket {
         const {protocolLevel, protocolName, flags, clientId, keepAlive, will, username, password} = this.options;
         const data = PacketStream.empty().writeString(protocolName).writeByte(protocolLevel).writeByte(flags).writeWord(keepAlive).writeString(clientId);
         if(will)
-            data.writeString(will.topic).writeString(will.payload);
+            data.writeString(will.topic).writeString(will.payload.toString());
         if(username)
             data.writeString(username);
         if(password)
@@ -59,7 +59,7 @@ export class ConnectRequestPacket extends MqttPacket {
 
     read(stream: PacketStream): void {
         super.read(stream);
-        this.assertPacketFlags(0);
+        //this.assertPacketFlags(0);
         this.assertRemainingPacketLength();
 
         this.options.protocolName = stream.readString();
@@ -73,7 +73,7 @@ export class ConnectRequestPacket extends MqttPacket {
         if((this.options.flags & (0x1 << 2)) !== 0) {
             this.options.will = {
                 topic: stream.readString(),
-                payload: stream.readString(),
+                payload: Buffer.from(stream.readString()),
             };
         }
 

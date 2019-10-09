@@ -60,8 +60,8 @@ export class SubscribeResponsePacket extends IdentifiableBasePacket {
     }
 
     protected assertValidReturnCode(returnCode: number) {
-        if(returnCode === 0 || returnCode === 1 || returnCode === 2 || returnCode === 128){
-            throw new Error('Invalid return code');
+        if(returnCode & 0b0111_1100){
+            throw new Error(`Invalid return code: ${returnCode}`);
         }
     }
 
