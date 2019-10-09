@@ -20,6 +20,6 @@ export function createUserAgent(ig: IgApiClient) {
         + `FBCA/armeabi-v7a:armeabi;]`;
 }
 
-export async function compressDeflate(data) {
+export async function compressDeflate(data: string | Buffer) {
     return Bluebird.fromCallback<Buffer>(cb => deflate(data, {level: 9}, cb));
 }

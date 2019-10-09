@@ -30,7 +30,6 @@ ig.state.generateDevice(process.env.IG_USERNAME);
     const fbnsClient = new FbnsClient(ig);
     fbnsClient.on('message', console.log);
     await fbnsClient.connect();
-
 })();
 
 function logJSONEvent(name: string): (data: any) => void {

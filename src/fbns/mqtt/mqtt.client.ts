@@ -93,7 +93,9 @@ export class MqttClient extends EventEmitter {
             }
             this.emitError(e);
         });
-        this.socket.on('end', () => this.emit('end'));
+        this.socket.on('end', () => {
+            this.setDisconnected();
+        });
         this.socket.on('close', () => {
             this.setDisconnected();
         });

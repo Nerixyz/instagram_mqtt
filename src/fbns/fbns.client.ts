@@ -23,9 +23,12 @@ export class FbnsClient extends EventEmitter {
         super();
         this.ig = ig;
         this.conn = new FbnsConnection(new FbnsDeviceAuth(this.ig), createUserAgent(this.ig));
+    }
+
+    public async connect() {
         this.client = new CustomMqttClient({
             url: FBNS.HOST_NAME_V6,
-            payload: deflateSync(this.conn.toString(), {level: 9}),
+            payload: await compressDeflate(this.conn.toThrift()),
         });
         this.client.on('message', (msg) => {
             console.log(msg);
@@ -34,13 +37,12 @@ export class FbnsClient extends EventEmitter {
         this.client.on('warning', console.error);
         this.client.on('error', console.error);
         this.client.on('open', () => console.log('open'));
-        this.connect().catch(console.error);
-    }
+        this.client.on('fbnsConnect', (x) => this.emit('message', x));
+        this.client.on('close', () => console.log('close'));
+        this.client.on('disconnect', () => console.log('disconnect'));
 
-    public async connect() {
         this.client.connect({
             keepAlive: 900,
-            protocolName: 'MQIsdp',
             protocolLevel: 3,
             clientId: this.ig.state.phoneId.substr(0, 20),
             clean: true

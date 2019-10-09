@@ -58,7 +58,8 @@ export class FbnsConnection {
     }
 
     public toThrift(): Buffer {
-        return new BufferWriter(Buffer.alloc(2048))
+        const writer = new BufferWriter(Buffer.alloc(Math.pow(2, 12)));
+        return writer
             .writeString(FbnsConnection.CLIENT_ID, this.auth.clientId)
             .writeStruct(FbnsConnection.CLIENT_INFO)
             .writeInt64(FbnsConnection.USER_ID, this.auth.userId)

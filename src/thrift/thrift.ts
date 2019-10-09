@@ -6,7 +6,7 @@ export interface ThriftMessage {
     type: number;
 }
 
-export const ThriftTypes =  {
+export const ThriftTypes = {
     STOP: 0x00,
     TRUE: 0x01,
     FALSE: 0x02,
@@ -33,7 +33,7 @@ export function thriftRead(message: Buffer) {
         const type = reader.readField();
         switch (type) {
             case ThriftTypes.STOP: {
-                if(reader.stack.length === 0){
+                if (reader.stack.length === 0) {
                     return messages;
                 }
                 reader.popStack();
@@ -83,7 +83,7 @@ export function thriftRead(message: Buffer) {
                 const byte = reader.readByte();
                 let size = byte >> 4;
                 const listType = byte & 0x0f;
-                if(size === 0x0f)
+                if (size === 0x0f)
                     size = reader.readVarInt();
                 messages.push({
                     context,
@@ -111,13 +111,16 @@ export class BufferReader {
     public get stack(): number[] {
         return this._stack;
     }
+
     private _position: number = 0;
     public get position(): number {
         return this._position;
     };
+
     public get length(): number {
         return this.buffer.length;
     }
+
     private _field: number = 0;
     public get field(): number {
         return this._field;
@@ -126,6 +129,7 @@ export class BufferReader {
     constructor(buffer) {
         this.buffer = buffer;
     }
+
     private move(bytes: number) {
         this._position = Math.min(Math.max(this._position + bytes, 0), this.buffer.length);
         return this._position - bytes;
@@ -133,42 +137,46 @@ export class BufferReader {
 
     public readByte = () => this.buffer.readUInt8(this.move(1));
     public readSByte = () => this.buffer.readInt8(this.move(1));
+
     public readVarInt(): number {
         let shift = 0;
         let result = 0;
-        while(this._position < this.length){
+        while (this._position < this.length) {
             const byte = this.readByte();
             result |= (byte & 0x7f) << shift;
-            if((byte & 0x80) == 0){
+            if ((byte & 0x80) == 0) {
                 break;
             }
             shift += 7;
         }
         return result;
     }
+
     public readField(): number {
         const byte = this.readByte();
         const delta = byte >> 4;
-        if(delta === 0) {
+        if (delta === 0) {
             this._field = BufferReader.fromZigZag(this.readVarInt());
-        }else {
+        } else {
             this._field += delta;
         }
         return byte & 0x0f;
     }
+
     public readString = (len: number): string => this.buffer.toString('UTF-8', this.move(len), this._position);
+
     public readList(size: number, type: number): Array<number | boolean | string> {
         const arr = [];
         switch (type) {
             case ThriftTypes.TRUE:
             case ThriftTypes.FALSE: {
-                for(let i = 0; i < size; i++){
+                for (let i = 0; i < size; i++) {
                     arr[i] = this.readSByte() === ThriftTypes.TRUE;
                 }
                 break;
             }
             case ThriftTypes.BYTE: {
-                for(let i = 0; i < size; i++){
+                for (let i = 0; i < size; i++) {
                     arr[i] = this.readSByte();
                 }
                 break;
@@ -176,13 +184,13 @@ export class BufferReader {
             case ThriftTypes.INT_16:
             case ThriftTypes.INT_32:
             case ThriftTypes.INT_64: {
-                for(let i = 0; i < size; i++){
+                for (let i = 0; i < size; i++) {
                     arr[i] = BufferReader.fromZigZag(this.readVarInt());
                 }
                 break;
             }
             case ThriftTypes.BINARY: {
-                for(let i = 0; i < size; i++){
+                for (let i = 0; i < size; i++) {
                     arr[i] = this.readString(this.readVarInt());
                 }
                 break;
@@ -208,19 +216,23 @@ export class BufferWriter {
     get buffer(): Buffer {
         return this._buffer;
     }
+
     private _buffer: Buffer;
 
     private _position: number = 0;
     public get position(): number {
         return this._position;
     };
+
     public get length(): number {
         return this._buffer.length;
     }
+
     private _field: number = 0;
     public get field(): number {
         return this._field;
     };
+
     private _stack: number[] = [];
     public get stack(): number[] {
         return this._stack;
@@ -230,18 +242,22 @@ export class BufferWriter {
         this._buffer = buffer;
     }
 
-    public move(bytes: number) {
-        this._position = Math.min(Math.max(this._position + bytes, 0), this._buffer.length);
+    public move(bytes: number): number {
+        this._position = this._position + bytes;
         return this._position - bytes;
     }
 
     private writeVarInt(num: number): this {
-        while(true) {
+        while (true) {
             let byte = num & (~0x7f);
-            if(byte === 0){
+            if (byte === 0) {
                 this.writeByte(byte);
                 break;
-            }else {
+            } else if (byte === -128) {
+                // -128 = 0b1000_0000 but it's the last an no other bytes will follow
+                this.writeByte(0);
+                break;
+            } else {
                 byte = (num & 0xff) | 0x80;
                 this.writeByte(byte);
                 num = num >> 7;
@@ -252,9 +268,9 @@ export class BufferWriter {
 
     private writeField(field: number, type: number): this {
         const delta = field - this.field;
-        if(delta > 0 && delta <= 15) {
+        if (delta > 0 && delta <= 15) {
             this.writeByte((delta << 4) | type);
-        }else {
+        } else {
             this.writeByte(type);
             this.writeWord(field);
         }
@@ -267,6 +283,7 @@ export class BufferWriter {
         this._buffer.writeUInt8(byte, this.move(1));
         return this;
     }
+
     private writeSByte(byte: number): this {
         this._buffer.writeInt8(byte, this.move(1));
         return this;
@@ -297,7 +314,7 @@ export class BufferWriter {
 
     public writeStop(): this {
         this.writeByte(ThriftTypes.STOP);
-        if(this.stack.length > 0) {
+        if (this.stack.length > 0) {
             this.popStack();
         }
         return this;
@@ -312,10 +329,12 @@ export class BufferWriter {
         this.writeField(field, ThriftTypes.INT_16);
         return this.writeWord(num);
     }
+
     public writeInt32(field: number, num: number): this {
         this.writeField(field, ThriftTypes.INT_32);
         return this.writeInt(num);
     }
+
     public writeInt64(field: number, num: number): this {
         this.writeField(field, ThriftTypes.INT_64);
         return this.writeLong(num);
@@ -325,7 +344,7 @@ export class BufferWriter {
         this.writeField(field, ThriftTypes.LIST);
         const size = list.length;
 
-        if(size < 0x0f) {
+        if (size < 0x0f) {
             this.writeByte((size << 4) | type);
         } else {
             this.writeByte(0xf0 | type);
