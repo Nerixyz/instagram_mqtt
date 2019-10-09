@@ -37,9 +37,9 @@ export class FbnsConnectRequestPacket extends MqttPacket {
     private _protocolName: string = 'MQTToT';
     private _flags: number = 194;
     private _keepAlive: number = 900;
-    public payload: string;
+    public payload: Buffer;
 
-    constructor(payload?: string) {
+    constructor(payload?: Buffer) {
         super(PacketTypes.TYPE_CONNECT);
         this.payload = payload;
     }
@@ -56,7 +56,7 @@ export class FbnsConnectRequestPacket extends MqttPacket {
         this._keepAlive = stream.readWord();
 
         const payloadLength = this.remainingPacketLength - (stream.position - originalPosition);
-        this.payload = stream.read(payloadLength).toString('utf8');
+        this.payload = stream.read(payloadLength);
     }
 
     write(stream: PacketStream): void {
@@ -65,7 +65,7 @@ export class FbnsConnectRequestPacket extends MqttPacket {
             .writeByte(this.protocolLevel)
             .writeByte(this._flags)
             .writeWord(this._keepAlive)
-            .writeRawString(this.payload);
+            .write(this.payload);
 
         this.remainingPacketLength = data.length;
         super.write(stream);

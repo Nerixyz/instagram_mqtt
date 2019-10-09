@@ -57,31 +57,34 @@ export class FbnsConnection {
         this.clientStack = FBNS.CLIENT_STACK;
     }
 
-    public toString(): string {
-        return new BufferWriter(Buffer.alloc(1024))
+    public toThrift(): Buffer {
+        return new BufferWriter(Buffer.alloc(2048))
             .writeString(FbnsConnection.CLIENT_ID, this.auth.clientId)
             .writeStruct(FbnsConnection.CLIENT_INFO)
-                .writeInt64(FbnsConnection.USER_ID, this.auth.userId)
-                .writeString(FbnsConnection.USER_AGENT, this.userAgent)
-                .writeInt64(FbnsConnection.CLIENT_CAPABILITIES, this.clientCapabilities)
-                .writeInt64(FbnsConnection.ENDPOINT_CAPABILITIES, this.endpointCapabilities)
-                .writeInt32(FbnsConnection.PUBLISH_FORMAT, this.publishFormat)
-                .writeBoolean(FbnsConnection.NO_AUTOMATIC_FOREGROUND, this.noAutomaticForeground)
-                .writeBoolean(FbnsConnection.MAKE_USER_AVAILABLE_IN_FOREGROUND, this.makeUserAvailableInForeground)
-                .writeString(FbnsConnection.DEVICE_ID, this.auth.deviceId)
-                .writeBoolean(FbnsConnection.IS_INITIALLY_FOREGROUND, this.isInitiallyForeground)
-                .writeInt32(FbnsConnection.NETWORK_TYPE, this.networkType)
-                .writeInt32(FbnsConnection.NETWORK_SUBTYPE, this.networkSubtype)
-                .writeInt64(FbnsConnection.CLIENT_MQTT_SESSION_ID, this.clientMqttSessionId || Date.now())
-                .writeList(FbnsConnection.SUBSCRIBE_TOPICS, ThriftTypes.INT_32, this.subscribeTopics)
-                .writeString(FbnsConnection.CLIENT_TYPE, 'device_auth')
-                .writeInt64(FbnsConnection.APP_ID, this.appId)
-                .writeString(FbnsConnection.DEVICE_SECRET, this.auth.deviceSecret)
-                .writeInt8(FbnsConnection.CLIENT_STACK, this.clientStack)
+            .writeInt64(FbnsConnection.USER_ID, this.auth.userId)
+            .writeString(FbnsConnection.USER_AGENT, this.userAgent)
+            .writeInt64(FbnsConnection.CLIENT_CAPABILITIES, this.clientCapabilities)
+            .writeInt64(FbnsConnection.ENDPOINT_CAPABILITIES, this.endpointCapabilities)
+            .writeInt32(FbnsConnection.PUBLISH_FORMAT, this.publishFormat)
+            .writeBoolean(FbnsConnection.NO_AUTOMATIC_FOREGROUND, this.noAutomaticForeground)
+            .writeBoolean(FbnsConnection.MAKE_USER_AVAILABLE_IN_FOREGROUND, this.makeUserAvailableInForeground)
+            .writeString(FbnsConnection.DEVICE_ID, this.auth.deviceId)
+            .writeBoolean(FbnsConnection.IS_INITIALLY_FOREGROUND, this.isInitiallyForeground)
+            .writeInt32(FbnsConnection.NETWORK_TYPE, this.networkType)
+            .writeInt32(FbnsConnection.NETWORK_SUBTYPE, this.networkSubtype)
+            .writeInt64(FbnsConnection.CLIENT_MQTT_SESSION_ID, this.clientMqttSessionId || Date.now())
+            .writeList(FbnsConnection.SUBSCRIBE_TOPICS, ThriftTypes.INT_32, this.subscribeTopics)
+            .writeString(FbnsConnection.CLIENT_TYPE, 'device_auth')
+            .writeInt64(FbnsConnection.APP_ID, this.appId)
+            .writeString(FbnsConnection.DEVICE_SECRET, this.auth.deviceSecret)
+            .writeInt8(FbnsConnection.CLIENT_STACK, this.clientStack)
             .writeStop()
             .writeString(FbnsConnection.PASSWORD, this.auth.password)
-            .writeStop()
-            .toString();
+            .writeStop().buffer;
+    }
+
+    public toString(): string {
+        return this.toThrift().toString();
     }
 
 }

@@ -12,35 +12,47 @@ import {MqttPacket} from "./mqtt/mqtt.packet";
 import {PacketTypes} from "./mqtt/mqtt.constants";
 import {FbnsConnectRequestPacket} from "./fbns.connect-request.packet";
 import { deflateSync } from "zlib";
+import {EventEmitter} from "events";
 
-export class FbnsClient {
+export class FbnsClient extends EventEmitter {
     private client: CustomMqttClient;
     private ig: IgApiClient;
     private conn: FbnsConnection;
 
     constructor(ig: IgApiClient){
+        super();
         this.ig = ig;
         this.conn = new FbnsConnection(new FbnsDeviceAuth(this.ig), createUserAgent(this.ig));
         this.client = new CustomMqttClient({
             url: FBNS.HOST_NAME_V6,
-            payload: deflateSync(this.conn.toString(), {level: 9}).toString('utf8'),
+            payload: deflateSync(this.conn.toString(), {level: 9}),
         });
-        this.client.on('message', console.log);
+        this.client.on('message', (msg) => {
+            console.log(msg);
+            this.emit('message');
+        });
         this.client.on('warning', console.error);
         this.client.on('error', console.error);
+        this.client.on('open', () => console.log('open'));
         this.connect().catch(console.error);
     }
 
     public async connect() {
-        this.client.connect({});
+        this.client.connect({
+            keepAlive: 900,
+            protocolName: 'MQIsdp',
+            protocolLevel: 3,
+            clientId: this.ig.state.phoneId.substr(0, 20),
+            clean: true
+        });
     }
 }
 
 class CustomMqttClient extends MqttClient {
 
-    protected fbnsPayload: string;
+    protected fbnsPayload: Buffer;
 
-    constructor(options: {url: string, payload: string}) {
+    constructor(options: {url: string, payload: Buffer}) {
         super({url: options.url});
         this.fbnsPayload = options.payload;
     }
@@ -52,10 +64,10 @@ class CustomMqttClient extends MqttClient {
 
 class FbnsConnectFlow extends PacketFlow<any> {
 
-    private payload: string;
+    private payload: Buffer;
 
-    constructor(payload: string) {
-        super()
+    constructor(payload: Buffer) {
+        super();
         this.payload = payload;
     }
 
@@ -68,11 +80,13 @@ class FbnsConnectFlow extends PacketFlow<any> {
     }
 
     next(packet: MqttPacket): MqttPacket {
+        console.log('next');
         this.succeeded(undefined);
         return undefined;
     }
 
     start(): MqttPacket {
+        console.log('start');
         return new FbnsConnectRequestPacket(this.payload);
     }
 

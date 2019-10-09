@@ -205,14 +205,17 @@ export class BufferReader {
 }
 
 export class BufferWriter {
-    private buffer: Buffer;
+    get buffer(): Buffer {
+        return this._buffer;
+    }
+    private _buffer: Buffer;
 
     private _position: number = 0;
     public get position(): number {
         return this._position;
     };
     public get length(): number {
-        return this.buffer.length;
+        return this._buffer.length;
     }
     private _field: number = 0;
     public get field(): number {
@@ -224,11 +227,11 @@ export class BufferWriter {
     }
 
     constructor(buffer: Buffer) {
-        this.buffer = buffer;
+        this._buffer = buffer;
     }
 
     public move(bytes: number) {
-        this._position = Math.min(Math.max(this._position + bytes, 0), this.buffer.length);
+        this._position = Math.min(Math.max(this._position + bytes, 0), this._buffer.length);
         return this._position - bytes;
     }
 
@@ -261,11 +264,11 @@ export class BufferWriter {
     }
 
     private writeByte(byte: number): this {
-        this.buffer.writeUInt8(byte, this.move(1));
+        this._buffer.writeUInt8(byte, this.move(1));
         return this;
     }
     private writeSByte(byte: number): this {
-        this.buffer.writeInt8(byte, this.move(1));
+        this._buffer.writeInt8(byte, this.move(1));
         return this;
     }
 
@@ -288,7 +291,7 @@ export class BufferWriter {
     public writeString(field: number, s: string): this {
         this.writeField(field, ThriftTypes.BINARY);
         this.writeVarInt(s.length);
-        this.buffer.write(s, this.move(s.length), s.length, 'utf8');
+        this._buffer.write(s, this.move(s.length), s.length, 'utf8');
         return this;
     }
 
@@ -375,7 +378,7 @@ export class BufferWriter {
     }
 
     public toString() {
-        return this.buffer.toString('ascii');
+        return this._buffer.toString('ascii');
     }
 
     public static toZigZag = (n: number, bits: number) => (n << 1) ^ (n >> (bits - 1));

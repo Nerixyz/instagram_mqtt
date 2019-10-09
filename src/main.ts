@@ -12,7 +12,7 @@ ig.state.generateDevice(process.env.IG_USERNAME);
 
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
 
-    const realtimeClient = new RealtimeClient(ig, [
+    /*const realtimeClient = new RealtimeClient(ig, [
         GraphQLSubscription.getAppPresenceSubscription(),
         GraphQLSubscription.getClientConfigUpdateSubscription(),
         GraphQLSubscription.getZeroProvisionSubscription(ig.state.deviceId),
@@ -25,7 +25,11 @@ ig.state.generateDevice(process.env.IG_USERNAME);
     realtimeClient.on('direct', logJSONEvent('direct'));
     realtimeClient.on('realtimeSub', logJSONEvent('realtimeSub'));
     realtimeClient.on('error', console.error);
-    realtimeClient.on('close', () => console.error('RealtimeClient closed'));
+    realtimeClient.on('close', () => console.error('RealtimeClient closed'));*/
+
+    const fbnsClient = new FbnsClient(ig);
+    fbnsClient.on('message', console.log);
+    await fbnsClient.connect();
 
 })();
 
