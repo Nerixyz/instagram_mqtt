@@ -4,18 +4,32 @@
   "description": "",
   "main": "dist/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "codegen": "thrift-typescript --target thrift-server --sourceDir src/fbns/thrift --outDir src/fbns/thrift-types",
+    "build": "tsc -p tsconfig.json"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^1.13.0",
-    "@typescript-eslint/parser": "^1.13.0",
-    "eslint": "^6.3.0",
-    "instagram-private-api": "latest",
+    "@creditkarma/thrift-client": "^0.15.1",
+    "@creditkarma/thrift-server-core": "^0.15.1",
+    "instagram-private-api": "^1.31.0",
+    "int64-buffer": "^0.99.1007",
     "lodash": "^4.16.6",
     "mqtt": "latest",
+    "node-cint64": "^3.0.0",
+    "rimraf": "^3.0.0",
+    "thrift-ds": "^1.1.1",
+    "thriftrw": "^3.11.3",
     "zlib": "^1.0.5"
+  },
+  "devDependencies": {
+    "@creditkarma/thrift-typescript": "^3.7.6",
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
+    "@types/bluebird": "^3.5.26",
+    "@types/lodash": "^4.14.123",
+    "eslint": "^6.3.0"
   }
 }

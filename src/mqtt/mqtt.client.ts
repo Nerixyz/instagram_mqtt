@@ -62,6 +62,7 @@ export class MqttClient extends EventEmitter {
             this.executeDelayed = (ms, cb) => setTimeout(cb, ms);
             this.stopExecuting = clearInterval;
         } catch (e) {
+            console.error('some timers could\'t be registered!');
             // process isn't defined
         }
     }
@@ -74,6 +75,7 @@ export class MqttClient extends EventEmitter {
         this.socket = connect({
             host: this.url.hostname,
             port: Number(this.url.port),
+            enableTrace: true,
         });
         this.setupListeners({registerOptions: options});
         this.setConnecting();
@@ -216,6 +218,7 @@ export class MqttClient extends EventEmitter {
         const stream = PacketStream.empty();
         packet.write(stream);
         const data = stream.data;
+        console.log(data.toString('hex'));
         this.socket.write(data, 'utf8',(err) => {
             if (err) this.emitWarning(err);
         });

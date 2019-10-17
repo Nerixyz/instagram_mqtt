@@ -1,5 +1,5 @@
 import {MqttPacket} from "./mqtt.packet";
-import {FbnsConnectRequestPacket} from "../fbns.connect-request.packet";
+import {FbnsConnectRequestPacket} from "../fbns/fbns.connect-request.packet";
 import {PacketTypes} from "./mqtt.constants";
 import {PacketStream} from "./packet-stream";
 import Bluebird = require("bluebird");

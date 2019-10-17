@@ -1,5 +1,5 @@
 import {IgApiClient} from "instagram-private-api";
-import { deflate } from "zlib";
+import { deflate, unzip } from "zlib";
 import Bluebird = require("bluebird");
 
 // TODO: map
@@ -22,4 +22,8 @@ export function createUserAgent(ig: IgApiClient) {
 
 export async function compressDeflate(data: string | Buffer) {
     return Bluebird.fromCallback<Buffer>(cb => deflate(data, {level: 9}, cb));
+}
+
+export async function unzipAsync(data: string | Buffer) {
+    return Bluebird.fromCallback<Buffer>(cb => unzip(data, cb));
 }

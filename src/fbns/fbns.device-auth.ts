@@ -16,7 +16,7 @@ export class FbnsDeviceAuth {
 
     constructor(ig: IgApiClient) {
         this.ig = ig;
-        this.clientId = this.ig.state.uuid.substr(0, 20);
+        this.clientId = this.ig.state.deviceId.substr(0, 20);
         this.deviceId = this.ig.state.deviceId;
         this.userId = parseInt(this.ig.state.cookieUserId);
         this.deviceSecret = '';

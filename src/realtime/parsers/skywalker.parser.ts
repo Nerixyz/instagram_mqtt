@@ -1,6 +1,6 @@
 import {IParser, ParsedMessage} from "./parser";
 import {Topic} from "../../topic";
-import {thriftRead, ThriftTypes} from "../../thrift/thrift";
+import {thriftRead, ThriftTypes} from "../../thrift";
 
 export class SkywalkerParser implements IParser {
     parseMessage(topic: Topic, payload: Buffer): ParsedMessage[] {

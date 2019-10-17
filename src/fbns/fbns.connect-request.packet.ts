@@ -1,6 +1,6 @@
-import {MqttPacket} from "./mqtt/mqtt.packet";
-import {PacketTypes} from './mqtt/mqtt.constants';
-import {PacketStream} from "./mqtt/packet-stream";
+import {MqttPacket} from "../mqtt/mqtt.packet";
+import {PacketTypes} from '../mqtt/mqtt.constants';
+import {PacketStream} from "../mqtt/packet-stream";
 
 export class FbnsConnectRequestPacket extends MqttPacket {
     get protocolName(): string {

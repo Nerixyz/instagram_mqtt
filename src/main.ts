@@ -1,11 +1,28 @@
 import {IgApiClient} from "instagram-private-api";
-import {GraphQLSubscription} from "./realtime/subscriptions/graphql.subscription";
-import {RealtimeClient} from "./realtime/realtime.client";
-import {Topic} from "./topic";
-import {ParsedMessage} from "./realtime/parsers/parser";
+import {promisify} from "util";
+import {readFile} from "fs";
+import {Connect} from "./fbns/thrift-types";
+import {BinaryProtocol, BufferedTransport} from "@creditkarma/thrift-server-core";
+import {unzipAsync} from "./shared";
+import {
+    ThriftDescriptors,
+    ThriftPacketDescriptor,
+    thriftRead,
+    thriftReadToObject,
+    ThriftTypes,
+    thriftWriteFromObject
+} from "./thrift";
 import {FbnsClient} from "./fbns/fbns.client";
+import {FbnsConnection} from "./fbns/fbns.connection";
 
+
+const thriftrw = require('thriftrw');
+const bufrw = require('bufrw');
+const path = require('path');
 const ig = new IgApiClient();
+
+const readFileAsync = promisify(readFile);
+
 ig.state.generateDevice(process.env.IG_USERNAME);
 
 (async () => {
@@ -28,9 +45,27 @@ ig.state.generateDevice(process.env.IG_USERNAME);
     realtimeClient.on('close', () => console.error('RealtimeClient closed'));*/
 
     const fbnsClient = new FbnsClient(ig);
-    fbnsClient.on('message', console.log);
     await fbnsClient.connect();
+    fbnsClient.on('message', logJSONEvent('message'));
+    setInterval(() => console.log('f'), 10 * 60 * 1000);
+
+    /*const data = '';
+
+    const unzipped = await unzipAsync(Buffer.from(data, 'hex'));
+    console.log(unzipped.toString('hex'));
+
+    const a = thriftReadToObject<any>(unzipped, FbnsConnection.thriftConfig);
+    console.log(a);
+
+    const serialized = thriftWriteFromObject({clientIdentifier: a.clientIdentifier, clientInfo: a.clientInfo, password: a.password, appSpecificInfo: a.appSpecificInfo }, FbnsConnection.thriftConfig);
+    console.log(serialized.toString('hex').toUpperCase());
+    console.log(areEqual(unzipped, serialized));
+    logJSONEvent('aaaa')({lol: thriftReadToObject(serialized, FbnsConnection.thriftConfig)});*/
 })();
+
+function areEqual(a: Buffer, b: Buffer) {
+    return a && b && a.length === b.length && a.toString() === b.toString();
+}
 
 function logJSONEvent(name: string): (data: any) => void {
     return (data: any) => console.log(`${name}: ${JSON.stringify(data, undefined, 2)}`);

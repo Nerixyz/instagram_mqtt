@@ -1,7 +1,7 @@
 import Bluebird = require("bluebird");
 import {Topic} from "../../topic";
 import {compressDeflate} from "../../shared";
-import {MqttClient} from "../../fbns/mqtt/mqtt.client";
+import {MqttClient} from "../../mqtt/mqtt.client";
 
 const zlib = require('zlib');
 
