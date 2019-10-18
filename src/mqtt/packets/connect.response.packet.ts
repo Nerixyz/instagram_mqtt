@@ -3,6 +3,9 @@ import {PacketStream} from "../packet-stream";
 import {PacketTypes} from "../mqtt.constants";
 
 export class ConnectResponsePacket extends MqttPacket {
+    get payload(): Buffer {
+        return this._payload;
+    }
 
     public static readonly returnCodes = [
         'Connection accepted',
@@ -31,6 +34,8 @@ export class ConnectResponsePacket extends MqttPacket {
     private _flags: number;
     private _returnCode: number;
 
+    private _payload: Buffer;
+
     constructor() {super(PacketTypes.TYPE_CONNACK)}
 
     read(stream: PacketStream): void {
@@ -38,5 +43,8 @@ export class ConnectResponsePacket extends MqttPacket {
 
         this._flags = stream.readByte();
         this._returnCode = stream.readByte();
+        if(this.remainingPacketLength > 0) {
+            this._payload = stream.readStringAsBuffer();
+        }
     }
 }

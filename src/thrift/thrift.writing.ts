@@ -16,6 +16,8 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
     for (const entry of entries) {
         const name = entry[0];
         const value = entry[1];
+        if(typeof value === 'undefined')
+            continue;
 
         const descriptor = descriptors.find(d => d.fieldName === name);
         if (!descriptor)

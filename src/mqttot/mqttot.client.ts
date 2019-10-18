@@ -5,6 +5,8 @@ import {MqttPacket} from "../mqtt/mqtt.packet";
 import {PacketTypes} from "../mqtt/mqtt.constants";
 import {FbnsConnectRequestPacket} from "../fbns/fbns.connect-request.packet";
 import {MQTToTConnectRequestPacket} from "./mqttot.connect-request-packet";
+import {MqttMessage} from "../mqtt/mqtt.message";
+import {compressDeflate} from "../shared";
 
 export class MQTToTClient extends MqttClient{
     protected connectPayload: Buffer;
@@ -19,6 +21,19 @@ export class MQTToTClient extends MqttClient{
         this.connectTimer = this.executeDelayed(2000, () => {
             this.registerClient(options);
         });
+    }
+
+    /**
+     * Compresses the payload
+     * @param {MqttMessage} message
+     * @returns {Promise<void>}
+     */
+    public async mqttotPublish(message: MqttMessage) {
+        this.publish({
+            topic: message.topic,
+            payload: await compressDeflate(message.payload),
+            qosLevel: message.qosLevel,
+        })
     }
 }
 
@@ -36,13 +51,13 @@ export class MQTToTConnectFlow extends PacketFlow<any> {
     }
 
     get name(): string {
-        return "fbnsConnect";
+        return "mqttotConnect";
     }
 
     next(packet: MqttPacket): MqttPacket {
         console.log('next');
         this.succeeded(packet);
-        return packet;
+        return undefined;
     }
 
     start(): MqttPacket {

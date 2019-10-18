@@ -75,7 +75,6 @@ export class MqttClient extends EventEmitter {
         this.socket = connect({
             host: this.url.hostname,
             port: Number(this.url.port),
-            enableTrace: true,
         });
         this.setupListeners({registerOptions: options});
         this.setConnecting();
@@ -151,6 +150,8 @@ export class MqttClient extends EventEmitter {
                 }
                 if(flow.finished) {
                     this.executeNextTick(() => this.finishFlow(flow));
+                } else {
+                    this.receivingFlows.push(flow);
                 }
             }
         } catch (e) {
@@ -218,7 +219,6 @@ export class MqttClient extends EventEmitter {
         const stream = PacketStream.empty();
         packet.write(stream);
         const data = stream.data;
-        console.log(data.toString('hex'));
         this.socket.write(data, 'utf8',(err) => {
             if (err) this.emitWarning(err);
         });
@@ -259,7 +259,7 @@ export class MqttClient extends EventEmitter {
                     });
                     this.timers.push(ref);
                 }
-                break;
+                // no break - continue
             }
             case PacketTypes.TYPE_PINGRESP:
             case PacketTypes.TYPE_SUBACK:

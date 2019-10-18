@@ -53,6 +53,8 @@ export const Topics = {
 
 };
 
+export const INSTAGRAM_PACKAGE_NAME = 'com.instagram.android';
+
 export const FbnsTopics = {
     FBNS_MESSAGE: {
         id: '76', path: '/fbns_msg', parser: undefined

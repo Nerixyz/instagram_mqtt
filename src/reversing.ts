@@ -2,10 +2,18 @@ import {thriftReadToObject, thriftWriteFromObject} from "./thrift";
 import { unzipAsync } from "./shared";
 import {IgApiClient} from "instagram-private-api";
 import {MQTToTConnection} from "./mqttot/mqttot.connection";
+import {MqttParser} from "./mqtt/mqtt.parser";
+
+/**
+ *  This file is for analyzing requests.
+ *  Put your zipped hex content (starting with 123 or 0x78) in 'data' and see the thrift struct.
+ */
 
 (async () => {
-    const data = '78da9260f6f1716400000000ffff0300033b00f5';
-    const unzipped = await unzipAsync(Buffer.from(data, 'hex'));
+    const data = '';
+    const buf = Buffer.from(data, 'hex');
+    // @ts-ignore
+    const unzipped = await unzipAsync(buf);
     console.log(unzipped.toString('hex'));
 
     const a = thriftReadToObject<any>(unzipped, MQTToTConnection.thriftConfig);
@@ -14,7 +22,7 @@ import {MQTToTConnection} from "./mqttot/mqttot.connection";
     const serialized = thriftWriteFromObject({clientIdentifier: a.clientIdentifier, clientInfo: a.clientInfo, password: a.password}, MQTToTConnection.thriftConfig);
     console.log(serialized.toString('hex').toUpperCase());
     console.log(areEqual(unzipped, serialized));
-    logJSONEvent('aaaa')({lol: thriftReadToObject(serialized, MQTToTConnection.thriftConfig)});
+    logJSONEvent('reread')({a: thriftReadToObject(serialized, MQTToTConnection.thriftConfig)});
 })();
 
 function areEqual(a: Buffer, b: Buffer) {
