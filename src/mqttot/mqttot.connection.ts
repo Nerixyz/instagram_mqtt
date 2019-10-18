@@ -1,22 +1,20 @@
-import {FbnsDeviceAuth} from "./fbns.device-auth";
-import {FBNS, FbnsTopics} from "../constants";
 import {
-    BufferWriter, CInt64,
+    CInt64,
     ThriftDescriptors,
-    ThriftPacketDescriptor,
-    ThriftTypes,
+    ThriftPacketDescriptor, thriftReadToObject,
     thriftWriteFromObject
 } from "../thrift";
-export type FbnsConnectionData = Partial<{
+
+export type MQTToTConnectionData = Partial<{
     clientIdentifier: string;
     willTopic: string;
     willMessage: string;
-    clientInfo: FbnsConnectionClientInfo;
+    clientInfo: MQTToTConnectionClientInfo;
     password: string;
     unknown: number;
-    appSpecificInfo: FbnsConnectionAppSpecificInfo;
+    appSpecificInfo: MQTToTConnectionAppSpecificInfo;
 }>
-export type FbnsConnectionAppSpecificInfo = Partial<{
+export type MQTToTConnectionAppSpecificInfo = Partial<{
     app_version: string;
     'X-IG-Capabilities': string;
     everclear_subscriptions: string;
@@ -27,7 +25,7 @@ export type FbnsConnectionAppSpecificInfo = Partial<{
     pubsub_msg_type_blacklist: string;
     auth_cache_enabled: string;
 }>;
-export type FbnsConnectionClientInfo = Partial<{
+export type MQTToTConnectionClientInfo = Partial<{
     // TODO: remove object as polyfill
     userId: number | CInt64 | object;
     userAgent: string;
@@ -56,10 +54,11 @@ export type FbnsConnectionClientInfo = Partial<{
     fbnsDeviceSecret: string;
     anotherUnknown: number;
 }>
-export class FbnsConnection {
+
+export class MQTToTConnection {
 
 
-    public fbnsConnectionData: FbnsConnectionData;
+    public fbnsConnectionData: MQTToTConnectionData;
 
     public static thriftConfig: ThriftPacketDescriptor[] = [
         ThriftDescriptors.binary('clientIdentifier', 1),
@@ -101,12 +100,16 @@ export class FbnsConnection {
         ThriftDescriptors.mapBinaryBinary('appSpecificInfo', 10),
     ];
 
-    constructor(connectionData: FbnsConnectionData) {
+    constructor(connectionData: MQTToTConnectionData) {
         this.fbnsConnectionData = connectionData;
     }
 
     public toThrift(): Buffer {
-        return thriftWriteFromObject(this.fbnsConnectionData, FbnsConnection.thriftConfig);
+        const thrift = thriftWriteFromObject(this.fbnsConnectionData, MQTToTConnection.thriftConfig);
+        console.log(thrift.toString('hex'));
+        const a = thriftReadToObject(thrift, MQTToTConnection.thriftConfig);
+        console.log(a);
+        return thrift;
     }
 
     public toString(): string {

@@ -13,7 +13,11 @@ import {
     thriftWriteFromObject
 } from "./thrift";
 import {FbnsClient} from "./fbns/fbns.client";
-import {FbnsConnection} from "./fbns/fbns.connection";
+import {RealtimeClient} from "./realtime/realtime.client";
+import {GraphQLSubscription} from "./realtime/subscriptions/graphql.subscription";
+import {Topic} from "./topic";
+import {ParsedMessage} from "./realtime/parsers/parser";
+import {MQTToTRealtimeClient} from "./mqttot/mqttot.realtime-client";
 
 
 const thriftrw = require('thriftrw');
@@ -29,7 +33,7 @@ ig.state.generateDevice(process.env.IG_USERNAME);
 
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
 
-    /*const realtimeClient = new RealtimeClient(ig, [
+   /*const realtimeClient = new RealtimeClient(ig, [
         GraphQLSubscription.getAppPresenceSubscription(),
         GraphQLSubscription.getClientConfigUpdateSubscription(),
         GraphQLSubscription.getZeroProvisionSubscription(ig.state.deviceId),
@@ -44,10 +48,15 @@ ig.state.generateDevice(process.env.IG_USERNAME);
     realtimeClient.on('error', console.error);
     realtimeClient.on('close', () => console.error('RealtimeClient closed'));*/
 
-    const fbnsClient = new FbnsClient(ig);
+   const mqttotRealtime = new MQTToTRealtimeClient(ig);
+   await mqttotRealtime.connect();
+    mqttotRealtime.on('message', logJSONEvent('message'));
+    setInterval(() => console.log('f'), 10 * 60 * 1000);
+
+    /*const fbnsClient = new FbnsClient(ig);
     await fbnsClient.connect();
     fbnsClient.on('message', logJSONEvent('message'));
-    setInterval(() => console.log('f'), 10 * 60 * 1000);
+    setInterval(() => console.log('f'), 10 * 60 * 1000);*/
 
     /*const data = '';
 
