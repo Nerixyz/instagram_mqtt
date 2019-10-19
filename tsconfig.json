@@ -10,7 +10,6 @@
   "exclude": [
     "node_modules",
     "dist"
-   // "src/reversing.ts"
   ],
   "include": [
     "src"

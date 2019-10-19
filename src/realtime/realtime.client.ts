@@ -3,17 +3,15 @@ import { REALTIME, Topics } from '../constants';
 import { EventEmitter } from 'events';
 import { ParsedMessage } from './parsers/parser';
 import { Commands } from './commands/commands';
-import { unzip } from 'zlib';
 import { thriftRead } from '../thrift';
 import { compressDeflate, createUserAgent, unzipAsync } from '../shared';
-import { MqttClient } from '../mqtt/mqtt.client';
-import { MqttMessage } from '../mqtt/mqtt.message';
 import { Topic } from '../topic';
 import { RealtimeSubDirectMessage } from './messages/realtime-sub.direct.message';
 import { random } from 'lodash';
 import { MQTToTClient } from '../mqttot/mqttot.client';
 import { MQTToTConnection } from '../mqttot/mqttot.connection';
-const { Int64 } = require('node-cint64');
+// @ts-ignore
+import { Int64 } from 'node-cint64';
 
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
@@ -67,7 +65,11 @@ export class RealtimeClient extends EventEmitter {
                 app_version: this.ig.state.appVersion,
                 'X-IG-Capabilities': this.ig.state.capabilitiesHeader,
                 everclear_subscriptions:
-                    '{"inapp_notification_subscribe_comment":"17899377895239777","inapp_notification_subscribe_comment_mention_and_reply":"17899377895239777","video_call_participant_state_delivery":"17977239895057311"}',
+                    '{' +
+                    '"inapp_notification_subscribe_comment":"17899377895239777",' +
+                    '"inapp_notification_subscribe_comment_mention_and_reply":"17899377895239777",' +
+                    '"video_call_participant_state_delivery":"17977239895057311"' +
+                    '}',
                 'User-Agent': userAgent,
                 'Accept-Language': this.ig.state.language.replace('_', '-'),
                 platform: 'android',
@@ -117,7 +119,7 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('warning', w => this.emitWarning(w));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
-        this.client.on('mqttotConnect', async x => {
+        this.client.on('mqttotConnect', async () => {
             Object.values(Topics)
                 .map(topic => ({ topic: topic.path }))
                 .forEach(t => this.client.subscribe(t));

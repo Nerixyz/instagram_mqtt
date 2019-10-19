@@ -5,9 +5,11 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run typecheck && npm run lint && npm run format && rimraf dist && tsc -p tsconfig.build.json",
     "lint": "eslint --fix --ext .js,.ts src/**",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "precommit": "npm run typecheck && npm run lint && npm run format"
   },
   "keywords": [],
   "author": "Nerixyz",

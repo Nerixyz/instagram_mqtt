@@ -32,7 +32,7 @@
     "quotes": ["error", "single", { "allowTemplateLiterals": true }],
     "max-len": ["error", {
         "code": 150,
-        "comments": 100,
+        "comments": 200,
         "ignoreTrailingComments": true
       }],
     "no-constant-condition": "off",
