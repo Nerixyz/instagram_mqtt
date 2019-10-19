@@ -69,7 +69,7 @@ export interface FbnsNotification {
     badgeCount?: FbnsBadgeCount;
     inAppActors?: string;
     actionPath?: string;
-    actionParams?: { [x: string]: string };
+    actionParams?: { [x: string]: string | string[] };
     higherPriorityApps?: string;
 }
 

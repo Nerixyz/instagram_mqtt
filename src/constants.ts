@@ -6,6 +6,11 @@ import { SkywalkerParser } from './realtime/parsers/skywalker.parser';
 import { Topic } from './topic';
 
 export const Topics: { [x: string]: Topic } = {
+    PP: {
+        id: '34',
+        path: '/pp',
+        parser: new JsonParser(),
+    },
     GRAPHQL: {
         id: '9',
         path: '/graphql',

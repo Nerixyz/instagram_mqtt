@@ -1,9 +1,9 @@
 import { Topic } from '../../topic';
 import { compressDeflate } from '../../shared';
-import { MqttClient } from '../../mqtt/mqtt.client';
+import { MQTToTClient } from '../../mqttot/mqttot.client';
 
 export class Commands {
-    private client: MqttClient;
+    private client: MQTToTClient;
 
     public constructor(client) {
         this.client = client;

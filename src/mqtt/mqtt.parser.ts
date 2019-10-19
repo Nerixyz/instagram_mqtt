@@ -101,6 +101,7 @@ export class MqttParser {
             try {
                 packet = this.mapping.find(x => x.type === type).packet();
             } catch (e) {
+                console.log('no packet');
                 continue;
             }
 

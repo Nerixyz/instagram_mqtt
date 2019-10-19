@@ -72,6 +72,7 @@ export class MqttClient extends EventEmitter {
         this.socket = connect({
             host: this.url.hostname,
             port: Number(this.url.port),
+            enableTrace: options.enableTrace,
         });
         this.setupListeners();
         this.setConnecting();
@@ -142,8 +143,6 @@ export class MqttClient extends EventEmitter {
                 if (packet) {
                     this.writePacketToSocket(packet);
                     this.writtenFlow = flow;
-                } else {
-                    this.executeNextTick(() => this.finishFlow(flow));
                 }
                 if (flow.finished) {
                     this.executeNextTick(() => this.finishFlow(flow));

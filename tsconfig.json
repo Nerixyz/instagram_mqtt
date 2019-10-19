@@ -9,8 +9,8 @@
   },
   "exclude": [
     "node_modules",
-    "dist",
-    "src/reversing.ts"
+    "dist"
+   // "src/reversing.ts"
   ],
   "include": [
     "src"
