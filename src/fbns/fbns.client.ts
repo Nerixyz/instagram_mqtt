@@ -229,7 +229,7 @@ export class FbnsClient extends EventEmitter {
     private emitMessage = (e: FbnsMessageData) => this.emit('message', e);
     private emitLogging = (e: { beacon_id: number }) => this.emit('exp_logging', e);
 
-    private buildConnection() {
+    public buildConnection() {
         this.conn = new MQTToTConnection({
             clientIdentifier: this._auth.clientId,
             clientInfo: {
@@ -257,6 +257,7 @@ export class FbnsClient extends EventEmitter {
     }
 
     public async connect() {
+        this.buildConnection();
         this.client = new MQTToTClient({
             url: FBNS.HOST_NAME_V6,
             payload: await compressDeflate(this.conn.toThrift()),

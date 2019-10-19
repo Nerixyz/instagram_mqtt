@@ -1,11 +1,16 @@
 {
   "name": "instagram_mqtt",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nerixyz/instagram_mqtt.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run typecheck && npm run lint && npm run format && rimraf dist && tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "lint": "eslint --fix --ext .js,.ts src/**",
     "format": "prettier --write \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
@@ -16,7 +21,6 @@
   "license": "MIT",
   "dependencies": {
     "instagram-private-api": "^1.31.0",
-    "int64-buffer": "^0.99.1007",
     "lodash": "^4.16.6",
     "node-cint64": "^3.0.0",
     "zlib": "^1.0.5"
