@@ -4,25 +4,25 @@
     Last revision: 10-Sep-19
 
  */
-import {EndOfStreamError} from "./errors/end-of-stream.error";
+import { EndOfStreamError } from './errors/end-of-stream.error';
 
 export class PacketStream {
-    set position(value: number) {
+    public set position(value: number) {
         this._position = value;
     }
-    get position(): number {
+    public get position(): number {
         return this._position;
     }
 
-    get data(): Buffer {
+    public get data(): Buffer {
         return this._data;
     }
 
-    get length(): number {
+    public get length(): number {
         return this._data ? this._data.length : 0;
     }
 
-    get remainingBytes(): number {
+    public get remainingBytes(): number {
         return this.length - this.position;
     }
 
@@ -31,7 +31,7 @@ export class PacketStream {
     private _position: number;
 
     private constructor(data?: string, length?: number, buffer?: Buffer) {
-        this._data = data? Buffer.from(data) : length? Buffer.alloc(length) : buffer? buffer: undefined;
+        this._data = data ? Buffer.from(data) : length ? Buffer.alloc(length) : buffer ? buffer : undefined;
         this.position = 0;
     }
 
@@ -48,7 +48,6 @@ export class PacketStream {
         return new PacketStream(undefined, undefined, undefined);
     }
 
-
     /**
      *
      * @param {number} steps - steps to move
@@ -56,8 +55,7 @@ export class PacketStream {
      */
     private move(steps: number = 1): number {
         this._position += steps;
-        if(this._position > this.length)
-            throw new EndOfStreamError('Reached end of stream');
+        if (this._position > this.length) throw new EndOfStreamError('Reached end of stream');
         return this._position - steps;
     }
 
@@ -77,10 +75,8 @@ export class PacketStream {
     // Write
 
     public write(data: Buffer): this {
-        if(this._data)
-            this._data = Buffer.concat([this._data, data]);
-        else
-            this._data = data;
+        if (this._data) this._data = Buffer.concat([this._data, data]);
+        else this._data = data;
         this.move(data.length);
         return this;
     }
@@ -94,7 +90,7 @@ export class PacketStream {
     }
 
     public writeWord(num: number): this {
-        return this.write(Buffer.from([(num & 0xff00) >> 8, (num & 0xff)]));
+        return this.write(Buffer.from([(num & 0xff00) >> 8, num & 0xff]));
     }
 
     public writeString(str: string): this {
@@ -106,7 +102,9 @@ export class PacketStream {
     public read(len: number): Buffer {
         if (this.position > this.length || len > this.length - this.position) {
             throw new EndOfStreamError(
-                `End of stream reached when trying to read ${len} bytes. content length=${this.length}, position=${this.position}`
+                `End of stream reached when trying to read ${len} bytes. content length=${this.length}, position=${
+                    this.position
+                }`,
             );
         }
 
@@ -126,7 +124,7 @@ export class PacketStream {
     }
 
     public readWord(): number {
-       return this._data.readUInt16BE(this.move(2));
+        return this._data.readUInt16BE(this.move(2));
     }
 
     public readString(): string {

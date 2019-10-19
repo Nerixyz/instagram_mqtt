@@ -1,27 +1,24 @@
-import {CInt64, ThriftPacketDescriptor, ThriftTypes} from "./thrift";
-import {flatten} from "lodash";
+import { CInt64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
 
 const Int64 = require('node-cint64').Int64;
 
-export function thriftWriteFromObject(obj: any, descriptors: ThriftPacketDescriptor[]): Buffer {
+export function thriftWriteFromObject(obj, descriptors: ThriftPacketDescriptor[]): Buffer {
     const writer = BufferWriter.empty();
     thriftWriteSingleLayerFromObject(obj, descriptors, writer);
     writer.writeStop();
     return writer.buffer;
 }
 
-function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDescriptor[], writer: BufferWriter): void {
+function thriftWriteSingleLayerFromObject(obj, descriptors: ThriftPacketDescriptor[], writer: BufferWriter): void {
     const entries = Object.entries(obj);
 
     for (const entry of entries) {
         const name = entry[0];
         const value = entry[1];
-        if(typeof value === 'undefined')
-            continue;
+        if (typeof value === 'undefined') continue;
 
         const descriptor = descriptors.find(d => d.fieldName === name);
-        if (!descriptor)
-            throw new Error(`Descriptor for ${name} not found`);
+        if (!descriptor) throw new Error(`Descriptor for ${name} not found`);
 
         switch (descriptor.type & 0xff) {
             case ThriftTypes.BOOLEAN:
@@ -31,23 +28,23 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
                 break;
             }
             case ThriftTypes.BYTE: {
-                if (typeof value === "number") {
-                    writer.writeInt8(descriptor.field, value)
+                if (typeof value === 'number') {
+                    writer.writeInt8(descriptor.field, value);
                 } else {
                     throw new Error(`Value of ${name} is not a number`);
                 }
                 break;
             }
             case ThriftTypes.INT_16: {
-                if (typeof value === "number") {
+                if (typeof value === 'number') {
                     writer.writeInt16(descriptor.field, value);
                 } else {
                     throw new Error(`Value of ${name} is not a number`);
                 }
                 break;
             }
-            case ThriftTypes.INT_32 : {
-                if (typeof value === "number") {
+            case ThriftTypes.INT_32: {
+                if (typeof value === 'number') {
                     writer.writeInt32(descriptor.field, value);
                 } else {
                     throw new Error(`Value of ${name} is not a number`);
@@ -58,8 +55,8 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
                 if (typeof value === 'object') {
                     // @ts-ignore (no types :c )
                     writer.writeInt64Buffer(descriptor.field, value);
-                } else if(typeof value === 'number') {
-                   writer.writeInt64(descriptor.field, value);
+                } else if (typeof value === 'number') {
+                    writer.writeInt64(descriptor.field, value);
                 } else {
                     throw new Error(`Value of ${name} is neither an object nor a number`);
                 }
@@ -67,7 +64,7 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
             }
             case ThriftTypes.LIST: {
                 // @ts-ignore
-                writer.writeList(descriptor.field, (descriptor.type >> 8), value);
+                writer.writeList(descriptor.field, descriptor.type >> 8, value);
                 break;
             }
             case ThriftTypes.STRUCT: {
@@ -77,7 +74,7 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
                 break;
             }
             case ThriftTypes.BINARY: {
-                if (typeof value === "string") {
+                if (typeof value === 'string') {
                     writer.writeString(descriptor.field, value);
                 } else {
                     throw new Error(`Value of ${name} is not a string`);
@@ -86,10 +83,10 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
             }
             case ThriftTypes.MAP: {
                 if (descriptor.type === ThriftTypes.MAP_BINARY_BINARY) {
-                    let pairs: Array<[string, string]>;
+                    let pairs: [string, string][];
                     if (Array.isArray(value)) {
                         //[{key: 'a', value: 'b'}]
-                        pairs = value.map((x: { key: string, value: string }) => [x.key, x.value]);
+                        pairs = value.map((x: { key: string; value: string }) => [x.key, x.value]);
                     } else {
                         // {a: 'b'}
                         pairs = Object.entries(value);
@@ -100,7 +97,7 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
                             writer.writeStringDirect(pair[0]).writeStringDirect(pair[1]);
                         }
                     }
-                }else {
+                } else {
                     throw new Error(`Map of type ${descriptor.type} not impl.`);
                 }
                 break;
@@ -113,7 +110,7 @@ function thriftWriteSingleLayerFromObject(obj: any, descriptors: ThriftPacketDes
 }
 
 export class BufferWriter {
-    get buffer(): Buffer {
+    public get buffer(): Buffer {
         return this._buffer;
     }
 
@@ -122,7 +119,7 @@ export class BufferWriter {
     private _position: number = 0;
     public get position(): number {
         return this._position;
-    };
+    }
 
     public get length(): number {
         return this._buffer.length;
@@ -131,7 +128,7 @@ export class BufferWriter {
     private _field: number = 0;
     public get field(): number {
         return this._field;
-    };
+    }
 
     private _stack: number[] = [];
     public get stack(): number[] {
@@ -166,7 +163,7 @@ export class BufferWriter {
 
     private writeVarInt(num: number): this {
         while (true) {
-            let byte = num & (~0x7f);
+            let byte = num & ~0x7f;
             if (byte === 0) {
                 this.writeByte(num);
                 break;
@@ -197,10 +194,8 @@ export class BufferWriter {
     }
 
     private writeBuffer(buf: Buffer): this {
-        if (this._buffer)
-            this._buffer = Buffer.concat([this._buffer, buf]);
-        else
-            this._buffer = buf;
+        if (this._buffer) this._buffer = Buffer.concat([this._buffer, buf]);
+        else this._buffer = buf;
         this.move(buf.length);
         return this;
     }
@@ -227,9 +222,9 @@ export class BufferWriter {
         return this.writeVarInt(BufferWriter.toZigZag(num, 0x20));
     }
 
-    private writeLong(num: CInt64 | {int: CInt64, num: number}): this {
+    private writeLong(num: CInt64 | { int: CInt64; num: number }): this {
         // @ts-ignore
-        if(num.int) {
+        if (num.int) {
             // @ts-ignore
             num = num.int;
         }
@@ -244,7 +239,12 @@ export class BufferWriter {
                 this.writeByte(n.toNumber());
                 break;
             } else {
-                this.writeByte(n.and(0x7f).or(0x80).toNumber());
+                this.writeByte(
+                    n
+                        .and(0x7f)
+                        .or(0x80)
+                        .toNumber(),
+                );
                 n = n.shiftRight(7);
             }
         }
@@ -309,7 +309,7 @@ export class BufferWriter {
         return this.writeLong(num);
     }
 
-    public writeList(field: number, type: number, list: any[]): this {
+    public writeList(field: number, type: number, list: []): this {
         this.writeField(field, ThriftTypes.LIST);
         const size = list.length;
 
@@ -369,7 +369,7 @@ export class BufferWriter {
     }
 
     public popStack() {
-        this._field = this._stack.pop()
+        this._field = this._stack.pop();
     }
 
     public toString() {

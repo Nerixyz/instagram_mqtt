@@ -1,7 +1,7 @@
-import {PacketStream} from "./packet-stream";
+import { PacketStream } from './packet-stream';
 
 export abstract class MqttPacket {
-    get packetType(): number {
+    public get packetType(): number {
         return this._packetType;
     }
     private readonly _packetType: number;
@@ -16,7 +16,7 @@ export abstract class MqttPacket {
         const typeAndFlags = stream.readByte();
         const type = (typeAndFlags & 0xf0) >> 4;
         const flags = typeAndFlags & 0x0f;
-        if(type !== this._packetType) {
+        if (type !== this._packetType) {
             throw new Error('Invalid packet type');
         }
 
@@ -34,16 +34,16 @@ export abstract class MqttPacket {
         let multiplier = 1;
 
         let encodedByte;
-        do{
+        do {
             encodedByte = stream.readByte();
 
             this.remainingPacketLength += (encodedByte & 0x7f) * multiplier;
             multiplier *= 0x80;
 
-            if(multiplier > Math.pow(0x80, 4)){
+            if (multiplier > Math.pow(0x80, 4)) {
                 throw new Error('Invalid length');
             }
-        } while((encodedByte & 0x80) !== 0);
+        } while ((encodedByte & 0x80) !== 0);
     }
 
     private writeRemainingLength(stream: PacketStream): void {
@@ -61,44 +61,46 @@ export abstract class MqttPacket {
         let digit = 0;
         do {
             digit = num % 128 | 0;
-            num = num / 128 | 0;
+            num = (num / 128) | 0;
             if (num > 0) digit = digit | 0x80;
 
             stream.writeByte(digit);
-        } while (num > 0)
+        } while (num > 0);
     }
 
     protected assertPacketFlags(flags): void {
-        if(this.packetFlags !== flags){
+        if (this.packetFlags !== flags) {
             throw new Error(`Expected flags ${flags} but got ${this.packetFlags}`);
         }
     }
 
     protected assertRemainingPacketLength(expected?: number): void {
-        if(expected && this.remainingPacketLength !== expected){
-            throw new Error(`Expected remaining packet length of ${expected} bytes but got ${this.remainingPacketLength}`);
+        if (expected && this.remainingPacketLength !== expected) {
+            throw new Error(
+                `Expected remaining packet length of ${expected} bytes but got ${this.remainingPacketLength}`,
+            );
         }
-        if(!expected && this.remainingPacketLength <= 0) {
+        if (!expected && this.remainingPacketLength <= 0) {
             throw new Error('Expected payload but remaining packet length is 0.');
         }
     }
 
     protected assertValidStringLength(str: string): void {
-        if(str.length > 0xffff){
+        if (str.length > 0xffff) {
             throw new Error(`The string ${str.substring(0, 20)} is longer than 0xffff bytes.`);
         }
     }
 
     protected assertValidString(str: string): void {
         this.assertValidStringLength(str);
-
-        if(str.match(/[\xD8-\xDF][\x00-\xFF]|\x00\x00/) !== null) {
+        /* eslint no-control-regex: "off" */
+        if (str.match(/[\xD8-\xDF][\x00-\xFF]|\x00\x00/) !== null) {
             throw new Error(`The string ${str.substring(0, 20)} contains invalid characters`);
         }
     }
 
     protected assertValidQosLevel(level: number): void {
-        if(level < 0 || level > 2) {
+        if (level < 0 || level > 2) {
             throw new Error(`Invalid QoS level ${level}.`);
         }
     }

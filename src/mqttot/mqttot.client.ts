@@ -1,18 +1,18 @@
-import {MqttClient} from "../mqtt/mqtt.client";
-import {ConnectRequestOptions} from "../mqtt/packets/connect.request.packet";
-import {PacketFlow} from "../mqtt/flow/packet-flow";
-import {MqttPacket} from "../mqtt/mqtt.packet";
-import {PacketTypes} from "../mqtt/mqtt.constants";
-import {FbnsConnectRequestPacket} from "../fbns/fbns.connect-request.packet";
-import {MQTToTConnectRequestPacket} from "./mqttot.connect-request-packet";
-import {MqttMessage} from "../mqtt/mqtt.message";
-import {compressDeflate} from "../shared";
+import { MqttClient } from '../mqtt/mqtt.client';
+import { ConnectRequestOptions } from '../mqtt/packets';
+import { PacketFlow } from '../mqtt/flow/packet-flow';
+import { MqttPacket } from '../mqtt/mqtt.packet';
+import { PacketTypes } from '../mqtt/mqtt.constants';
+import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
+import { MqttMessage } from '../mqtt/mqtt.message';
+import { compressDeflate } from '../shared';
+import { ConnectResponsePacket } from '../mqtt/packets';
 
-export class MQTToTClient extends MqttClient{
+export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
 
-    constructor(options: { url: string, payload: Buffer }) {
-        super({url: options.url});
+    public constructor(options: { url: string; payload: Buffer }) {
+        super({ url: options.url });
         this.connectPayload = options.payload;
     }
 
@@ -33,37 +33,32 @@ export class MQTToTClient extends MqttClient{
             topic: message.topic,
             payload: await compressDeflate(message.payload),
             qosLevel: message.qosLevel,
-        })
+        });
     }
 }
 
-export class MQTToTConnectFlow extends PacketFlow<any> {
-
+export class MQTToTConnectFlow extends PacketFlow<ConnectResponsePacket> {
     private readonly payload: Buffer;
 
-    constructor(payload: Buffer) {
+    public constructor(payload: Buffer) {
         super();
         this.payload = payload;
     }
 
-    accept(packet: MqttPacket): boolean {
+    public accept(packet: MqttPacket): boolean {
         return packet.packetType === PacketTypes.TYPE_CONNACK;
     }
 
-    get name(): string {
-        return "mqttotConnect";
+    public get name(): string {
+        return 'mqttotConnect';
     }
 
-    next(packet: MqttPacket): MqttPacket {
-        console.log('next');
+    public next(packet: ConnectResponsePacket): MqttPacket {
         this.succeeded(packet);
         return undefined;
     }
 
-    start(): MqttPacket {
-        console.log('start');
+    public start(): MqttPacket {
         return new MQTToTConnectRequestPacket(this.payload);
     }
-
 }
-

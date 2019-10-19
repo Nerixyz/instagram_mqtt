@@ -1,9 +1,4 @@
-import {
-    CInt64,
-    ThriftDescriptors,
-    ThriftPacketDescriptor, thriftReadToObject,
-    thriftWriteFromObject
-} from "../thrift";
+import { CInt64, ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../thrift';
 
 export type MQTToTConnectionData = Partial<{
     clientIdentifier: string;
@@ -13,7 +8,7 @@ export type MQTToTConnectionData = Partial<{
     password: string;
     unknown: number;
     appSpecificInfo: MQTToTConnectionAppSpecificInfo;
-}>
+}>;
 export type MQTToTConnectionAppSpecificInfo = Partial<{
     app_version: string;
     'X-IG-Capabilities': string;
@@ -53,11 +48,9 @@ export type MQTToTConnectionClientInfo = Partial<{
     fbnsDeviceId: string;
     fbnsDeviceSecret: string;
     anotherUnknown: number;
-}>
+}>;
 
 export class MQTToTConnection {
-
-
     public fbnsConnectionData: MQTToTConnectionData;
 
     public static thriftConfig: ThriftPacketDescriptor[] = [
@@ -100,20 +93,15 @@ export class MQTToTConnection {
         ThriftDescriptors.mapBinaryBinary('appSpecificInfo', 10),
     ];
 
-    constructor(connectionData: MQTToTConnectionData) {
+    public constructor(connectionData: MQTToTConnectionData) {
         this.fbnsConnectionData = connectionData;
     }
 
     public toThrift(): Buffer {
-        const thrift = thriftWriteFromObject(this.fbnsConnectionData, MQTToTConnection.thriftConfig);
-        console.log(thrift.toString('hex'));
-        const a = thriftReadToObject(thrift, MQTToTConnection.thriftConfig);
-        console.log(a);
-        return thrift;
+        return thriftWriteFromObject(this.fbnsConnectionData, MQTToTConnection.thriftConfig);
     }
 
     public toString(): string {
         return this.toThrift().toString();
     }
-
 }

@@ -1,10 +1,8 @@
-import {IdentifierPacket} from "./identifiable.packet";
-import {PacketTypes} from "../mqtt.constants";
+import { IdentifierPacket } from './identifiable.packet';
+import { PacketTypes } from '../mqtt.constants';
 
 export class PublishReleasePacket extends IdentifierPacket {
-
-
-    constructor(identifier?: number) {
+    public constructor(identifier?: number) {
         super(PacketTypes.TYPE_PUBREL);
         this.packetFlags = 2;
         this.identifier = identifier;
@@ -13,5 +11,4 @@ export class PublishReleasePacket extends IdentifierPacket {
     protected getExpectedPacketFlags(): number {
         return 2;
     }
-
 }

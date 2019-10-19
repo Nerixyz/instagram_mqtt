@@ -1,3 +1,3 @@
-import { CustomError } from "ts-custom-error";
+import { CustomError } from 'ts-custom-error';
 
-export class EndOfStreamError extends CustomError{}
+export class EndOfStreamError extends CustomError {}

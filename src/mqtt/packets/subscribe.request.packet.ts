@@ -1,21 +1,21 @@
-import {IdentifiableBasePacket, IdentifierPacket} from "./identifiable.packet";
-import {PacketTypes} from "../mqtt.constants";
-import {PacketStream} from "../packet-stream";
+import { IdentifiableBasePacket } from './identifiable.packet';
+import { PacketTypes } from '../mqtt.constants';
+import { PacketStream } from '../packet-stream';
 
-export class SubscribeRequestPacket extends IdentifiableBasePacket{
-    get qosLevel(): number {
+export class SubscribeRequestPacket extends IdentifiableBasePacket {
+    public get qosLevel(): number {
         return this._qosLevel;
     }
 
-    set qosLevel(value: number) {
+    public set qosLevel(value: number) {
         this.assertValidQosLevel(value);
         this._qosLevel = value;
     }
-    get topic(): string {
+    public get topic(): string {
         return this._topic;
     }
 
-    set topic(value: string) {
+    public set topic(value: string) {
         this.assertValidString(value);
         this._topic = value;
     }
@@ -23,7 +23,7 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket{
     private _topic: string;
     private _qosLevel: number;
 
-    constructor(topic?: string, qosLevel: number = 1) {
+    public constructor(topic?: string, qosLevel: number = 1) {
         super(PacketTypes.TYPE_SUBSCRIBE);
         this.assertValidQosLevel(qosLevel);
         this.assertValidString(topic);
@@ -31,7 +31,7 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket{
         this._qosLevel = qosLevel;
     }
 
-    read(stream: PacketStream): void {
+    public read(stream: PacketStream): void {
         super.read(stream);
         this.assertPacketFlags(2);
         this.assertRemainingPacketLength();
@@ -44,8 +44,11 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket{
         this.assertValidString(this._topic);
     }
 
-    write(stream: PacketStream): void {
-        const data = PacketStream.empty().writeWord(this.generateIdentifier()).writeString(this._topic).writeByte(this._qosLevel);
+    public write(stream: PacketStream): void {
+        const data = PacketStream.empty()
+            .writeWord(this.generateIdentifier())
+            .writeString(this._topic)
+            .writeByte(this._qosLevel);
         this.remainingPacketLength = data.length;
         super.write(stream);
         stream.write(data.data);
@@ -54,5 +57,4 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket{
     protected getExpectedPacketFlags(): number {
         return 0;
     }
-
 }

@@ -1,4 +1,5 @@
-import {IgApiClient} from "instagram-private-api";
+import { IgApiClient } from 'instagram-private-api';
+import { Enumerable } from 'instagram-private-api/dist/decorators';
 
 export class FbnsDeviceAuth {
     public clientId: string;
@@ -12,9 +13,10 @@ export class FbnsDeviceAuth {
 
     private json?: string;
 
+    @Enumerable(false)
     private ig: IgApiClient;
 
-    constructor(ig: IgApiClient) {
+    public constructor(ig: IgApiClient) {
         this.ig = ig;
         this.clientId = this.ig.state.phoneId.substr(0, 20);
         this.deviceId = '';
@@ -25,10 +27,10 @@ export class FbnsDeviceAuth {
 
     public read(jsonStr: string) {
         this.json = jsonStr;
-        const {ck, cs, di, ds, sr, rc} = JSON.parse(jsonStr);
+        const { ck, cs, di, ds, sr, rc } = JSON.parse(jsonStr);
         this.userId = ck || this.userId;
         this.password = cs || this.password;
-        if(di){
+        if (di) {
             this.deviceId = di;
             this.clientId = this.deviceId.substr(0, 20);
         } else {

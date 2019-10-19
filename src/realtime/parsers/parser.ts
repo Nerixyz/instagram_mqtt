@@ -1,9 +1,9 @@
-import {Topic} from "../../topic";
+import { Topic } from '../../topic';
 
-export interface IParser {
+export interface Parser {
     parseMessage(topic: Topic, payload: Buffer): ParsedMessage[];
 }
 export interface ParsedMessage {
     topic: Topic;
-    data: any;
+    data;
 }

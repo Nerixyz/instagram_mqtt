@@ -1,41 +1,43 @@
-import {IdentifiableBasePacket} from "./identifiable.packet";
-import {PacketTypes} from "../mqtt.constants";
-import {PacketStream} from "../packet-stream";
+import { IdentifiableBasePacket } from './identifiable.packet';
+import { PacketTypes } from '../mqtt.constants';
+import { PacketStream } from '../packet-stream';
 
-export class UnsubscribeRequestPacket extends IdentifiableBasePacket{
-    get topic(): string {
+export class UnsubscribeRequestPacket extends IdentifiableBasePacket {
+    public get topic(): string {
         return this._topic;
     }
 
-    set topic(value: string) {
+    public set topic(value: string) {
         this.assertValidString(value);
         this._topic = value;
     }
 
     private _topic: string;
 
-    constructor(topic?: string) {
+    public constructor(topic?: string) {
         super(PacketTypes.TYPE_UNSUBSCRIBE);
         this.packetFlags = 2;
         this.assertValidString(topic);
         this._topic = topic;
     }
 
-    read(stream: PacketStream): void {
+    public read(stream: PacketStream): void {
         super.read(stream);
         this.assertPacketFlags(2);
         this.assertRemainingPacketLength();
 
         const originalPosition = stream.position;
 
-        do{
+        do {
             this.identifier = stream.readWord();
             this._topic = stream.readString();
-        }while((stream.position - originalPosition) <= this.remainingPacketLength);
+        } while (stream.position - originalPosition <= this.remainingPacketLength);
     }
 
-    write(stream: PacketStream): void {
-        const data = PacketStream.empty().writeWord(this.generateIdentifier()).writeString(this._topic);
+    public write(stream: PacketStream): void {
+        const data = PacketStream.empty()
+            .writeWord(this.generateIdentifier())
+            .writeString(this._topic);
         this.remainingPacketLength = data.length;
         super.write(stream);
         stream.write(data.data);
@@ -44,5 +46,4 @@ export class UnsubscribeRequestPacket extends IdentifiableBasePacket{
     protected getExpectedPacketFlags(): number {
         return 0;
     }
-
 }

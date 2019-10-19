@@ -1,4 +1,4 @@
-export interface  MqttMessage {
+export interface MqttMessage {
     topic: string;
     payload: Buffer;
     retained?: boolean;

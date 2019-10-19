@@ -1,18 +1,15 @@
-import Bluebird = require("bluebird");
-import {Topic} from "../../topic";
-import {compressDeflate} from "../../shared";
-import {MqttClient} from "../../mqtt/mqtt.client";
-
-const zlib = require('zlib');
+import { Topic } from '../../topic';
+import { compressDeflate } from '../../shared';
+import { MqttClient } from '../../mqtt/mqtt.client';
 
 export class Commands {
     private client: MqttClient;
 
-    constructor(client) {
+    public constructor(client) {
         this.client = client;
     }
 
-    private async publishToTopic(topic: string, compressedData: string | Buffer, qos: 0|1) {
+    private async publishToTopic(topic: string, compressedData: string | Buffer, qos: 0 | 1) {
         this.client.publish({
             topic,
             payload: compressedData instanceof Buffer ? compressedData : Buffer.from(compressedData),
@@ -20,11 +17,7 @@ export class Commands {
         });
     }
 
-    public async updateSubscriptions(options: { topic: Topic, data: {sub?: string[], unsub?: string[] }}) {
+    public async updateSubscriptions(options: { topic: Topic; data: { sub?: string[]; unsub?: string[] } }) {
         this.publishToTopic(options.topic.id, await compressDeflate(JSON.stringify(options.data)), 1);
-    }
-
-    public async fbnsMessage() {
-
     }
 }

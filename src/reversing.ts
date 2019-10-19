@@ -1,8 +1,7 @@
-import {thriftReadToObject, thriftWriteFromObject} from "./thrift";
-import { unzipAsync } from "./shared";
-import {IgApiClient} from "instagram-private-api";
-import {MQTToTConnection} from "./mqttot/mqttot.connection";
-import {MqttParser} from "./mqtt/mqtt.parser";
+/* eslint no-console: "off" */
+import { thriftReadToObject, thriftWriteFromObject } from './thrift';
+import { unzipAsync } from './shared';
+import { MQTToTConnection } from './mqttot/mqttot.connection';
 
 /**
  *  This file is for analyzing requests.
@@ -19,16 +18,23 @@ import {MqttParser} from "./mqtt/mqtt.parser";
     const a = thriftReadToObject<any>(unzipped, MQTToTConnection.thriftConfig);
     console.log(a);
 
-    const serialized = thriftWriteFromObject({clientIdentifier: a.clientIdentifier, clientInfo: a.clientInfo, password: a.password}, MQTToTConnection.thriftConfig);
+    const serialized = thriftWriteFromObject(
+        {
+            clientIdentifier: a.clientIdentifier,
+            clientInfo: a.clientInfo,
+            password: a.password,
+        },
+        MQTToTConnection.thriftConfig,
+    );
     console.log(serialized.toString('hex').toUpperCase());
     console.log(areEqual(unzipped, serialized));
-    logJSONEvent('reread')({a: thriftReadToObject(serialized, MQTToTConnection.thriftConfig)});
+    logJSONEvent('reread')({ a: thriftReadToObject(serialized, MQTToTConnection.thriftConfig) });
 })();
 
 function areEqual(a: Buffer, b: Buffer) {
     return a && b && a.length === b.length && a.toString() === b.toString();
 }
 
-function logJSONEvent(name: string): (data: any) => void {
-    return (data: any) => console.log(`${name}: ${JSON.stringify(data, undefined, 2)}`);
+function logJSONEvent(name: string): (data) => void {
+    return data => console.log(`${name}: ${JSON.stringify(data, undefined, 2)}`);
 }

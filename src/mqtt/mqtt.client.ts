@@ -4,32 +4,28 @@ import {
     ExecutePeriodically,
     MqttClientConstructorOptions,
     MqttSubscription,
-    RegisterClientOptions, StopExecuting
-} from "./mqtt.types";
+    RegisterClientOptions,
+    StopExecuting,
+} from './mqtt.types';
 import * as URL from 'url';
-import Bluebird = require("bluebird");
-import {EventEmitter} from "events";
-import {MqttParser} from "./mqtt.parser";
-import {PacketFlow} from "./flow/packet-flow";
-import {MqttPacket} from "./mqtt.packet";
-import {PacketStream} from "./packet-stream";
-import {PacketTypes} from "./mqtt.constants";
-import {PublishRequestPacket} from "./packets/publish.request.packet";
-import {IncomingPublishFlow} from "./flow/incoming.publish.flow";
-import {PublishReceivedPacket} from "./packets/publish.received.packet";
-import {OutgoingConnectFlow} from "./flow/outgoing.connect.flow";
-import {OutgoingPublishFlow} from "./flow/outgoing.publish.flow";
-import {OutgoingSubscribeFlow} from "./flow/outgoing.subscribe.flow";
-import {OutgoingUnsubscribeFlow} from "./flow/outgoing.unsubscribe.flow";
-import {OutgoingDisconnectFlow} from "./flow/outgoing.disconnect.flow";
-import {OutgoingPingFlow} from "./flow/outgoing.ping.flow";
-import {MqttMessage} from "./mqtt.message";
-import {ConnectRequestPacket} from "./packets/connect.request.packet";
-import { Writable } from "stream";
-import { connect, TLSSocket } from "tls";
+import { EventEmitter } from 'events';
+import { MqttParser } from './mqtt.parser';
+import { PacketFlow } from './flow/packet-flow';
+import { MqttPacket } from './mqtt.packet';
+import { PacketStream } from './packet-stream';
+import { PacketTypes } from './mqtt.constants';
+import { PublishRequestPacket } from './packets';
+import { IncomingPublishFlow } from './flow/incoming.publish.flow';
+import { OutgoingConnectFlow } from './flow/outgoing.connect.flow';
+import { OutgoingPublishFlow } from './flow/outgoing.publish.flow';
+import { OutgoingSubscribeFlow } from './flow/outgoing.subscribe.flow';
+import { OutgoingUnsubscribeFlow } from './flow/outgoing.unsubscribe.flow';
+import { OutgoingDisconnectFlow } from './flow/outgoing.disconnect.flow';
+import { OutgoingPingFlow } from './flow/outgoing.ping.flow';
+import { MqttMessage } from './mqtt.message';
+import { TLSSocket, connect } from 'tls';
 
 export class MqttClient extends EventEmitter {
-
     public executeNextTick: ExecuteNextTick;
     public executePeriodically: ExecutePeriodically;
     public stopExecuting: StopExecuting;
@@ -42,16 +38,16 @@ export class MqttClient extends EventEmitter {
     protected isDisconnected: boolean = false;
     protected url: URL.UrlWithStringQuery;
 
-    protected receivingFlows: PacketFlow<any>[] = [];
-    protected sendingFlows: PacketFlow<any>[] = [];
-    protected writtenFlow: PacketFlow<any>;
+    protected receivingFlows: PacketFlow<object>[] = [];
+    protected sendingFlows: PacketFlow<object>[] = [];
+    protected writtenFlow: PacketFlow<object>;
 
     protected connectionSettings: RegisterClientOptions;
 
-    protected timers: any[] = [];
-    protected connectTimer: any;
+    protected timers: object[] = [];
+    protected connectTimer: object;
 
-    constructor(options: MqttClientConstructorOptions) {
+    public constructor(options: MqttClientConstructorOptions) {
         super();
         this.url = URL.parse(options.url);
         this.parser = options.parser || new MqttParser(this.emitError);
@@ -62,7 +58,8 @@ export class MqttClient extends EventEmitter {
             this.executeDelayed = (ms, cb) => setTimeout(cb, ms);
             this.stopExecuting = clearInterval;
         } catch (e) {
-            console.error('some timers could\'t be registered!');
+            /* eslint no-console: "off" */
+            console.error("some timers could't be registered!");
             // process isn't defined
         }
     }
@@ -76,19 +73,19 @@ export class MqttClient extends EventEmitter {
             host: this.url.hostname,
             port: Number(this.url.port),
         });
-        this.setupListeners({registerOptions: options});
+        this.setupListeners();
         this.setConnecting();
     }
 
-    protected emitError: (e) => void = (e) => this.emit('error', e);
-    protected emitWarning: (e) => void = (e) => this.emit('warning', e);
+    protected emitError: (e) => void = e => this.emit('error', e);
+    protected emitWarning: (e) => void = e => this.emit('warning', e);
     protected emitOpen: () => void = () => this.emit('open');
     protected emitConnect: () => void = () => this.emit('connect');
 
-    protected emitFlow: (name: string, result: any) => void = (name, result) => this.emit(name, result);
+    protected emitFlow: (name: string, result: object) => void = (name, result) => this.emit(name, result);
 
-    protected setupListeners(options: { registerOptions: RegisterClientOptions }) {
-        this.socket.on('error', (e) => {
+    protected setupListeners() {
+        this.socket.on('error', e => {
             if (this.isConnecting) {
                 this.setDisconnected();
             }
@@ -109,7 +106,7 @@ export class MqttClient extends EventEmitter {
             this.emitError(new Error('Timed out'));
         });
 
-        this.socket.on('data', (buf) => this.handleData(buf));
+        this.socket.on('data', buf => this.handleData(buf));
     }
 
     public publish(message: MqttMessage) {
@@ -135,7 +132,7 @@ export class MqttClient extends EventEmitter {
         });
     }
 
-    public startFlow(flow: PacketFlow<any>) {
+    public startFlow(flow: PacketFlow<object>) {
         try {
             if (this.writtenFlow) {
                 this.sendingFlows.push(flow);
@@ -148,7 +145,7 @@ export class MqttClient extends EventEmitter {
                 } else {
                     this.executeNextTick(() => this.finishFlow(flow));
                 }
-                if(flow.finished) {
+                if (flow.finished) {
                     this.executeNextTick(() => this.finishFlow(flow));
                 } else {
                     this.receivingFlows.push(flow);
@@ -159,7 +156,7 @@ export class MqttClient extends EventEmitter {
         }
     }
 
-    protected continueFlow(flow: PacketFlow<any>, packet: MqttPacket) {
+    protected continueFlow(flow: PacketFlow<object>, packet: MqttPacket) {
         try {
             const response = flow.next(packet);
             if (response) {
@@ -178,7 +175,7 @@ export class MqttClient extends EventEmitter {
         }
     }
 
-    protected finishFlow(flow: PacketFlow<any>) {
+    protected finishFlow(flow: PacketFlow<object>) {
         if (flow.success) {
             if (!flow.silent) {
                 this.emitFlow(flow.name, flow.result);
@@ -190,7 +187,7 @@ export class MqttClient extends EventEmitter {
     }
 
     protected handleSendingFlows() {
-        let flow: PacketFlow<any> = undefined;
+        let flow: PacketFlow<object> = undefined;
         if (this.writtenFlow) {
             flow = this.writtenFlow;
             this.writtenFlow = undefined;
@@ -219,7 +216,7 @@ export class MqttClient extends EventEmitter {
         const stream = PacketStream.empty();
         packet.write(stream);
         const data = stream.data;
-        this.socket.write(data, 'utf8',(err) => {
+        this.socket.write(data, 'utf8', err => {
             if (err) this.emitWarning(err);
         });
     }
@@ -231,7 +228,7 @@ export class MqttClient extends EventEmitter {
             if (results.length > 0) {
                 results.forEach(r => this.handlePacket(r));
             }
-        }catch(e) {
+        } catch (e) {
             this.emitWarning(e);
         }
     }
@@ -241,14 +238,17 @@ export class MqttClient extends EventEmitter {
             case PacketTypes.TYPE_PUBLISH: {
                 const pub = packet as PublishRequestPacket;
                 this.startFlow(
-                    new IncomingPublishFlow({
+                    new IncomingPublishFlow(
+                        {
                             topic: pub.topic,
                             payload: pub.payload,
                             qosLevel: pub.qosLevel,
                             retained: pub.retained,
-                            duplicate: pub.duplicate
+                            duplicate: pub.duplicate,
                         },
-                        pub.identifier));
+                        pub.identifier,
+                    ),
+                );
                 break;
             }
             case PacketTypes.TYPE_CONNACK: {
@@ -261,6 +261,7 @@ export class MqttClient extends EventEmitter {
                 }
                 // no break - continue
             }
+            /* eslint no-fallthrough: "off" */
             case PacketTypes.TYPE_PINGRESP:
             case PacketTypes.TYPE_SUBACK:
             case PacketTypes.TYPE_UNSUBACK:
@@ -280,7 +281,9 @@ export class MqttClient extends EventEmitter {
                     }
                 }
                 if (flowFound) {
-                    this.receivingFlows = this.receivingFlows.filter((val) => val && !val.finished && (!val.finished || val !== usedFlow));
+                    this.receivingFlows = this.receivingFlows.filter(
+                        val => val && !val.finished && (!val.finished || val !== usedFlow),
+                    );
                 } else {
                     this.emitWarning(new Error(`Unexpected packet: ${packet.packetType}`));
                 }

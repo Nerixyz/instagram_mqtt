@@ -1,32 +1,31 @@
-import {MqttPacket} from "../mqtt.packet";
-import {IdentifiableBasePacket} from "./identifiable.packet";
-import {PacketTypes} from "../mqtt.constants";
-import {PacketStream} from "../packet-stream";
+import { IdentifiableBasePacket } from './identifiable.packet';
+import { PacketTypes } from '../mqtt.constants';
+import { PacketStream } from '../packet-stream';
 
 export class SubscribeResponsePacket extends IdentifiableBasePacket {
-    get returnCodes(): number[] {
+    public get returnCodes(): number[] {
         return this._returnCodes;
     }
 
-    set returnCodes(value: number[]) {
+    public set returnCodes(value: number[]) {
         value.forEach(e => this.assertValidReturnCode(e));
         this._returnCodes = value;
     }
 
     private static readonly qosLevels = {
-        q0: "Max QoS 0",
-        q1: "Max QoS 1",
-        q2: "Max QoS 2",
-        q128: "Failure"
+        q0: 'Max QoS 0',
+        q1: 'Max QoS 1',
+        q2: 'Max QoS 2',
+        q128: 'Failure',
     };
 
     private _returnCodes: number[];
 
-    constructor() {
+    public constructor() {
         super(PacketTypes.TYPE_SUBACK);
     }
 
-    read(stream: PacketStream): void {
+    public read(stream: PacketStream): void {
         super.read(stream);
         this.assertPacketFlags(0);
         this.assertRemainingPacketLength();
@@ -35,14 +34,14 @@ export class SubscribeResponsePacket extends IdentifiableBasePacket {
 
         const returnCodeLen = this.remainingPacketLength - 2;
         this._returnCodes = [];
-        for(let i = 0; i < returnCodeLen; i++) {
+        for (let i = 0; i < returnCodeLen; i++) {
             const code = stream.readByte();
             this.assertValidReturnCode(code);
             this._returnCodes.push(code);
         }
     }
 
-    write(stream: PacketStream): void {
+    public write(stream: PacketStream): void {
         const data = PacketStream.empty().writeWord(this.generateIdentifier());
         this._returnCodes.forEach(c => data.writeByte(c));
 
@@ -60,7 +59,7 @@ export class SubscribeResponsePacket extends IdentifiableBasePacket {
     }
 
     protected assertValidReturnCode(returnCode: number) {
-        if(returnCode & 0b0111_1100){
+        if (returnCode & 0b0111_1100) {
             throw new Error(`Invalid return code: ${returnCode}`);
         }
     }
@@ -68,5 +67,4 @@ export class SubscribeResponsePacket extends IdentifiableBasePacket {
     protected getExpectedPacketFlags(): number {
         return 0;
     }
-
 }

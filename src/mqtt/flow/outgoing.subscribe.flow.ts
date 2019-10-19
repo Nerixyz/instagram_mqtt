@@ -1,42 +1,43 @@
-import {PacketFlow} from "./packet-flow";
-import {MqttSubscription} from "../mqtt.types";
-import {MqttPacket} from "../mqtt.packet";
-import {SubscribeRequestPacket} from "../packets/subscribe.request.packet";
-import {IdentifiableBasePacket} from "../packets/identifiable.packet";
-import {PacketTypes} from "../mqtt.constants";
-import {SubscribeResponsePacket} from "../packets/subscribe.response.packet";
+import { PacketFlow } from './packet-flow';
+import { MqttSubscription } from '../mqtt.types';
+import { MqttPacket } from '../mqtt.packet';
+import { SubscribeRequestPacket } from '../packets';
+import { IdentifiableBasePacket } from '../packets';
+import { PacketTypes } from '../mqtt.constants';
+import { SubscribeResponsePacket } from '../packets';
 
-export class OutgoingSubscribeFlow extends PacketFlow<MqttSubscription>{
+export class OutgoingSubscribeFlow extends PacketFlow<MqttSubscription> {
     private readonly subscription: MqttSubscription;
     private readonly identifier: number;
 
-    constructor(subscription: MqttSubscription, identifier?: number) {
+    public constructor(subscription: MqttSubscription, identifier?: number) {
         super();
         this.subscription = subscription;
         this.identifier = identifier || IdentifiableBasePacket.generateIdentifier();
     }
-    accept(packet: MqttPacket): boolean {
-        return packet.packetType === PacketTypes.TYPE_SUBACK && (packet as SubscribeResponsePacket).identifier === this.identifier;
+    public accept(packet: MqttPacket): boolean {
+        return (
+            packet.packetType === PacketTypes.TYPE_SUBACK &&
+            (packet as SubscribeResponsePacket).identifier === this.identifier
+        );
     }
 
-    get name(): string {
-        return "subscribe";
+    public get name(): string {
+        return 'subscribe';
     }
 
-    next(packet: MqttPacket): MqttPacket {
-        const response = packet as SubscribeResponsePacket;
-        if(response.returnCodes.every(value => !response.isError(value))) {
+    public next(packet: SubscribeResponsePacket): MqttPacket {
+        if (packet.returnCodes.every(value => !packet.isError(value))) {
             this.succeeded(this.subscription);
-        }else {
+        } else {
             this.errored(`Failed to subscribe to ${this.subscription.topic}`);
         }
         return undefined;
     }
 
-    start(): MqttPacket {
+    public start(): MqttPacket {
         const packet = new SubscribeRequestPacket(this.subscription.topic, this.subscription.qosLevel || 0);
         packet.identifier = this.identifier;
         return packet;
     }
-
 }

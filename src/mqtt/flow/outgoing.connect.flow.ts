@@ -1,16 +1,15 @@
-import {PacketFlow} from "./packet-flow";
-import {MqttPacket} from "../mqtt.packet";
-import {PacketTypes} from "../mqtt.constants";
-import {ConnectRequestOptions, ConnectRequestPacket} from "../packets/connect.request.packet";
-import {ConnectResponsePacket} from "../packets/connect.response.packet";
+import { PacketFlow } from './packet-flow';
+import { MqttPacket } from '../mqtt.packet';
+import { PacketTypes } from '../mqtt.constants';
+import { ConnectRequestOptions, ConnectRequestPacket } from '../packets';
+import { ConnectResponsePacket } from '../packets';
 
-const {defaults, random} = require('lodash');
+import { defaults, random } from 'lodash';
 
 export class OutgoingConnectFlow extends PacketFlow<ConnectRequestOptions> {
-
     private readonly options: ConnectRequestOptions;
 
-    constructor(options: ConnectRequestOptions) {
+    public constructor(options: ConnectRequestOptions) {
         super();
         this.options = defaults(options, {
             protocol: 3,
@@ -23,26 +22,25 @@ export class OutgoingConnectFlow extends PacketFlow<ConnectRequestOptions> {
         });
     }
 
-    accept(packet: MqttPacket): boolean {
+    public accept(packet: MqttPacket): boolean {
         return packet.packetType === PacketTypes.TYPE_CONNACK;
     }
 
-    get name(): string {
-        return "connect";
+    public get name(): string {
+        return 'connect';
     }
 
-    next(packet: MqttPacket): MqttPacket {
-        const response = (packet as ConnectResponsePacket);
-        if(response.isSuccess){
+    public next(packet: MqttPacket): MqttPacket {
+        const response = packet as ConnectResponsePacket;
+        if (response.isSuccess) {
             this.succeeded(this.options);
-        }else {
+        } else {
             this.errored(response.errorName);
         }
         return undefined;
     }
 
-    start(): MqttPacket {
-        return  new ConnectRequestPacket(this.options);
+    public start(): MqttPacket {
+        return new ConnectRequestPacket(this.options);
     }
-
 }

@@ -1,11 +1,9 @@
-import {MqttMessage} from "./mqtt.message";
-import {ConnectRequestOptions} from "./packets/connect.request.packet";
-import {MqttPacket} from "./mqtt.packet";
-import {MqttParser} from "./mqtt.parser";
+import { ConnectRequestOptions } from './packets/connect.request.packet';
+import { MqttParser } from './mqtt.parser';
 
 export interface MqttClientConstructorOptions {
-    url: string,
-    parser?: MqttParser,
+    url: string;
+    parser?: MqttParser;
 }
 
 export interface MqttSubscription {
@@ -16,6 +14,6 @@ export interface MqttSubscription {
 export type RegisterClientOptions = ConnectRequestOptions;
 
 export type ExecuteNextTick = (action: () => void) => void;
-export type ExecutePeriodically = (timeInMs: number, action: () => void) => any;
-export type ExecuteDelayed = (timeInMs: number, action: () => void) => any;
-export type StopExecuting = (ref: any) => void;
+export type ExecutePeriodically = (timeInMs: number, action: () => void) => object;
+export type ExecuteDelayed = (timeInMs: number, action: () => void) => object;
+export type StopExecuting = (ref) => void;

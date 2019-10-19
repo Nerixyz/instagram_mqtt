@@ -1,7 +1,7 @@
 export interface ThriftMessage {
     context: string;
     field: number;
-    value: any;
+    value;
     /* see  FbnsTypes*/
     type: number;
 }
@@ -48,41 +48,53 @@ export const ThriftDescriptors = {
     boolean: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.BOOLEAN
+        type: ThriftTypes.BOOLEAN,
     }),
-    byte: (fieldName: string, field: number): ThriftPacketDescriptor => ({field, fieldName, type: ThriftTypes.BYTE}),
-    int16: (fieldName: string, field: number): ThriftPacketDescriptor => ({field, fieldName, type: ThriftTypes.INT_16}),
-    int32: (fieldName: string, field: number): ThriftPacketDescriptor => ({field, fieldName, type: ThriftTypes.INT_32}),
-    int64: (fieldName: string, field: number): ThriftPacketDescriptor => ({field, fieldName, type: ThriftTypes.INT_64}),
+    byte: (fieldName: string, field: number): ThriftPacketDescriptor => ({ field, fieldName, type: ThriftTypes.BYTE }),
+    int16: (fieldName: string, field: number): ThriftPacketDescriptor => ({
+        field,
+        fieldName,
+        type: ThriftTypes.INT_16,
+    }),
+    int32: (fieldName: string, field: number): ThriftPacketDescriptor => ({
+        field,
+        fieldName,
+        type: ThriftTypes.INT_32,
+    }),
+    int64: (fieldName: string, field: number): ThriftPacketDescriptor => ({
+        field,
+        fieldName,
+        type: ThriftTypes.INT_64,
+    }),
     double: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.DOUBLE
+        type: ThriftTypes.DOUBLE,
     }),
     binary: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.BINARY
+        type: ThriftTypes.BINARY,
     }),
     listOfInt16: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.LIST_INT_16
+        type: ThriftTypes.LIST_INT_16,
     }),
     listOfInt32: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.LIST_INT_32
+        type: ThriftTypes.LIST_INT_32,
     }),
     listOfInt64: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.LIST_INT_64
+        type: ThriftTypes.LIST_INT_64,
     }),
     listOfBinary: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
         fieldName,
-        type: ThriftTypes.LIST_BINARY
+        type: ThriftTypes.LIST_BINARY,
     }),
     mapBinaryBinary: (fieldName: string, field: number): ThriftPacketDescriptor => ({
         field,
@@ -94,14 +106,12 @@ export const ThriftDescriptors = {
         field,
         fieldName,
         type: ThriftTypes.STRUCT,
-        structDescriptors: descriptors
+        structDescriptors: descriptors,
     }),
-
 };
 
 // this because there are no types for it :(
-export type CInt64 = {
-    constructor(value: number);
+export interface CInt64 {
     shiftLeft(signedBits: number): CInt64;
     shiftRight(signedBits: number): CInt64;
     xor(other: CInt64): CInt64;
@@ -116,5 +126,4 @@ export type CInt64 = {
     eq(other: CInt64): boolean;
     eq(other: number): boolean;
     toNumber(): number;
-
-};
+}
