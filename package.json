@@ -2,19 +2,34 @@
   "name": "instagram_mqtt",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run typecheck && npm run lint && npm run format && rimraf dist && tsc -p tsconfig.build.json",
+    "lint": "eslint --fix --ext .js,.ts src/**",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "precommit": "npm run typecheck && npm run lint && npm run format"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Nerixyz",
+  "license": "MIT",
   "dependencies": {
+    "instagram-private-api": "^1.31.0",
+    "int64-buffer": "^0.99.1007",
+    "lodash": "^4.16.6",
+    "node-cint64": "^3.0.0",
+    "zlib": "^1.0.5"
+  },
+  "devDependencies": {
+    "@creditkarma/thrift-typescript": "^3.7.6",
     "@typescript-eslint/eslint-plugin": "^1.13.0",
     "@typescript-eslint/parser": "^1.13.0",
+    "@types/bluebird": "^3.5.26",
+    "@types/lodash": "^4.14.123",
     "eslint": "^6.3.0",
-    "instagram-private-api": "latest",
-    "mqtt": "latest",
-    "zlib": "^1.0.5"
+    "eslint-config-prettier": "^6.4.0",
+    "prettier": "1.16.2",
+    "rimraf": "^3.0.0"
   }
 }
