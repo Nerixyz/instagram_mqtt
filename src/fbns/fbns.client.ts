@@ -90,6 +90,8 @@ export declare interface FbnsClient {
     on(event: 'push', cb: (e: FbnsNotification) => void);
     // a beacon id gets sent
     on(event: 'exp_logging', cb: (e: { beacon_id: number }) => void);
+    // idk
+    on(event: 'pp', eb: (e: string) => void);
 
     // a packet without a notification was received
     on(event: 'message', cb: (e: FbnsMessageData) => void);
@@ -200,6 +202,8 @@ export declare interface FbnsClient {
     on(event: 'report_updated', cb: (e: FbnsNotification) => void);
     on(event: 'promote_account', cb: (e: FbnsNotification) => void);
     on(event: 'unseen_notification_reminders', cb: (e: FbnsNotification) => void);
+
+    on(event: string, cb: (...args: any[] | undefined) => void);
 }
 
 export class FbnsClient extends EventEmitter {
@@ -228,6 +232,7 @@ export class FbnsClient extends EventEmitter {
     private emitPush = (e: FbnsNotification) => this.emit('push', e);
     private emitMessage = (e: FbnsMessageData) => this.emit('message', e);
     private emitLogging = (e: { beacon_id: number }) => this.emit('exp_logging', e);
+    private emitPP = (e: string) => this.emit('pp', e);
 
     public buildConnection() {
         this.conn = new MQTToTConnection({
@@ -328,6 +333,11 @@ export class FbnsClient extends EventEmitter {
             case FbnsTopics.FBNS_EXP_LOGGING.id: {
                 const payload = JSON.parse((await unzipAsync(msg.payload)).toString('utf8'));
                 this.emitLogging(payload);
+                break;
+            }
+            case FbnsTopics.PP.id: {
+                const payload = msg.payload.toString('utf8');
+                this.emitPP(payload);
                 break;
             }
             default: {

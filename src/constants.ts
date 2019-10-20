@@ -75,6 +75,10 @@ export const FbnsTopics = {
         id: '231',
         path: '/fbns_exp_logging',
     },
+    PP: {
+        id: '34',
+        path: '/pp',
+    },
 };
 
 export const FBNS = {
