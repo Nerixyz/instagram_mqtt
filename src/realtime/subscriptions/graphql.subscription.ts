@@ -4,7 +4,7 @@ import Chance = require('chance');
 export const QueryIDs = {
     appPresence: '17846944882223835',
     asyncAdSub: '17911191835112000',
-    clientConfigUpdate: '17969151037264401',
+    clientConfigUpdate: '17849856529644700',
     directStatus: '17854499065530643',
     directTyping: '17867973967082385',
     liveWave: '17882305414154951',

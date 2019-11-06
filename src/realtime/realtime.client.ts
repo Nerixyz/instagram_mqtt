@@ -32,6 +32,18 @@ export declare interface RealtimeClient {
         }) => void,
     );
 
+    on(
+        event: 'clientConfigUpdate',
+        cb: (data: {
+            client_config_update_event: {
+                publish_id: string;
+                client_config_name: string;
+                backing: 'QE' | string;
+                client_subscription_id: '17849856529644700' | string;
+            };
+        }) => void,
+    );
+
     on(event: string, cb: (...args: any[] | undefined) => void);
 }
 
