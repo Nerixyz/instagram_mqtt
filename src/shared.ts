@@ -4,23 +4,27 @@ import Bluebird = require('bluebird');
 
 // TODO: map
 export function createUserAgent(ig: IgApiClient) {
-    const deviceParams = ig.state.deviceString.split('; ');
-    return (
-        `[FBAN/MQTT;` +
-        `FBAV/${ig.state.appVersion};` +
-        `FBBV/175574640;` +
-        `FBDM/{density=4.0,width=${deviceParams[2].split('x')[0]},height=${deviceParams[2].split('x')[1]}};` +
-        `FBLC/${ig.state.language};` +
-        `FBCR/Android;` +
-        `FBMF/${deviceParams[3].toUpperCase()};` +
-        `FBBD/Android;` +
-        `FBPN/com.instagram.android;` +
-        `FBDV/${deviceParams[4].toUpperCase()};` +
-        `FBSV/9.0.0;` +
-        `FBLR/0;` +
-        `FBBK/1;` +
-        `FBCA/armeabi-v7a:armeabi;]`
-    );
+    const [androidVersion, , resolution, manufacturer, deviceName] = ig.state.deviceString.split('; ');
+    const [width, height] = resolution.split('x');
+    const params = {
+        FBAN: 'MQTT',
+        FBAV: ig.state.appVersion,
+        FBBV: ig.state.appVersionCode,
+        FBDM: `{density=4.0,width=${width},height=${height}`,
+        FBLC: ig.state.language,
+        FBCR: 'Android',
+        FBMF: manufacturer.trim(),
+        FBBD: 'Android',
+        FBPN: 'com.instagram.android',
+        FBDV: deviceName.trim(),
+        FBSV: androidVersion.split('/')[1],
+        FBLR: '0',
+        FBBK: '1',
+        FBCA: 'x86:armeabi-v7a',
+    };
+    return `[${Object.entries(params)
+        .map(p => p.join('/'))
+        .join(';')}]`;
 }
 
 export async function compressDeflate(data: string | Buffer) {
