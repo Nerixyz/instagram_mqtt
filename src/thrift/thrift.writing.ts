@@ -254,11 +254,11 @@ export class BufferWriter {
         this.writeField(field, ThriftTypes.MAP);
         if (size === 0) {
             this.writeByte(0);
-            return this;
         } else {
             this.writeVarInt(size);
             this.writeByte(((keyType & 0xf) << 4) | (valueType & 0xf));
         }
+        return this;
     }
 
     public writeBoolean(field: number, bool: boolean): this {
