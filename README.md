@@ -1,6 +1,6 @@
 # Instagram Realtime and FBNS
-This library is heavily based on the [PHP implementation](https://github.com/valga/fbns-react).
-It integrates with the [instagram-private-api](https://github.com/dilame/instagram-private-api).
+Thanks to [valga](https://github.com/valga) for providing and maintaining the [PHP library](https://github.com/valga/fbns-react).
+This library integrates with the [instagram-private-api](https://github.com/dilame/instagram-private-api).
 
 # Getting started
 
