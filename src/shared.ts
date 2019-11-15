@@ -27,7 +27,7 @@ export function createUserAgent(ig: IgApiClient) {
         .join(';')}]`;
 }
 
-export async function compressDeflate(data: string | Buffer) {
+export async function compressDeflate(data: string | Buffer): Promise<Buffer> {
     return Bluebird.fromCallback<Buffer>(cb => deflate(data, { level: 9 }, cb));
 }
 

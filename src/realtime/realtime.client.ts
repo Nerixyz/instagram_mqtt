@@ -13,6 +13,7 @@ import { MQTToTConnection } from '../mqttot/mqttot.connection';
 import { Int64 } from 'node-cint64';
 import { QueryIDs } from './subscriptions/graphql.subscription';
 import { GraphQlMessage } from './parsers/graphql.parser';
+import { DirectCommands } from './commands/direct.commands';
 
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
@@ -57,6 +58,7 @@ export class RealtimeClient extends EventEmitter {
     private gQlSubs: string[];
 
     public commands: Commands;
+    public direct: DirectCommands;
 
     public constructor(ig: IgApiClient, subs: string[] = []) {
         super();
@@ -113,6 +115,7 @@ export class RealtimeClient extends EventEmitter {
             payload: await compressDeflate(this.connection.toThrift()),
         });
         this.commands = new Commands(this.client);
+        this.direct = new DirectCommands(this.client);
         const topicsArray = Object.values(Topics);
         this.client.on('message', async packet => {
             if (packet.payload === null) {
