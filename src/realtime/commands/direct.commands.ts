@@ -12,12 +12,12 @@ export class DirectCommands {
     private client: MQTToTClient;
     private chance: Chance.Chance;
 
-    constructor(client: MQTToTClient) {
+    public constructor(client: MQTToTClient) {
         this.client = client;
         this.chance = new Chance();
     }
 
-    private async sendCommand({ action, data, threadId, clientContext }: { action: string, data: any } & ItemBaseType) {
+    private async sendCommand({ action, data, threadId, clientContext }: { action: string; data: any } & ItemBaseType) {
         if (clientContext) {
             data.client_context = clientContext;
         }
@@ -26,7 +26,6 @@ export class DirectCommands {
             thread_id: threadId,
             ...data,
         });
-        console.log(json);
         return this.client.publish({
             topic: Topics.SEND_MESSAGE.id,
             qosLevel: 0,
@@ -34,7 +33,12 @@ export class DirectCommands {
         });
     }
 
-    private async sendItem({ threadId, itemType, data, clientContext }: { itemType: string, data: any } & ItemBaseType) {
+    private async sendItem({
+        threadId,
+        itemType,
+        data,
+        clientContext,
+    }: { itemType: string; data: any } & ItemBaseType) {
         return this.sendCommand({
             action: 'send_item',
             threadId,
@@ -46,7 +50,12 @@ export class DirectCommands {
         });
     }
 
-    public async sendHashtag({ text, threadId, hashtag, clientContext }: { text?: string, hashtag: string } & ItemBaseType) {
+    public async sendHashtag({
+        text,
+        threadId,
+        hashtag,
+        clientContext,
+    }: { text?: string; hashtag: string } & ItemBaseType) {
         return this.sendItem({
             itemType: 'hashtag',
             threadId,
@@ -68,7 +77,12 @@ export class DirectCommands {
         });
     }
 
-    public async sendLocation({ text, locationId, threadId, clientContext }: { text?: string, locationId: string } & ItemBaseType) {
+    public async sendLocation({
+        text,
+        locationId,
+        threadId,
+        clientContext,
+    }: { text?: string; locationId: string } & ItemBaseType) {
         return this.sendItem({
             itemType: 'location',
             threadId,
@@ -81,7 +95,12 @@ export class DirectCommands {
         });
     }
 
-    public async sendMedia({ text, mediaId, threadId, clientContext }: { text?: string, mediaId: string } & ItemBaseType) {
+    public async sendMedia({
+        text,
+        mediaId,
+        threadId,
+        clientContext,
+    }: { text?: string; mediaId: string } & ItemBaseType) {
         return this.sendItem({
             itemType: 'media_share',
             threadId,
@@ -93,7 +112,12 @@ export class DirectCommands {
         });
     }
 
-    public async sendProfile({ text, userId, threadId, clientContext }: { text?: string, userId: string } & ItemBaseType) {
+    public async sendProfile({
+        text,
+        userId,
+        threadId,
+        clientContext,
+    }: { text?: string; userId: string } & ItemBaseType) {
         return this.sendItem({
             itemType: 'profile',
             threadId,
@@ -107,15 +131,16 @@ export class DirectCommands {
     }
 
     public async sendReaction({
-                                  itemId,
-                                  reactionType,
-                                  clientContext,
-                                  threadId,
-                                  reactionStatus,
-                              }: {
-        itemId: string,
-        reactionType?: 'like' | string,
-        reactionStatus?: 'created' | 'deleted' } & ItemBaseType) {
+        itemId,
+        reactionType,
+        clientContext,
+        threadId,
+        reactionStatus,
+    }: {
+        itemId: string;
+        reactionType?: 'like' | string;
+        reactionStatus?: 'created' | 'deleted';
+    } & ItemBaseType) {
         return this.sendItem({
             itemType: 'reaction',
             threadId,
@@ -129,7 +154,12 @@ export class DirectCommands {
         });
     }
 
-    public async sendUserStory({ text, storyId, threadId, clientContext }: { text?: string, storyId: string } & ItemBaseType) {
+    public async sendUserStory({
+        text,
+        storyId,
+        threadId,
+        clientContext,
+    }: { text?: string; storyId: string } & ItemBaseType) {
         return this.sendItem({
             itemType: 'reel_share',
             threadId,
@@ -153,25 +183,24 @@ export class DirectCommands {
         });
     }
 
-    public async markAsSeen({threadId, itemId}: {threadId: string, itemId: string}) {
+    public async markAsSeen({ threadId, itemId }: { threadId: string; itemId: string }) {
         return this.sendCommand({
             action: 'mark_seen',
             threadId,
             data: {
                 item_id: itemId,
-            }
+            },
         });
     }
 
-    public async indicateActivity({threadId, isActive, clientContext}: {isActive?: boolean} & ItemBaseType) {
+    public async indicateActivity({ threadId, isActive, clientContext }: { isActive?: boolean } & ItemBaseType) {
         return this.sendCommand({
             action: 'indicate_activity',
             threadId,
-            clientContext: clientContext || this.chance.guid({version: 4}),
+            clientContext: clientContext || this.chance.guid({ version: 4 }),
             data: {
-                activity_status: (typeof isActive === 'undefined' ? true : isActive) ? '1' : '0'
-            }
+                activity_status: (typeof isActive === 'undefined' ? true : isActive) ? '1' : '0',
+            },
         });
     }
-
 }

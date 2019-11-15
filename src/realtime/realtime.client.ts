@@ -117,7 +117,7 @@ export class RealtimeClient extends EventEmitter {
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);
         const topicsArray = Object.values(Topics);
-        this.client.on('message', async packet => {
+        this.client.on('message', async (packet) => {
             if (packet.payload === null) {
                 this.emit('receive', packet.topic, packet.payload);
                 return true;
@@ -189,7 +189,7 @@ export class RealtimeClient extends EventEmitter {
         switch (topic) {
             case 'direct': {
                 const parsed: RealtimeSubDirectMessage = json;
-                parsed.data = parsed.data.map(e => {
+                parsed.data = parsed.data.map((e) => {
                     if (typeof e.value === 'string') {
                         e.value = JSON.parse(e.value);
                     }

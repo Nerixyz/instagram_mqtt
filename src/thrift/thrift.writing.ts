@@ -343,7 +343,7 @@ export class BufferWriter {
                 break;
             }
             case ThriftTypes.BINARY: {
-                list.forEach(el => {
+                list.forEach((el) => {
                     const buf = Buffer.from(el, 'utf8');
                     this.writeVarInt(buf.length);
                     this.writeBuffer(buf);
