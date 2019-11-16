@@ -1,6 +1,7 @@
 import { RealtimeClient } from '../src';
 import { GraphQLSubscriptions } from '../src/realtime/subscriptions/graphql.subscription';
 import { IgApiClient } from 'instagram-private-api';
+import { SkywalkerSubscriptions } from '../src/realtime/subscriptions/skywalker.subscription';
 
 (async () => {
     // normal login
@@ -8,19 +9,26 @@ import { IgApiClient } from 'instagram-private-api';
     ig.state.generateDevice(process.env.IG_USERNAME);
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
 
-    const realtimeClient = new RealtimeClient(ig, [
-        // these are some subscriptions
-        GraphQLSubscriptions.getAppPresenceSubscription(),
-        GraphQLSubscriptions.getClientConfigUpdateSubscription(),
-        GraphQLSubscriptions.getZeroProvisionSubscription(ig.state.phoneId),
-        GraphQLSubscriptions.getDirectStatusSubscription(),
-        GraphQLSubscriptions.getDirectTypingSubscription(ig.state.cookieUserId),
-        GraphQLSubscriptions.getAsyncAdSubscription(ig.state.cookieUserId),
-    ]);
+    const realtimeClient = new RealtimeClient(ig, {
+        graphQlSubs: [
+            // these are some subscriptions
+            GraphQLSubscriptions.getAppPresenceSubscription(),
+            GraphQLSubscriptions.getClientConfigUpdateSubscription(),
+            GraphQLSubscriptions.getZeroProvisionSubscription(ig.state.phoneId),
+            GraphQLSubscriptions.getDirectStatusSubscription(),
+            GraphQLSubscriptions.getDirectTypingSubscription(ig.state.cookieUserId),
+            GraphQLSubscriptions.getAsyncAdSubscription(ig.state.cookieUserId),
+        ],
+        skywalkerSubs: [
+            SkywalkerSubscriptions.directSub(ig.state.cookieUserId),
+            SkywalkerSubscriptions.liveSub(ig.state.cookieUserId)
+        ],
+        irisData: await ig.feed.directInbox().request(),
+    });
 
     const subToLiveComments = (broadcastId) =>
         // you can add other GraphQL subs using .subscribe
-    realtimeClient.subscribe(GraphQLSubscriptions.getLiveRealtimeCommentsSubscription(broadcastId));
+        realtimeClient.graphQlSubscribe(GraphQLSubscriptions.getLiveRealtimeCommentsSubscription(broadcastId));
 
     // whenever something gets sent and has no event, this is called
     realtimeClient.on('receive', (topic, messages) => {

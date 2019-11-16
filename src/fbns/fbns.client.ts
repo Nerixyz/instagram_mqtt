@@ -23,6 +23,7 @@ export interface FbnsMessageData {
     num_endpoints?: string;
 }
 
+// internal
 export interface FbPushNotif {
     t?: string;
     m?: string;

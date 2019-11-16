@@ -14,6 +14,8 @@ import { Int64 } from 'node-cint64';
 import { QueryIDs } from './subscriptions/graphql.subscription';
 import { GraphQlMessage } from './parsers/graphql.parser';
 import { DirectCommands } from './commands/direct.commands';
+import { deprecate } from 'util';
+import { defaults } from 'lodash';
 
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
@@ -50,20 +52,41 @@ export declare interface RealtimeClient {
 
 export declare type OnReceiveCallback = (messages: ParsedMessage[]) => void;
 
+export interface RealtimeClientInitOptions {
+    graphQlSubs?: string[];
+    skywalkerSubs?: string[];
+    irisData?: {seq_id: number, snapshot_at_ms: number};
+}
+
 export class RealtimeClient extends EventEmitter {
     private client: MQTToTClient;
     private connection: MQTToTConnection;
     private readonly ig: IgApiClient;
 
-    private gQlSubs: string[];
+    private initOptions: RealtimeClientInitOptions;
 
     public commands: Commands;
     public direct: DirectCommands;
 
-    public constructor(ig: IgApiClient, subs: string[] = []) {
+    /**
+     *
+     * @param {IgApiClient} ig
+     * @param {RealtimeClientInitOptions | string[]} initOptions string array is deprecated
+     */
+    public constructor(ig: IgApiClient, initOptions: RealtimeClientInitOptions | string[]) {
         super();
         this.ig = ig;
-        this.gQlSubs = subs;
+
+        if(Array.isArray(initOptions))
+            initOptions = {graphQlSubs: initOptions};
+        this.initOptions = defaults<RealtimeClientInitOptions, RealtimeClientInitOptions>(initOptions, {
+            graphQlSubs: [],
+            skywalkerSubs: [],
+        });
+        this.constructConnection();
+    }
+
+    private constructConnection() {
         const userAgent = this.ig.state.appUserAgent;
         const deviceId = this.ig.state.phoneId;
         const password = `sessionid=${this.ig.state.extractCookieValue('sessionid')}`;
@@ -150,17 +173,18 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('warning', w => this.emitWarning(w));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
-        this.client.on('mqttotConnect', async () => {
+        this.client.once('mqttotConnect', async () => {
             Object.values(Topics)
                 .map(topic => ({ topic: topic.path }))
                 .forEach(t => this.client.subscribe(t));
-            if (this.gQlSubs.length > 0) {
-                await this.commands.updateSubscriptions({
-                    topic: Topics.REALTIME_SUB,
-                    data: {
-                        sub: this.gQlSubs,
-                    },
-                });
+            if (this.initOptions.graphQlSubs.length > 0) {
+                await this.graphQlSubscribe(this.initOptions.graphQlSubs);
+            }
+            if(this.initOptions.skywalkerSubs.length > 0) {
+                await this.skywalkerSubscribe(this.initOptions.skywalkerSubs);
+            }
+            if(this.initOptions.irisData) {
+                await this.irisSubscribe(this.initOptions.irisData);
             }
         });
 
@@ -174,13 +198,35 @@ export class RealtimeClient extends EventEmitter {
     private emitError = (e: Error) => this.emit('error', e);
     private emitWarning = (e: Error) => this.emit('warning', e);
 
-    public subscribe(subs: string | string[]) {
+    public subscribe = deprecate((subs: string | string[]) => this.graphQlSubscribe(subs), 'Use RealtimeClient.graphQlSubscribe instead');
+
+    public graphQlSubscribe(subs: string | string[]) {
         return this.commands.updateSubscriptions({
             topic: Topics.REALTIME_SUB,
             data: {
                 sub: typeof subs === 'string' ? [subs] : subs,
             },
         });
+    }
+
+    public skywalkerSubscribe(subs: string | string[]) {
+        return this.commands.updateSubscriptions({
+            topic: Topics.PUBSUB,
+            data: {
+                sub: typeof subs === 'string' ? [subs] : subs,
+            }
+
+        })
+    }
+
+    public irisSubscribe({seq_id, snapshot_at_ms}: {seq_id: number, snapshot_at_ms: number}) {
+        return this.commands.updateSubscriptions({
+            topic: Topics.IRIS_SUB,
+            data: {
+                seq_id,
+                snapshot_at_ms,
+            }
+        })
     }
 
     private handleRealtimeSub([message]: [{ topic: string; data: GraphQlMessage }]) {

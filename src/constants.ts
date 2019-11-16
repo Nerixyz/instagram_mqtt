@@ -5,7 +5,7 @@ import { JsonParser } from './realtime/parsers/json.parser';
 import { SkywalkerParser } from './realtime/parsers/skywalker.parser';
 import { Topic } from './topic';
 
-export const Topics: { [x: string]: Topic } = {
+export const Topics: { [x: string]: Topic }= {
     PP: {
         id: '34',
         path: '/pp',
