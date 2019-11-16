@@ -36,3 +36,5 @@ export async function unzipAsync(data: string | Buffer) {
 }
 
 export const notUndefined = a => typeof a !== 'undefined';
+
+export type BigInteger = string | number | bigint;

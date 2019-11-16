@@ -6,7 +6,7 @@ import { Commands } from './commands/commands';
 import { thriftRead } from '../thrift';
 import { compressDeflate, unzipAsync } from '../shared';
 import { Topic } from '../topic';
-import { RealtimeSubDirectMessage } from './messages/realtime-sub.direct.message';
+import { RealtimeSubDirectDataWrapper } from './messages/realtime-sub.direct.data';
 import { MQTToTClient } from '../mqttot/mqttot.client';
 import { MQTToTConnection } from '../mqttot/mqttot.connection';
 // @ts-ignore
@@ -16,17 +16,23 @@ import { GraphQlMessage } from './parsers/graphql.parser';
 import { DirectCommands } from './commands/direct.commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
+import { IrisParserData } from './parsers/iris.parser';
+import { MessageSyncMessageWrapper } from './messages/message-sync.message';
 
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
 
-    on(event: 'receive', cb: (topic: Topic, messages?: ParsedMessage[]) => void);
+    on(event: 'receive', cb: (topic: Topic, messages?: ParsedMessage<any>[]) => void);
 
     on(event: 'close', cb: () => void);
 
-    on(event: 'realtimeSub', cb: (message: ParsedMessage) => void);
+    on(event: 'realtimeSub', cb: (message: ParsedMessage<any>) => void);
 
-    on(event: 'direct', cb: (directMessage: RealtimeSubDirectMessage) => void);
+    on(event: 'direct', cb: (directData: RealtimeSubDirectDataWrapper) => void);
+
+    on(event: 'iris', cb: (irisData: Partial<IrisParserData> & any) => void);
+
+    on(event: 'message', cb: (message: MessageSyncMessageWrapper) => void);
 
     on(
         event: 'appPresence',
@@ -50,12 +56,12 @@ export declare interface RealtimeClient {
     on(event: string, cb: (...args: any[] | undefined) => void);
 }
 
-export declare type OnReceiveCallback = (messages: ParsedMessage[]) => void;
+//export declare type OnReceiveCallback = (messages: ParsedMessage<any>[]) => void;
 
 export interface RealtimeClientInitOptions {
     graphQlSubs?: string[];
     skywalkerSubs?: string[];
-    irisData?: {seq_id: number, snapshot_at_ms: number};
+    irisData?: { seq_id: number; snapshot_at_ms: number };
 }
 
 export class RealtimeClient extends EventEmitter {
@@ -77,8 +83,7 @@ export class RealtimeClient extends EventEmitter {
         super();
         this.ig = ig;
 
-        if(Array.isArray(initOptions))
-            initOptions = {graphQlSubs: initOptions};
+        if (Array.isArray(initOptions)) initOptions = { graphQlSubs: initOptions };
         this.initOptions = defaults<RealtimeClientInitOptions, RealtimeClientInitOptions>(initOptions, {
             graphQlSubs: [],
             skywalkerSubs: [],
@@ -140,7 +145,7 @@ export class RealtimeClient extends EventEmitter {
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);
         const topicsArray = Object.values(Topics);
-        this.client.on('message', async (packet) => {
+        this.client.on('message', async packet => {
             if (packet.payload === null) {
                 this.emit('receive', packet.topic, packet.payload);
                 return true;
@@ -153,6 +158,10 @@ export class RealtimeClient extends EventEmitter {
                     case Topics.REALTIME_SUB: {
                         // @ts-ignore - GraphQl parser returns [{topic, data}] => this is possible
                         this.handleRealtimeSub(parsedMessages);
+                        break;
+                    }
+                    case Topics.MESSAGE_SYNC: {
+                        this.handleMessageSync(parsedMessages.map(m => m.data));
                         break;
                     }
                     default: {
@@ -180,10 +189,10 @@ export class RealtimeClient extends EventEmitter {
             if (this.initOptions.graphQlSubs.length > 0) {
                 await this.graphQlSubscribe(this.initOptions.graphQlSubs);
             }
-            if(this.initOptions.skywalkerSubs.length > 0) {
+            if (this.initOptions.skywalkerSubs.length > 0) {
                 await this.skywalkerSubscribe(this.initOptions.skywalkerSubs);
             }
-            if(this.initOptions.irisData) {
+            if (this.initOptions.irisData) {
                 await this.irisSubscribe(this.initOptions.irisData);
             }
         });
@@ -198,7 +207,10 @@ export class RealtimeClient extends EventEmitter {
     private emitError = (e: Error) => this.emit('error', e);
     private emitWarning = (e: Error) => this.emit('warning', e);
 
-    public subscribe = deprecate((subs: string | string[]) => this.graphQlSubscribe(subs), 'Use RealtimeClient.graphQlSubscribe instead');
+    public subscribe = deprecate(
+        (subs: string | string[]) => this.graphQlSubscribe(subs),
+        'Use RealtimeClient.graphQlSubscribe instead',
+    );
 
     public graphQlSubscribe(subs: string | string[]) {
         return this.commands.updateSubscriptions({
@@ -214,19 +226,18 @@ export class RealtimeClient extends EventEmitter {
             topic: Topics.PUBSUB,
             data: {
                 sub: typeof subs === 'string' ? [subs] : subs,
-            }
-
-        })
+            },
+        });
     }
 
-    public irisSubscribe({seq_id, snapshot_at_ms}: {seq_id: number, snapshot_at_ms: number}) {
+    public irisSubscribe({ seq_id, snapshot_at_ms }: { seq_id: number; snapshot_at_ms: number }) {
         return this.commands.updateSubscriptions({
             topic: Topics.IRIS_SUB,
             data: {
                 seq_id,
                 snapshot_at_ms,
-            }
-        })
+            },
+        });
     }
 
     private handleRealtimeSub([message]: [{ topic: string; data: GraphQlMessage }]) {
@@ -234,14 +245,14 @@ export class RealtimeClient extends EventEmitter {
         this.emit('realtimeSub', message);
         switch (topic) {
             case 'direct': {
-                const parsed: RealtimeSubDirectMessage = json;
-                parsed.data = parsed.data.map((e) => {
+                const parsed = json;
+                parsed.data = parsed.data.map(e => {
                     if (typeof e.value === 'string') {
                         e.value = JSON.parse(e.value);
                     }
                     return e;
                 });
-                this.emit('direct', parsed);
+                parsed.data.forEach(data => this.emit('direct', data));
                 break;
             }
             default: {
@@ -251,6 +262,31 @@ export class RealtimeClient extends EventEmitter {
                     this.emit(query[0], json || payload);
                 }
             }
+        }
+    }
+
+    private handleMessageSync(syncData: IrisParserData[]) {
+        for (const element of syncData) {
+            const data = element.data;
+            delete element.data;
+            data.forEach(e => {
+                if (e.path && e.value) {
+                    if (e.path.startsWith('/direct_v2/threads/')) {
+                        const [, , , thread_id] = e.path.split('/');
+                        this.emit('message', {
+                            ...element,
+                            message: {
+                                path: e.path,
+                                op: e.op,
+                                thread_id,
+                                ...JSON.parse(e.value),
+                            },
+                        });
+                    }
+                } else {
+                    this.emit('iris', { ...element, ...e });
+                }
+            });
         }
     }
 }

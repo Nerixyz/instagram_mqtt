@@ -1,9 +1,9 @@
 import { Topic } from '../../topic';
 
 export interface Parser {
-    parseMessage(topic: Topic, payload: Buffer): ParsedMessage[];
+    parseMessage(topic: Topic, payload: Buffer): ParsedMessage<any>[];
 }
-export interface ParsedMessage {
+export interface ParsedMessage<T> {
     topic: Topic;
-    data;
+    data: T;
 }

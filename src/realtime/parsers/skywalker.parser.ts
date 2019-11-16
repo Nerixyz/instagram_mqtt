@@ -3,7 +3,7 @@ import { Topic } from '../../topic';
 import { ThriftTypes, thriftRead } from '../../thrift';
 
 export class SkywalkerParser implements Parser {
-    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage[] {
+    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<any>[] {
         const msg = thriftRead(payload);
         return [
             {

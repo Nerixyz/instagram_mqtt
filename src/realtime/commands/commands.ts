@@ -17,7 +17,7 @@ export class Commands {
         });
     }
 
-    public async updateSubscriptions(options: { topic: Topic; data: { sub?: string[]; unsub?: string[]} | any }) {
+    public async updateSubscriptions(options: { topic: Topic; data: { sub?: string[]; unsub?: string[] } | any }) {
         this.publishToTopic(options.topic.id, await compressDeflate(JSON.stringify(options.data)), 1);
     }
 }

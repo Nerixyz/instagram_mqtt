@@ -1,4 +1,3 @@
-
 export class SkywalkerSubscriptions {
     public static directSub(userId: string | number | bigint) {
         return `ig/u/v1/${userId}`;

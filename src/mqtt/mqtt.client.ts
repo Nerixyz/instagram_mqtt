@@ -59,7 +59,7 @@ export class MqttClient extends EventEmitter {
             this.stopExecuting = clearInterval;
         } catch (e) {
             /* eslint no-console: "off" */
-            console.error('some timers could\'t be registered!');
+            console.error("some timers could't be registered!");
             // process isn't defined
         }
     }
@@ -86,7 +86,7 @@ export class MqttClient extends EventEmitter {
     protected emitFlow: (name: string, result: object) => void = (name, result) => this.emit(name, result);
 
     protected setupListeners() {
-        this.socket.on('error', (e) => {
+        this.socket.on('error', e => {
             if (this.isConnecting) {
                 this.setDisconnected();
             }
@@ -215,7 +215,7 @@ export class MqttClient extends EventEmitter {
         const stream = PacketStream.empty();
         packet.write(stream);
         const data = stream.data;
-        this.socket.write(data, 'utf8', (err) => {
+        this.socket.write(data, 'utf8', err => {
             if (err) this.emitWarning(err);
         });
     }

@@ -8,12 +8,12 @@ export class GraphqlParser implements Parser {
         ThriftDescriptors.binary('payload', 2),
     ];
 
-    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage[] {
+    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<GraphQlMessage>[] {
         const msg = thriftReadToObject<GraphQlMessage>(payload, GraphqlParser.descriptors);
         if (msg.payload.match(/[{[]/)) {
             msg.json = JSON.parse(msg.payload);
         }
-
+        // @ts-ignore
         return [{ topic, data: msg }];
     }
 }

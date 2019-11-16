@@ -35,6 +35,8 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions/skywalker.
         console.log('receive', topic, messages);
     });
     realtimeClient.on('direct', logEvent('direct'));
+    // this is called with a wrapper use {message} to only get the message from the wrapper
+    realtimeClient.on('message', logEvent('messageWrapper'));
     // whenever something gets sent to /ig_realtime_sub and has no event, this is called
     realtimeClient.on('realtimeSub', logEvent('realtimeSub'));
     // whenever the client has a fatal error
