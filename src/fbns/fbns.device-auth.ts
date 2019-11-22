@@ -18,11 +18,17 @@ export class FbnsDeviceAuth {
 
     public constructor(ig: IgApiClient) {
         this.ig = ig;
-        this.clientId = this.ig.state.phoneId.substr(0, 20);
+        this.clientId = this.ig.state.phoneId?.substr(0, 20) || '';
         this.deviceId = '';
         this.userId = 0;
         this.deviceSecret = '';
         this.password = '';
+    }
+
+    public update() {
+        if (this.clientId === '') {
+            this.clientId = this.ig.state.phoneId?.substr(0, 20) || '';
+        }
     }
 
     public read(jsonStr: string) {

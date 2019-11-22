@@ -102,9 +102,7 @@ export class PacketStream {
     public read(len: number): Buffer {
         if (this.position > this.length || len > this.length - this.position) {
             throw new EndOfStreamError(
-                `End of stream reached when trying to read ${len} bytes. content length=${this.length}, position=${
-                    this.position
-                }`,
+                `End of stream reached when trying to read ${len} bytes. content length=${this.length}, position=${this.position}`,
             );
         }
 

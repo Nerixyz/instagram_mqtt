@@ -1,6 +1,6 @@
 {
   "name": "instagram_mqtt",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Realtime and Push Notification (FBNS) support for the instagram-private-api",
   "bugs": {
     "url": "https://github.com/Nerixyz/instagram_mqtt/issues"
@@ -36,7 +36,8 @@
     "@types/bluebird": "^3.5.26",
     "@types/lodash": "^4.14.123",
     "eslint-config-prettier": "^6.4.0",
-    "prettier": "1.16.2",
-    "rimraf": "^3.0.0"
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.0",
+    "typescript": "^3.7.2"
   }
 }
