@@ -175,6 +175,8 @@ export class MqttClient extends EventEmitter {
     }
 
     protected finishFlow(flow: PacketFlow<object>) {
+        if(!flow)
+            return;
         if (flow.success) {
             if (!flow.silent) {
                 this.emitFlow(flow.name, flow.result);

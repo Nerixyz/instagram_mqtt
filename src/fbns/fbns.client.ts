@@ -223,8 +223,6 @@ export class FbnsClient extends EventEmitter {
     public constructor(ig: IgApiClient) {
         super();
         this.ig = ig;
-        this._auth = new FbnsDeviceAuth(this.ig);
-        this.buildConnection();
     }
 
     private emitError = (e: Error | object) => this.emit('error', e);
@@ -263,6 +261,7 @@ export class FbnsClient extends EventEmitter {
     }
 
     public async connect() {
+        this._auth = new FbnsDeviceAuth(this.ig);
         this.buildConnection();
         this.client = new MQTToTClient({
             url: FBNS.HOST_NAME_V6,

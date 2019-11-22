@@ -1,15 +1,33 @@
-import { RealtimeClient } from '../src';
+import { IgApiClientRealtime, withRealtime } from '../src';
 import { GraphQLSubscriptions } from '../src/realtime/subscriptions/graphql.subscription';
 import { IgApiClient } from 'instagram-private-api';
 import { SkywalkerSubscriptions } from '../src/realtime/subscriptions/skywalker.subscription';
 
 (async () => {
+    // this extends the IgApiClient with realtime features
+    const ig: IgApiClientRealtime = withRealtime(new IgApiClient());
     // normal login
-    const ig = new IgApiClient();
     ig.state.generateDevice(process.env.IG_USERNAME);
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
 
-    const realtimeClient = new RealtimeClient(ig, {
+    const subToLiveComments = (broadcastId) =>
+        // you can add other GraphQL subs using .subscribe
+        ig.realtime.graphQlSubscribe(GraphQLSubscriptions.getLiveRealtimeCommentsSubscription(broadcastId));
+
+    // whenever something gets sent and has no event, this is called
+    ig.realtime.on('receive', (topic, messages) => {
+        console.log('receive', topic, messages);
+    });
+    ig.realtime.on('direct', logEvent('direct'));
+    // this is called with a wrapper use {message} to only get the message from the wrapper
+    ig.realtime.on('message', logEvent('messageWrapper'));
+    // whenever something gets sent to /ig_realtime_sub and has no event, this is called
+    ig.realtime.on('realtimeSub', logEvent('realtimeSub'));
+    // whenever the client has a fatal error
+    ig.realtime.on('error', console.error);
+    ig.realtime.on('close', () => console.error('RealtimeClient closed'));
+    // connect
+    await ig.realtime.connect({
         graphQlSubs: [
             // these are some subscriptions
             GraphQLSubscriptions.getAppPresenceSubscription(),
@@ -25,24 +43,6 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions/skywalker.
         ],
         irisData: await ig.feed.directInbox().request(),
     });
-
-    const subToLiveComments = (broadcastId) =>
-        // you can add other GraphQL subs using .subscribe
-        realtimeClient.graphQlSubscribe(GraphQLSubscriptions.getLiveRealtimeCommentsSubscription(broadcastId));
-
-    // whenever something gets sent and has no event, this is called
-    realtimeClient.on('receive', (topic, messages) => {
-        console.log('receive', topic, messages);
-    });
-    realtimeClient.on('direct', logEvent('direct'));
-    // this is called with a wrapper use {message} to only get the message from the wrapper
-    realtimeClient.on('message', logEvent('messageWrapper'));
-    // whenever something gets sent to /ig_realtime_sub and has no event, this is called
-    realtimeClient.on('realtimeSub', logEvent('realtimeSub'));
-    // whenever the client has a fatal error
-    realtimeClient.on('error', console.error);
-    realtimeClient.on('close', () => console.error('RealtimeClient closed'));
-    await realtimeClient.connect();
 })();
 
 /**

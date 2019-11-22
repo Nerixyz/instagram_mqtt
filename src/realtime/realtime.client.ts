@@ -79,16 +79,18 @@ export class RealtimeClient extends EventEmitter {
      * @param {IgApiClient} ig
      * @param {RealtimeClientInitOptions | string[]} initOptions string array is deprecated
      */
-    public constructor(ig: IgApiClient, initOptions: RealtimeClientInitOptions | string[]) {
+    public constructor(ig: IgApiClient, initOptions?: RealtimeClientInitOptions | string[]) {
         super();
         this.ig = ig;
+        this.setInitOptions(initOptions);
+    }
 
+    private setInitOptions(initOptions?: RealtimeClientInitOptions | string[]) {
         if (Array.isArray(initOptions)) initOptions = { graphQlSubs: initOptions };
-        this.initOptions = defaults<RealtimeClientInitOptions, RealtimeClientInitOptions>(initOptions, {
+        this.initOptions = defaults<RealtimeClientInitOptions, RealtimeClientInitOptions>(initOptions || {}, {
             graphQlSubs: [],
             skywalkerSubs: [],
         });
-        this.constructConnection();
     }
 
     private constructConnection() {
@@ -137,7 +139,9 @@ export class RealtimeClient extends EventEmitter {
         });
     }
 
-    public async connect() {
+    public async connect(initOptions?: RealtimeClientInitOptions | string[]) {
+        this.setInitOptions(initOptions);
+        this.constructConnection();
         this.client = new MQTToTClient({
             url: REALTIME.HOST_NAME_V6,
             payload: await compressDeflate(this.connection.toThrift()),
