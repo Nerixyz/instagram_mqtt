@@ -4,4 +4,4 @@ node_modules/
 .idea/
 src/main.ts
 src/reversing.ts
-state.json
+dev/
