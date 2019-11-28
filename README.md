@@ -10,6 +10,53 @@ This library integrates with the [instagram-private-api](https://github.com/dila
 3. Login to Instagram
 4. [Use](examples) the clients.
 
+## Version Infos
+### below 0.1.5 (old)
+Up to version 0.1.5 the clients worked on their own.
+To init them they are constructed with a reference to the IgApiClient:
+```typescript
+import {FbnsClient, RealtimeClient} from 'instagram_mqtt';
+import {IgApiClient} from 'instagram-private-api';
+
+const ig = new IgApiClient();
+// Initialize the client
+// This includes logging in (if you are below 0.1.6)
+// ig.account.login ...
+const fbns = new FbnsClient(ig);
+await fbns.connect();
+
+const realtime = new RealtimeClient(ig);
+await realtime.connect();
+```
+
+### 0.1.5 or above (new)
+The new way of using mqtt is done by "extending" the base client.
+*Note: this might change in a future version of the API*
+```typescript
+import {
+    withRealtime,
+    withFbns,
+    // only for typescript
+    IgApiClientMQTT
+} from 'instagram_mqtt';
+import {IgApiClient} from 'instagram-private-api';
+
+// using FBNS
+const ig = withFbns(new IgApiClient());
+await ig.fbns.connect();
+
+// using realtime
+const ig = withRealtime(new IgApiClient());
+await ig.realtime.connect({ /* initial subscriptions */ });
+
+// using both
+const ig = withFbns(withRealtime(new IgApiClient()));
+
+// using typescript you can declare ig like this:
+const ig: IgApiClientMQTT = withFbns(withRealtime(new IgApiClient()));
+// this way, your IDE will provide proper highlighting
+```
+
 ## TODO
  - Proper descriptions for events
  - Error handling
