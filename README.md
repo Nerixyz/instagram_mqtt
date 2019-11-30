@@ -11,6 +11,7 @@ This library integrates with the [instagram-private-api](https://github.com/dila
 4. [Use](examples) the clients.
 
 ## Version Infos
+To see what's new, visit the [changelog](CHANGELOG.md).
 ### below 0.1.5 (old)
 Up to version 0.1.5 the clients worked on their own.
 To init them they are constructed with a reference to the IgApiClient:
