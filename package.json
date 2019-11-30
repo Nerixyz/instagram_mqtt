@@ -31,7 +31,6 @@
     "zlib": "^1.0.5"
   },
   "devDependencies": {
-    "@creditkarma/thrift-typescript": "^3.7.6",
     "eslint": "^6.3.0",
     "@typescript-eslint/eslint-plugin": "^1.13.0",
     "@typescript-eslint/parser": "^1.13.0",
