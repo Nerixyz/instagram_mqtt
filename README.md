@@ -4,9 +4,13 @@ This library integrates with the [instagram-private-api](https://github.com/dila
 
 # Getting started
 
-1. Run ```npm install Nerixyz/instagram_mqtt```
+1. Run 
+```
+npm install instagram_mqtt
+```
 2. Import the library `import { FbnsClient, RealtimeClient } from 'instagram_mqtt';`
  (with require: `const {FbnsClient, RealtimeClient} = require('instagram_mqtt')`)
+ *Note: It's not recommended to use the clients directly. For further information look at the [examples](examples).*
 3. Login to Instagram
 4. [Use](examples) the clients.
 
