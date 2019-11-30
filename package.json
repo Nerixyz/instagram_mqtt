@@ -27,8 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "instagram-private-api": "^1.31.0",
-    "lodash": "^4.16.6",
-    "zlib": "^1.0.5"
+    "lodash": "^4.16.6"
   },
   "devDependencies": {
     "eslint": "^6.3.0",
