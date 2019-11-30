@@ -10,6 +10,7 @@ export interface StateHook<T> {
 
 export class IgApiClientExt extends IgApiClient {
     protected sateHooks: StateHook<any>[] = [];
+
     public async exportState(): Promise<string> {
         const data = {};
         for (const hook of this.sateHooks) {
@@ -29,7 +30,7 @@ export class IgApiClientExt extends IgApiClient {
         }
     }
 
-    constructor() {
+    public constructor() {
         super();
         this.addStateHook({
             name: 'cookies',

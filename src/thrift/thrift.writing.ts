@@ -1,4 +1,4 @@
-import { CInt64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
+import { CInt64, Int64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
 
 const Int64 = require('node-cint64').Int64;
 
@@ -57,6 +57,8 @@ function thriftWriteSingleLayerFromObject(obj, descriptors: ThriftPacketDescript
                     writer.writeInt64Buffer(descriptor.field, value);
                 } else if (typeof value === 'number') {
                     writer.writeInt64(descriptor.field, value);
+                } else if (typeof value === 'bigint') {
+                    writer.writeInt64Buffer(descriptor.field, value);
                 } else {
                     throw new Error(`Value of ${name} is neither an object nor a number`);
                 }
@@ -222,15 +224,31 @@ export class BufferWriter {
         return this.writeVarInt(BufferWriter.toZigZag(num, 0x20));
     }
 
-    private writeLong(num: CInt64 | { int: CInt64; num: number }): this {
+    private writeLong(num: Int64 | { int: Int64; num: number }): this {
         // @ts-ignore
         if (num.int) {
             // @ts-ignore
             num = num.int;
         }
-        // @ts-ignore
-        this.writeVarInt64(BufferWriter.int64ToZigZag(num));
+        if (typeof num === 'bigint') {
+            this.writeBigint(BufferWriter.bigintToZigZag(num));
+        } else {
+            // @ts-ignore
+            this.writeVarInt64(BufferWriter.int64ToZigZag(num));
+        }
         return this;
+    }
+
+    private writeBigint(n: bigint) {
+        while (true) {
+            if ((n & ~BigInt(0x7f)) === BigInt(0)) {
+                this.writeByte(Number(n));
+                break;
+            } else {
+                this.writeByte(Number((n & BigInt(0x7f)) | BigInt(0x80)));
+                n = n >> BigInt(7);
+            }
+        }
     }
 
     private writeVarInt64(n: CInt64) {
@@ -304,7 +322,7 @@ export class BufferWriter {
         return this.writeInt64Buffer(field, new Int64(num));
     }
 
-    public writeInt64Buffer(field: number, num: CInt64): this {
+    public writeInt64Buffer(field: number, num: Int64): this {
         this.writeField(field, ThriftTypes.INT_64);
         return this.writeLong(num);
     }
@@ -378,6 +396,10 @@ export class BufferWriter {
 
     public static int64ToZigZag(n: CInt64): CInt64 {
         return n.shiftLeft(1).xor(n.shiftRight(63));
+    }
+
+    public static bigintToZigZag(n: bigint): bigint {
+        return (n << BigInt(1)) ^ (n >> BigInt(63));
     }
 
     public static toZigZag = (n: number, bits: number) => (n << 1) ^ (n >> (bits - 1));

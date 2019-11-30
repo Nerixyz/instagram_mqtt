@@ -64,7 +64,7 @@ function getReadFunction(
             return ({ reader, context }): ThriftMessage => ({
                 context,
                 field: reader.field,
-                value: reader.readInt64(),
+                value: reader.readBigint(),
                 type,
             });
         case ThriftTypes.BINARY:
@@ -277,6 +277,28 @@ export class BufferReader {
     public readInt64(): { int: CInt64; num: number } {
         const result = this.zigzagToInt64(this.readVarInt64());
         return { int: result, num: result.toNumber() };
+    }
+
+    public readVarBigint(): bigint {
+        let shift = BigInt(0);
+        let result = BigInt(0);
+        while (true) {
+            const byte = this.readByte();
+            result = result | ((BigInt(byte) & BigInt(0x7f)) << shift);
+            if ((byte & 0x80) !== 0x80) break;
+
+            shift += BigInt(7);
+        }
+        return result;
+    }
+
+    public zigzagToBigint(n: bigint): bigint {
+        return (n >> BigInt(1)) ^ ~(n & BigInt(1));
+    }
+
+    public readBigint(): { int: bigint; num: number } {
+        const result = this.zigzagToBigint(this.readVarBigint());
+        return { int: result, num: Number(result) };
     }
 
     public readSmallInt(): number {

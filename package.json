@@ -19,13 +19,15 @@
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "precommit": "npm run typecheck && npm run lint && npm run format"
   },
+  "engines": {
+    "node": ">=10.4.0"
+  },
   "keywords": [],
   "author": "Nerixyz",
   "license": "MIT",
   "dependencies": {
     "instagram-private-api": "^1.31.0",
     "lodash": "^4.16.6",
-    "node-cint64": "^3.0.0",
     "zlib": "^1.0.5"
   },
   "devDependencies": {

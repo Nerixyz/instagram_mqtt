@@ -12,8 +12,6 @@ import * as querystring from 'querystring';
 
 import * as URL from 'url';
 
-const Int64 = require('node-cint64').Int64;
-
 export interface FbnsMessageData {
     token?: string;
     pn?: string;
@@ -238,7 +236,7 @@ export class FbnsClient extends EventEmitter {
         this.conn = new MQTToTConnection({
             clientIdentifier: this._auth.clientId,
             clientInfo: {
-                userId: new Int64(this._auth.userId),
+                userId: BigInt(this._auth.userId),
                 userAgent: createUserAgent(this.ig),
                 clientCapabilities: 183,
                 endpointCapabilities: 128,
@@ -249,12 +247,12 @@ export class FbnsClient extends EventEmitter {
                 isInitiallyForeground: false,
                 networkType: 1,
                 networkSubtype: 0,
-                clientMqttSessionId: Date.now() & 0xffffff,
+                clientMqttSessionId: BigInt(Date.now()) & BigInt(0xffffffff),
                 subscribeTopics: [76, 80, 231],
                 clientType: 'device_auth',
-                appId: new Int64(567310203415052),
+                appId: BigInt(567310203415052),
                 deviceSecret: this._auth.deviceSecret,
-                anotherUnknown: new Int64(-1),
+                anotherUnknown: BigInt(-1),
                 clientStack: 3,
             },
             password: this._auth.password,

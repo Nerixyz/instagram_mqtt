@@ -1,4 +1,4 @@
-import { CInt64, ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../thrift';
+import { Int64, ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../thrift';
 
 export type MQTToTConnectionData = Partial<{
     clientIdentifier: string;
@@ -22,10 +22,10 @@ export type MQTToTConnectionAppSpecificInfo = Partial<{
 }>;
 export type MQTToTConnectionClientInfo = Partial<{
     // TODO: remove object as polyfill
-    userId: number | CInt64 | object;
+    userId: Int64;
     userAgent: string;
-    clientCapabilities: number | CInt64 | object;
-    endpointCapabilities: number | CInt64 | object;
+    clientCapabilities: Int64;
+    endpointCapabilities: Int64;
     publishFormat: number;
     noAutomaticForeground: boolean;
     makeUserAvailableInForeground: boolean;
@@ -33,11 +33,11 @@ export type MQTToTConnectionClientInfo = Partial<{
     isInitiallyForeground: boolean;
     networkType: number;
     networkSubtype: number;
-    clientMqttSessionId: number | CInt64 | object;
+    clientMqttSessionId: Int64;
     clientIpAddress: string;
     subscribeTopics: number[];
     clientType: string;
-    appId: number | CInt64 | object;
+    appId: Int64;
     overrideNectarLogging: boolean;
     connectTokenHash: string;
     regionPreference: string;
@@ -47,7 +47,7 @@ export type MQTToTConnectionClientInfo = Partial<{
     fbnsConnectionSecret: string;
     fbnsDeviceId: string;
     fbnsDeviceSecret: string;
-    anotherUnknown: number;
+    anotherUnknown: Int64;
 }>;
 
 export class MQTToTConnection {

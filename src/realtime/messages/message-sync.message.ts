@@ -18,12 +18,12 @@ export interface MessageSyncMessage {
     media?: RegularMediaItem;
     voice_media?: VoiceMediaItem;
     reactions?: {
-        likes: Array<{
+        likes: {
             sender_id: BigInteger;
             // not actually a user id but the type fits
             timestamp: BigInteger;
             client_context: string;
-        }>;
+        }[];
         likes_count: number;
     };
     animated_media?: AnimatedMediaItem;
@@ -31,12 +31,12 @@ export interface MessageSyncMessage {
 }
 
 export interface ImageVersions {
-    candidates: Array<{
+    candidates: {
         width: number;
         height: number;
         url: string;
         estimated_scan_sizes?: number[];
-    }>;
+    }[];
 }
 
 export interface RegularMediaItem {

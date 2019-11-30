@@ -9,8 +9,6 @@ import { Topic } from '../topic';
 import { RealtimeSubDirectDataWrapper } from './messages/realtime-sub.direct.data';
 import { MQTToTClient } from '../mqttot/mqttot.client';
 import { MQTToTConnection } from '../mqttot/mqttot.connection';
-// @ts-ignore
-import { Int64 } from 'node-cint64';
 import { QueryIDs } from './subscriptions/graphql.subscription';
 import { GraphQlMessage } from './parsers/graphql.parser';
 import { DirectCommands } from './commands/direct.commands';
@@ -100,7 +98,7 @@ export class RealtimeClient extends EventEmitter {
         this.connection = new MQTToTConnection({
             clientIdentifier: deviceId.substring(0, 20),
             clientInfo: {
-                userId: new Int64(Number(this.ig.state.cookieUserId)),
+                userId: BigInt(Number(this.ig.state.cookieUserId)),
                 userAgent,
                 clientCapabilities: 183,
                 endpointCapabilities: 0,
@@ -111,10 +109,10 @@ export class RealtimeClient extends EventEmitter {
                 isInitiallyForeground: true,
                 networkType: 1,
                 networkSubtype: 0,
-                clientMqttSessionId: new Int64(Date.now() & 0xffffffff),
+                clientMqttSessionId: BigInt(Date.now()) & BigInt(0xffffffff),
                 subscribeTopics: [88, 135, 149, 150, 133, 146],
                 clientType: 'cookie_auth',
-                appId: new Int64(567067343352427),
+                appId: BigInt(567067343352427),
                 deviceSecret: '',
                 clientStack: 3,
             },
