@@ -1,7 +1,5 @@
 import { CInt64, Int64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
 
-const Int64 = require('node-cint64').Int64;
-
 export function thriftWriteFromObject(obj, descriptors: ThriftPacketDescriptor[]): Buffer {
     const writer = BufferWriter.empty();
     thriftWriteSingleLayerFromObject(obj, descriptors, writer);
@@ -56,7 +54,7 @@ function thriftWriteSingleLayerFromObject(obj, descriptors: ThriftPacketDescript
                     // @ts-ignore (no types :c )
                     writer.writeInt64Buffer(descriptor.field, value);
                 } else if (typeof value === 'number') {
-                    writer.writeInt64(descriptor.field, value);
+                    writer.writeInt64Buffer(descriptor.field, BigInt(value));
                 } else if (typeof value === 'bigint') {
                     writer.writeInt64Buffer(descriptor.field, value);
                 } else {
@@ -318,10 +316,6 @@ export class BufferWriter {
         return this.writeInt(num);
     }
 
-    public writeInt64(field: number, num: number): this {
-        return this.writeInt64Buffer(field, new Int64(num));
-    }
-
     public writeInt64Buffer(field: number, num: Int64): this {
         this.writeField(field, ThriftTypes.INT_64);
         return this.writeLong(num);
@@ -357,7 +351,7 @@ export class BufferWriter {
                 break;
             }
             case ThriftTypes.INT_64: {
-                list.forEach(el => this.writeLong(new Int64(el)));
+                list.forEach(el => this.writeLong(BigInt(el)));
                 break;
             }
             case ThriftTypes.BINARY: {

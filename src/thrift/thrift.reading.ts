@@ -1,8 +1,6 @@
 import { CInt64, ThriftMessage, ThriftPacketDescriptor, ThriftTypes, isThriftBoolean } from './thrift';
 import { isEqual } from 'lodash';
 
-const Int64 = require('node-cint64').Int64;
-
 export function thriftRead(message: Buffer): ThriftMessage[] {
     const reader = new BufferReader(message);
     const messages: ThriftMessage[] = [];
@@ -255,28 +253,6 @@ export class BufferReader {
             shift += 7;
         }
         return result;
-    }
-
-    public readVarInt64(): CInt64 {
-        let shift = 0;
-        let result: CInt64 = new Int64(0);
-        while (true) {
-            const byte = this.readByte();
-            result = result.or(new Int64(byte & 0x7f).shiftLeft(shift));
-            if ((byte & 0x80) !== 0x80) break;
-
-            shift += 7;
-        }
-        return result;
-    }
-
-    public zigzagToInt64(n: CInt64): CInt64 {
-        return n.shiftRight(1).xor(n.and(1).neg());
-    }
-
-    public readInt64(): { int: CInt64; num: number } {
-        const result = this.zigzagToInt64(this.readVarInt64());
-        return { int: result, num: result.toNumber() };
     }
 
     public readVarBigint(): bigint {
