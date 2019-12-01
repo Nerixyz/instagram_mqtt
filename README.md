@@ -1,4 +1,5 @@
 # Instagram Realtime and FBNS
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/nerixyz/instagram_mqtt/Node CI)
 Thanks to [valga](https://github.com/valga) for providing and maintaining the [PHP library](https://github.com/valga/fbns-react).
 This library integrates with the [instagram-private-api](https://github.com/dilame/instagram-private-api).
 
