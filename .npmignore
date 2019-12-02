@@ -1,0 +1,8 @@
+src/main.ts
+src/reversing.ts
+dist/main.js
+dist/reversing.js
+node_modules/
+.git/
+.idea/
+dev/
