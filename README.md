@@ -88,6 +88,19 @@ The events are described [here](src/fbns/fbns.client.ts).
 And [here](https://github.com/mgp25/Instagram-API/blob/master/src/Push.php).
 Note: this library provides the query (actionPath/Params) as an object (actionParams)
  so you can use `actionParams.YOUR_KEY`.
+ 
+# Debugging
+In order to debug the clients you can set the environment variable `NODE_DEBUG`.
+Recommended is setting it to `ig-mqtt-*`. If you want to debug the entire **instagram-private-api**, set it to `ig-*`.
+Currently, the emitted "channels" are:
+ - `ig-mqtt-realtime`
+ - `ig-mqtt-fbns`
+ - `ig-mqtt-mqttot`
+ 
+ An example `.env` file would look like this:
+ ```
+NODE_DEBUG=ig-mqtt-*
+```
 
 # Architecture
 

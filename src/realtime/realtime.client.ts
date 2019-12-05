@@ -16,6 +16,9 @@ import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { IrisParserData } from './parsers/iris.parser';
 import { MessageSyncMessageWrapper } from './messages/message-sync.message';
+import { debuglog } from 'util';
+
+const _realtimeDebug = debuglog('ig-mqtt-realtime');
 
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
@@ -138,6 +141,7 @@ export class RealtimeClient extends EventEmitter {
     }
 
     public async connect(initOptions?: RealtimeClientInitOptions | string[]) {
+        _realtimeDebug('Connecting to realtime-broker...');
         this.setInitOptions(initOptions);
         this.constructConnection();
         this.client = new MQTToTClient({
@@ -149,6 +153,7 @@ export class RealtimeClient extends EventEmitter {
         const topicsArray = Object.values(Topics);
         this.client.on('message', async packet => {
             if (packet.payload === null) {
+                _realtimeDebug(`Received empty packet on topic ${packet.topic}`);
                 this.emit('receive', packet.topic, packet.payload);
                 return true;
             }
@@ -175,6 +180,11 @@ export class RealtimeClient extends EventEmitter {
                 try {
                     this.emit('receive', topic, thriftRead(unzipped));
                 } catch (e) {
+                    _realtimeDebug(`Error while reading packet: ${JSON.stringify({
+                        topic: packet.topic,
+                        unzipped: unzipped.toString('hex'),
+                    })}`);
+                    _realtimeDebug(e);
                     this.emitWarning(e);
                     this.emit('receive', topic, unzipped.toString('utf8'));
                 }
@@ -185,6 +195,7 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
         this.client.once('mqttotConnect', async () => {
+            _realtimeDebug('Connected.');
             Object.values(Topics)
                 .map(topic => ({ topic: topic.path }))
                 .forEach(t => this.client.subscribe(t));

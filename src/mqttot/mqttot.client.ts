@@ -7,16 +7,28 @@ import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { MqttMessage } from '../mqtt/mqtt.message';
 import { compressDeflate } from '../shared';
 import { ConnectResponsePacket } from '../mqtt/packets';
+import { debuglog } from 'util';
+
+const __mqttotDebugChannel = debuglog('ig-mqtt-mqttot');
 
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
 
+    protected _mqttotDebug = (msg: string, ...args: string[]) => __mqttotDebugChannel(`${this.url.host}: ${msg}`, ...args);
+
     public constructor(options: { url: string; payload: Buffer }) {
         super({ url: options.url });
         this.connectPayload = options.payload;
+        this._mqttotDebug(`Creating client`);
+        this.registerListeners();
+    }
+
+    protected registerListeners() {
+        this.on('disconnect', () => this._mqttotDebug('Disconnected.'));
     }
 
     protected registerClient(options: ConnectRequestOptions) {
+        this._mqttotDebug(`Trying to register the client...`);
         this.startFlow(new MQTToTConnectFlow(this.connectPayload));
         this.connectTimer = this.executeDelayed(2000, () => {
             this.registerClient(options);
@@ -29,6 +41,7 @@ export class MQTToTClient extends MqttClient {
      * @returns {Promise<void>}
      */
     public async mqttotPublish(message: MqttMessage) {
+        this._mqttotDebug(`Publishing ${message.payload.byteLength}bytes to topic ${message.topic}`);
         this.publish({
             topic: message.topic,
             payload: await compressDeflate(message.payload),
