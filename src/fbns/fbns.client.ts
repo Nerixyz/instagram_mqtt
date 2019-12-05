@@ -280,7 +280,7 @@ export class FbnsClient extends EventEmitter {
         this.client.on('mqttotConnect', async (res: ConnectResponsePacket) => {
             _fbnsDebug('Connected to MQTT');
             const payload = res.payload.toString('utf8');
-            if(payload.length === 0) {
+            if (payload.length === 0) {
                 _fbnsDebug('Received empty connect packet.');
                 this.emitError(new Error('Received empty connect packet'));
                 return;

@@ -180,10 +180,12 @@ export class RealtimeClient extends EventEmitter {
                 try {
                     this.emit('receive', topic, thriftRead(unzipped));
                 } catch (e) {
-                    _realtimeDebug(`Error while reading packet: ${JSON.stringify({
-                        topic: packet.topic,
-                        unzipped: unzipped.toString('hex'),
-                    })}`);
+                    _realtimeDebug(
+                        `Error while reading packet: ${JSON.stringify({
+                            topic: packet.topic,
+                            unzipped: unzipped.toString('hex'),
+                        })}`,
+                    );
                     _realtimeDebug(e);
                     this.emitWarning(e);
                     this.emit('receive', topic, unzipped.toString('utf8'));

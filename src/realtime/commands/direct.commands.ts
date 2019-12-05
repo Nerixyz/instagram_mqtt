@@ -43,8 +43,10 @@ export class DirectCommands {
     public async sendForegroundState(state: ForegroundState) {
         return this.client.publish({
             topic: '102', // '/t_fs'
-            payload: await compressDeflate(Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)])),
-        })
+            payload: await compressDeflate(
+                Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)]),
+            ),
+        });
     }
 
     private async sendCommand({ action, data, threadId, clientContext }: { action: string; data: any } & ItemBaseType) {

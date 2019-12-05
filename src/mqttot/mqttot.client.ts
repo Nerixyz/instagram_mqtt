@@ -14,7 +14,8 @@ const __mqttotDebugChannel = debuglog('ig-mqtt-mqttot');
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
 
-    protected _mqttotDebug = (msg: string, ...args: string[]) => __mqttotDebugChannel(`${this.url.host}: ${msg}`, ...args);
+    protected _mqttotDebug = (msg: string, ...args: string[]) =>
+        __mqttotDebugChannel(`${this.url.host}: ${msg}`, ...args);
 
     public constructor(options: { url: string; payload: Buffer }) {
         super({ url: options.url });
