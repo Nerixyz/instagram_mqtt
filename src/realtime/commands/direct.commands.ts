@@ -1,20 +1,50 @@
 import { MQTToTClient } from '../../mqttot/mqttot.client';
-import { Topics } from '../../constants';
+import { PossibleTopics, Topics } from '../../constants';
 import { compressDeflate } from '../../shared';
 import * as Chance from 'chance';
+import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';
 
 interface ItemBaseType {
     threadId: string;
     clientContext?: string;
 }
 
+export interface ForegroundState {
+    inForegroundApp?: boolean;
+    inForegroundDevice?: boolean;
+    keepAliveTimeout?: number;
+    subscribeTopics?: string[];
+    subscribeGenericTopics?: string[];
+    unsubscribeTopics?: string[];
+    unsubscribeGenericTopics?: string[];
+    requestId?: bigint;
+}
+
 export class DirectCommands {
     private client: MQTToTClient;
     private chance: Chance.Chance;
 
+    public foregroundStateConfig: ThriftPacketDescriptor[] = [
+        ThriftDescriptors.boolean('inForegroundApp', 1),
+        ThriftDescriptors.boolean('inForegroundDevice', 2),
+        ThriftDescriptors.int32('keepAliveTimeout', 3),
+        ThriftDescriptors.listOfBinary('subscribeTopics', 4),
+        ThriftDescriptors.listOfBinary('subscribeGenericTopics', 5),
+        ThriftDescriptors.listOfBinary('unsubscribeTopics', 6),
+        ThriftDescriptors.listOfBinary('unsubscribeGenericTopics', 7),
+        ThriftDescriptors.int64('requestId', 8),
+    ];
+
     public constructor(client: MQTToTClient) {
         this.client = client;
         this.chance = new Chance();
+    }
+
+    public async sendForegroundState(state: ForegroundState) {
+        return this.client.publish({
+            topic: '102', // '/t_fs'
+            payload: await compressDeflate(Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)])),
+        })
     }
 
     private async sendCommand({ action, data, threadId, clientContext }: { action: string; data: any } & ItemBaseType) {

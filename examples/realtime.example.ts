@@ -43,6 +43,15 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions/skywalker.
         ],
         irisData: await ig.feed.directInbox().request(),
     });
+    setTimeout(() => {
+        console.log('Device off');
+        // from now on, you won't receive any realtime-data as you "aren't in the app"
+        ig.realtime.direct.sendForegroundState({inForegroundApp: false, inForegroundDevice: false, keepAliveTimeout: 900});
+    }, 2000);
+    setTimeout(() => {
+        console.log('In App');
+        ig.realtime.direct.sendForegroundState({inForegroundApp: true, inForegroundDevice: true, keepAliveTimeout: 60});
+    }, 4000);
 })();
 
 /**
