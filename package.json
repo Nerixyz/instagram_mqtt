@@ -40,5 +40,6 @@
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
     "typescript": "^3.7.2"
-  }
+  },
+  "types": "dist/index.d.ts"
 }
