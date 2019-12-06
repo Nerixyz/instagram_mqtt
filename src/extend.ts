@@ -1,6 +1,7 @@
 import { IgApiClient } from 'instagram-private-api';
 import { FbnsClient } from './fbns/fbns.client';
 import { RealtimeClient, RealtimeClientInitOptions } from './realtime/realtime.client';
+import { omit } from 'lodash';
 
 export interface StateHook<T> {
     name: string;
@@ -33,28 +34,9 @@ export class IgApiClientExt extends IgApiClient {
     public constructor() {
         super();
         this.addStateHook({
-            name: 'cookies',
-            onExport: async client => JSON.stringify(await client.state.serializeCookieJar()),
-            onImport: (data, client) => client.state.deserializeCookieJar(data),
-        });
-        this.addStateHook({
-            name: 'device',
-            onExport: client => ({
-                deviceString: client.state.deviceString,
-                deviceId: client.state.deviceId,
-                uuid: client.state.uuid,
-                phoneId: client.state.phoneId,
-                adid: client.state.adid,
-                build: client.state.build,
-            }),
-            onImport: (data, client) => {
-                client.state.deviceString = data.deviceString;
-                client.state.deviceId = data.deviceId;
-                client.state.uuid = data.uuid;
-                client.state.phoneId = data.phoneId;
-                client.state.adid = data.adid;
-                client.state.build = data.build;
-            },
+            name: 'client',
+            onExport: async client => omit(await client.state.serialize(), ['constants']),
+            onImport: (data, client) => client.state.deserialize(data),
         });
     }
 
