@@ -1,4 +1,4 @@
-import { Parser } from './realtime/parsers/parser';
+import { Parser } from './realtime/parsers';
 
 export interface Topic {
     id: string;

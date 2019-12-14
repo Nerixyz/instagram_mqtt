@@ -1,21 +1,18 @@
 import { IgApiClient } from 'instagram-private-api';
 import { REALTIME, Topics } from '../constants';
 import { EventEmitter } from 'events';
-import { ParsedMessage } from './parsers/parser';
-import { Commands } from './commands/commands';
+import { ParsedMessage, IrisParserData, GraphQlMessage } from './parsers';
+import { Commands } from './commands';
 import { thriftRead } from '../thrift';
 import { compressDeflate, unzipAsync } from '../shared';
 import { Topic } from '../topic';
-import { RealtimeSubDirectDataWrapper } from './messages/realtime-sub.direct.data';
+import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper } from './messages';
 import { MQTToTClient } from '../mqttot/mqttot.client';
 import { MQTToTConnection } from '../mqttot/mqttot.connection';
-import { QueryIDs } from './subscriptions/graphql.subscription';
-import { GraphQlMessage } from './parsers/graphql.parser';
-import { DirectCommands } from './commands/direct.commands';
+import { QueryIDs } from './subscriptions';
+import { DirectCommands } from './commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
-import { IrisParserData } from './parsers/iris.parser';
-import { MessageSyncMessageWrapper } from './messages/message-sync.message';
 import { debuglog } from 'util';
 
 const _realtimeDebug = debuglog('ig-mqtt-realtime');
@@ -38,7 +35,7 @@ export declare interface RealtimeClient {
     on(
         event: 'appPresence',
         cb: (data: {
-            presence_event: { user_id: string; is_active: boolean; last_activity_at: string; in_threads: any };
+            presence_event: { user_id: string; is_active: boolean; last_activity_at_ms: string; in_threads: any[] };
         }) => void,
     );
 

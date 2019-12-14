@@ -1,7 +1,7 @@
 import { IgApiClientRealtime, withRealtime } from '../src';
-import { GraphQLSubscriptions } from '../src/realtime/subscriptions/graphql.subscription';
+import { GraphQLSubscriptions } from '../src/realtime/subscriptions';
 import { IgApiClient } from 'instagram-private-api';
-import { SkywalkerSubscriptions } from '../src/realtime/subscriptions/skywalker.subscription';
+import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
 
 (async () => {
     // this extends the IgApiClient with realtime features

@@ -1,3 +1,6 @@
-export * from './realtime/realtime.client';
-export * from './fbns/fbns.client';
 export * from './extend';
+
+export * from './realtime';
+export * from './fbns';
+
+export * from './thrift';

@@ -1,5 +1,5 @@
 import { MQTToTClient } from '../../mqttot/mqttot.client';
-import { PossibleTopics, Topics } from '../../constants';
+import { Topics } from '../../constants';
 import { compressDeflate } from '../../shared';
 import * as Chance from 'chance';
 import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';

@@ -110,7 +110,7 @@ export const ThriftDescriptors = {
     }),
 };
 
-export type Int64 = number | CInt64 | bigint | object;
+export type Int64 = number | bigint | object;
 
 export function int64ToNumber(i64: Int64): number {
     if (typeof i64 === 'number') return i64;
@@ -120,22 +120,4 @@ export function int64ToNumber(i64: Int64): number {
         return i64.toNumber();
     }
     throw new Error('Unknown Int64-type');
-}
-
-// this because there are no types for it :(
-export interface CInt64 {
-    shiftLeft(signedBits: number): CInt64;
-    shiftRight(signedBits: number): CInt64;
-    xor(other: CInt64): CInt64;
-    xor(other: number): CInt64;
-    not(other: CInt64): CInt64;
-    not(other: number): CInt64;
-    and(other: CInt64): CInt64;
-    and(other: number): CInt64;
-    or(other: CInt64): CInt64;
-    or(other: number): CInt64;
-    neg(): CInt64;
-    eq(other: CInt64): boolean;
-    eq(other: number): boolean;
-    toNumber(): number;
 }

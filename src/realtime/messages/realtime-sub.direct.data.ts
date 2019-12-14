@@ -6,7 +6,7 @@ export interface RealtimeSubDirectDataWrapper {
 
 export interface RealtimeSubDirectData {
     timestamp: string;
-    sender: string;
+    sender_id: string;
     ttl: number;
     activity_status: number;
 }

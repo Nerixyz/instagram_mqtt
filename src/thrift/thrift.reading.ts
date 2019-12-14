@@ -1,4 +1,4 @@
-import { CInt64, ThriftMessage, ThriftPacketDescriptor, ThriftTypes, isThriftBoolean } from './thrift';
+import { ThriftMessage, ThriftPacketDescriptor, ThriftTypes, isThriftBoolean } from './thrift';
 import { isEqual } from 'lodash';
 
 export function thriftRead(message: Buffer): ThriftMessage[] {
