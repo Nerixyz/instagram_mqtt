@@ -7,7 +7,7 @@ import { thriftRead } from '../thrift';
 import { compressDeflate, unzipAsync } from '../shared';
 import { Topic } from '../topic';
 import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper, AppPresenceEventWrapper } from './messages';
-import { MQTToTClient, MQTToTConnection } from '../mqttot';
+import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
 import { QueryIDs } from './subscriptions';
 import { DirectCommands } from './commands';
 import { deprecate } from 'util';
@@ -54,6 +54,7 @@ export interface RealtimeClientInitOptions {
     graphQlSubs?: string[];
     skywalkerSubs?: string[];
     irisData?: { seq_id: number; snapshot_at_ms: number };
+    connectOverrides?: MQTToTConnectionClientInfo;
 }
 
 export class RealtimeClient extends EventEmitter {
@@ -109,6 +110,7 @@ export class RealtimeClient extends EventEmitter {
                 appId: BigInt(567067343352427),
                 deviceSecret: '',
                 clientStack: 3,
+                ...(this.initOptions.connectOverrides || {}),
             },
             password,
             appSpecificInfo: {
