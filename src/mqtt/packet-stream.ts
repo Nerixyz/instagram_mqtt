@@ -4,7 +4,7 @@
     Last revision: 10-Sep-19
 
  */
-import { EndOfStreamError } from './errors/end-of-stream.error';
+import { EndOfStreamError } from './errors';
 
 export class PacketStream {
     public set position(value: number) {

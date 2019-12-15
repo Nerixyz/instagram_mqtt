@@ -10,18 +10,20 @@ import {
 import * as URL from 'url';
 import { EventEmitter } from 'events';
 import { MqttParser } from './mqtt.parser';
-import { PacketFlow } from './flow/packet-flow';
+import {
+    PacketFlow,
+    IncomingPublishFlow,
+    OutgoingConnectFlow,
+    OutgoingPublishFlow,
+    OutgoingSubscribeFlow,
+    OutgoingUnsubscribeFlow,
+    OutgoingDisconnectFlow,
+    OutgoingPingFlow,
+} from './flow';
 import { MqttPacket } from './mqtt.packet';
 import { PacketStream } from './packet-stream';
 import { PacketTypes } from './mqtt.constants';
 import { PublishRequestPacket } from './packets';
-import { IncomingPublishFlow } from './flow/incoming.publish.flow';
-import { OutgoingConnectFlow } from './flow/outgoing.connect.flow';
-import { OutgoingPublishFlow } from './flow/outgoing.publish.flow';
-import { OutgoingSubscribeFlow } from './flow/outgoing.subscribe.flow';
-import { OutgoingUnsubscribeFlow } from './flow/outgoing.unsubscribe.flow';
-import { OutgoingDisconnectFlow } from './flow/outgoing.disconnect.flow';
-import { OutgoingPingFlow } from './flow/outgoing.ping.flow';
 import { MqttMessage } from './mqtt.message';
 import { TLSSocket, connect } from 'tls';
 

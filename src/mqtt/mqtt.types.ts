@@ -1,4 +1,4 @@
-import { ConnectRequestOptions } from './packets/connect.request.packet';
+import { ConnectRequestOptions } from './packets';
 import { MqttParser } from './mqtt.parser';
 
 export interface MqttClientConstructorOptions {

@@ -2,7 +2,7 @@ import { MqttPacket } from './mqtt.packet';
 import { PacketTypes } from './mqtt.constants';
 import { PacketStream } from './packet-stream';
 import Bluebird = require('bluebird');
-import { EndOfStreamError } from './errors/end-of-stream.error';
+import { EndOfStreamError } from './errors';
 import {
     ConnectRequestPacket,
     ConnectResponsePacket,

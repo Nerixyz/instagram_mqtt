@@ -6,9 +6,8 @@ import { Commands } from './commands';
 import { thriftRead } from '../thrift';
 import { compressDeflate, unzipAsync } from '../shared';
 import { Topic } from '../topic';
-import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper } from './messages';
-import { MQTToTClient } from '../mqttot/mqttot.client';
-import { MQTToTConnection } from '../mqttot/mqttot.connection';
+import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper, AppPresenceEventWrapper } from './messages';
+import { MQTToTClient, MQTToTConnection } from '../mqttot';
 import { QueryIDs } from './subscriptions';
 import { DirectCommands } from './commands';
 import { deprecate } from 'util';
@@ -32,12 +31,7 @@ export declare interface RealtimeClient {
 
     on(event: 'message', cb: (message: MessageSyncMessageWrapper) => void);
 
-    on(
-        event: 'appPresence',
-        cb: (data: {
-            presence_event: { user_id: string; is_active: boolean; last_activity_at_ms: string; in_threads: any[] };
-        }) => void,
-    );
+    on(event: 'appPresence', cb: (data: AppPresenceEventWrapper) => void);
 
     on(
         event: 'clientConfigUpdate',

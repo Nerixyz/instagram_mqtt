@@ -1,10 +1,8 @@
-import { MqttClient } from '../mqtt/mqtt.client';
+import { MqttClient } from '../mqtt';
 import { ConnectRequestOptions } from '../mqtt/packets';
-import { PacketFlow } from '../mqtt/flow/packet-flow';
-import { MqttPacket } from '../mqtt/mqtt.packet';
-import { PacketTypes } from '../mqtt/mqtt.constants';
+import { PacketFlow } from '../mqtt/flow';
+import { MqttPacket, MqttMessage, PacketTypes } from '../mqtt';
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
-import { MqttMessage } from '../mqtt/mqtt.message';
 import { compressDeflate } from '../shared';
 import { ConnectResponsePacket } from '../mqtt/packets';
 import { debuglog } from 'util';
