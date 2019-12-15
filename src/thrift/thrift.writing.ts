@@ -1,4 +1,4 @@
-import { CInt64, Int64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
+import { Int64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
 
 export function thriftWriteFromObject(obj, descriptors: ThriftPacketDescriptor[]): Buffer {
     const writer = BufferWriter.empty();
@@ -249,23 +249,6 @@ export class BufferWriter {
         }
     }
 
-    private writeVarInt64(n: CInt64) {
-        while (true) {
-            if (n.and(~0x7f).eq(0)) {
-                this.writeByte(n.toNumber());
-                break;
-            } else {
-                this.writeByte(
-                    n
-                        .and(0x7f)
-                        .or(0x80)
-                        .toNumber(),
-                );
-                n = n.shiftRight(7);
-            }
-        }
-    }
-
     public writeMapHeader(field: number, size: number, keyType: number, valueType: number): this {
         this.writeField(field, ThriftTypes.MAP);
         if (size === 0) {
@@ -386,10 +369,6 @@ export class BufferWriter {
 
     public toString() {
         return this._buffer.toString('ascii');
-    }
-
-    public static int64ToZigZag(n: CInt64): CInt64 {
-        return n.shiftLeft(1).xor(n.shiftRight(63));
     }
 
     public static bigintToZigZag(n: bigint): bigint {
