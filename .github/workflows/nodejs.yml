@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - '*'
+    branches:
+      - master
+  pull_request:
+    branches: 
+      - master
 
 jobs:
   build:
@@ -12,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.4.x, 12.x]
+        node-version: [10.4.x]
 
     steps:
     - uses: actions/checkout@v1
