@@ -136,6 +136,7 @@ export class RealtimeClient extends EventEmitter {
     public async connect(initOptions?: RealtimeClientInitOptions | string[]) {
         _realtimeDebug('Connecting to realtime-broker...');
         this.setInitOptions(initOptions);
+        _realtimeDebug(`Overriding: ${Object.keys(this.initOptions.connectOverrides || {}).join(', ')}`);
         this.constructConnection();
         this.client = new MQTToTClient({
             url: REALTIME.HOST_NAME_V6,

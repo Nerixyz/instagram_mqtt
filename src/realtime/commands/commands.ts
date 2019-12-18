@@ -1,6 +1,6 @@
 import { Topic } from '../../topic';
 import { compressDeflate } from '../../shared';
-import { MQTToTClient } from '../../mqttot/mqttot.client';
+import { MQTToTClient } from '../../mqttot';
 
 export class Commands {
     private client: MQTToTClient;

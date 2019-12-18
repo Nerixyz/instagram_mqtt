@@ -1,5 +1,8 @@
 import { IgApiClient } from 'instagram-private-api';
 import { Enumerable } from 'instagram-private-api/dist/decorators';
+import { debuglog } from 'util';
+
+const _authLog = debuglog('ig-mqtt-fbns-uth');
 
 export class FbnsDeviceAuth {
     public clientId: string;
@@ -32,6 +35,9 @@ export class FbnsDeviceAuth {
     }
 
     public read(jsonStr: string) {
+        _authLog(`Reading json of length ${jsonStr?.length ?? '-1'}`);
+        if(!jsonStr)
+            return;
         this.json = jsonStr;
         const { ck, cs, di, ds, sr, rc } = JSON.parse(jsonStr);
         this.userId = ck || this.userId;
