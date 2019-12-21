@@ -3,11 +3,10 @@ import { ConnectRequestOptions } from '../mqtt/packets';
 import { PacketFlow } from '../mqtt/flow';
 import { MqttPacket, MqttMessage, PacketTypes } from '../mqtt';
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
-import { compressDeflate } from '../shared';
+import { compressDeflate, debugChannel } from '../shared';
 import { ConnectResponsePacket } from '../mqtt/packets';
-import { debuglog } from 'util';
 
-const __mqttotDebugChannel = debuglog('ig-mqtt-mqttot');
+const __mqttotDebugChannel = debugChannel('mqttot');
 
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;

@@ -1,4 +1,4 @@
-import { MQTToTClient } from '../../mqttot/mqttot.client';
+import { MQTToTClient } from '../../mqttot';
 import { Topics } from '../../constants';
 import { compressDeflate } from '../../shared';
 import * as Chance from 'chance';

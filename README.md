@@ -90,17 +90,20 @@ Note: this library provides the query (actionPath/Params) as an object (actionPa
  so you can use `actionParams.YOUR_KEY`.
  
 # Debugging
-In order to debug the clients you can set the environment variable `NODE_DEBUG`.
-Recommended is setting it to `ig-mqtt-*`. If you want to debug the entire **instagram-private-api**, set it to `ig-*`.
+In order to debug the clients you can set the environment variable `DEBUG`.
+Recommended is setting it to `ig:mqtt:*`. If you want to debug the entire **instagram-private-api**, set it to `ig:*`.
 Currently, the emitted "channels" are:
- - `ig-mqtt-realtime`
- - `ig-mqtt-fbns`
- - `ig-mqtt-mqttot`
+ - `ig:mqtt:realtime`
+ - `ig:mqtt:fbns`
+ - `ig:mqtt:mqttot`
  
  An example `.env` file would look like this:
  ```
-NODE_DEBUG=ig-mqtt-*
+DEBUG=ig:mqtt:*
 ```
+*Note:* In version 0.1.14 the debug library was changed to **debug** instead of the native **util.debuglog**.
+ Thus the naming scheme is different `ig-mqtt-fbns` is now `ig:mqtt:fbns`
+  and instead of `NODE_DEBUG` the environment variable `DEBUG` is used.
 
 # Architecture
 

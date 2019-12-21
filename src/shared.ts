@@ -1,6 +1,7 @@
 import { IgApiClient } from 'instagram-private-api';
 import { deflate, unzip } from 'zlib';
 import Bluebird = require('bluebird');
+import debug from 'debug';
 
 // TODO: map
 export function createUserAgent(ig: IgApiClient) {
@@ -34,6 +35,14 @@ export async function compressDeflate(data: string | Buffer): Promise<Buffer> {
 export async function unzipAsync(data: string | Buffer) {
     return Bluebird.fromCallback<Buffer>(cb => unzip(data, cb));
 }
+
+/**
+ * Returns a debug function with a path starting with ig:mqtt
+ * @param {string} path
+ * @returns {(msg: string, ...additionalData: any) => void}
+ */
+export const debugChannel = (...path: string[]): ((msg: string, ...additionalData: any) => void) =>
+    debug(['ig', 'mqtt', ...path].join(':'));
 
 export const notUndefined = a => typeof a !== 'undefined';
 

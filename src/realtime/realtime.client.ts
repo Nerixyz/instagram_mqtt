@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import { ParsedMessage, IrisParserData, GraphQlMessage } from './parsers';
 import { Commands } from './commands';
 import { thriftRead } from '../thrift';
-import { compressDeflate, unzipAsync } from '../shared';
+import { compressDeflate, debugChannel, unzipAsync } from '../shared';
 import { Topic } from '../topic';
 import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper, AppPresenceEventWrapper } from './messages';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
@@ -12,9 +12,8 @@ import { QueryIDs } from './subscriptions';
 import { DirectCommands } from './commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
-import { debuglog } from 'util';
 
-const _realtimeDebug = debuglog('ig-mqtt-realtime');
+const _realtimeDebug = debugChannel('realtime');
 
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);

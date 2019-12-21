@@ -1,19 +1,14 @@
 import { IgApiClient } from 'instagram-private-api';
 import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
-import { compressDeflate, createUserAgent, notUndefined, unzipAsync } from '../shared';
+import { compressDeflate, createUserAgent, debugChannel, notUndefined, unzipAsync } from '../shared';
 import { EventEmitter } from 'events';
-import { MQTToTConnection } from '../mqttot/mqttot.connection';
-import { MQTToTClient } from '../mqttot/mqttot.client';
+import { MQTToTConnection, MQTToTClient } from '../mqttot';
 import { ConnectResponsePacket, IdentifierPacket, PublishRequestPacket } from '../mqtt/packets';
 import { Chance } from 'chance';
-import { debuglog } from 'util';
-
-const _fbnsDebug = debuglog('ig-mqtt-fbns');
-
 import * as querystring from 'querystring';
-
 import * as URL from 'url';
+const _fbnsDebug = debugChannel('fbns');
 
 export interface FbnsMessageData {
     token?: string;
