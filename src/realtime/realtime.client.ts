@@ -18,6 +18,8 @@ const _realtimeDebug = debugChannel('realtime');
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
 
+    on(event: 'warning', cb: (e: any | Error) => void);
+
     on(event: 'receive', cb: (topic: Topic, messages?: ParsedMessage<any>[]) => void);
 
     on(event: 'close', cb: () => void);

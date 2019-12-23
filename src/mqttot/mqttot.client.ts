@@ -23,6 +23,15 @@ export class MQTToTClient extends MqttClient {
 
     protected registerListeners() {
         this.on('disconnect', () => this._mqttotDebug('Disconnected.'));
+        const printErrorOrWarning = (type: string) => (e: Error | string) => {
+            if(typeof e === 'string') {
+                this._mqttotDebug(`${type}: ${e}`);
+            } else {
+                this._mqttotDebug(`${type}: ${e.message}\n\tStack: ${e.stack}`);
+            }
+        };
+        this.on('error', printErrorOrWarning('Error'));
+        this.on('warning', printErrorOrWarning('Warning'));
     }
 
     protected registerClient(options: ConnectRequestOptions) {
