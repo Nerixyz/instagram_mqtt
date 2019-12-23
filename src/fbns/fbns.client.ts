@@ -258,7 +258,7 @@ export class FbnsClient extends EventEmitter {
         });
     }
 
-    public async connect() {
+    public async connect({enableTrace}: {enableTrace?: boolean} = {}) {
         _fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.buildConnection();
@@ -302,6 +302,7 @@ export class FbnsClient extends EventEmitter {
             keepAlive: 0,
             protocolLevel: 3,
             clean: true,
+            enableTrace,
         });
     }
 

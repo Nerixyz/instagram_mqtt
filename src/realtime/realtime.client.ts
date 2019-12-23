@@ -56,6 +56,7 @@ export interface RealtimeClientInitOptions {
     skywalkerSubs?: string[];
     irisData?: { seq_id: number; snapshot_at_ms: number };
     connectOverrides?: MQTToTConnectionClientInfo;
+    enableTrace?: boolean;
 }
 
 export class RealtimeClient extends EventEmitter {
@@ -211,6 +212,7 @@ export class RealtimeClient extends EventEmitter {
             keepAlive: 0,
             protocolLevel: 3,
             clean: true,
+            enableTrace: this.initOptions.enableTrace,
         });
     }
 
