@@ -104,6 +104,10 @@ DEBUG=ig:mqtt:*
 *Note:* In version 0.1.14 the debug library was changed to **debug** instead of the native **util.debuglog**.
  Thus the naming scheme is different `ig-mqtt-fbns` is now `ig:mqtt:fbns`
   and instead of `NODE_DEBUG` the environment variable `DEBUG` is used.
+  
+ ### Raw TLS Sockets
+ To debug raw TLS Sockets you just have to set `enableTrace` to `true` while connecting:
+ `ig.realtime.connect({enableTrace: true})` or `ig.fbns.connect({enableTrace: true})`
 
 # Architecture
 
