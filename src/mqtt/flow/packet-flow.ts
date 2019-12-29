@@ -25,12 +25,12 @@ export abstract class PacketFlow<T> {
     public get result(): T {
         return this._result;
     }
-    get promise(): Promise<T> {
+    public get promise(): Promise<T> {
         return this._promise;
     }
     public abstract get name(): string;
 
-    constructor() {
+    public constructor() {
         this._promise = new Promise<T>((resolve, reject) => {
             this._resolve = resolve;
             this._reject = reject;

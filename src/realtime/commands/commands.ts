@@ -18,7 +18,10 @@ export class Commands {
         });
     }
 
-    public async updateSubscriptions(options: { topic: Topic; data: { sub?: string[]; unsub?: string[] } | any }): Promise<MqttMessage> {
+    public async updateSubscriptions(options: {
+        topic: Topic;
+        data: { sub?: string[]; unsub?: string[] } | any;
+    }): Promise<MqttMessage> {
         return this.publishToTopic(options.topic.id, await compressDeflate(JSON.stringify(options.data)), 1);
     }
 }

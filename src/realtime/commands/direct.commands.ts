@@ -51,7 +51,12 @@ export class DirectCommands {
         });
     }
 
-    private async sendCommand({ action, data, threadId, clientContext }: { action: string; data: any } & ItemBaseType): Promise<MqttMessage> {
+    private async sendCommand({
+        action,
+        data,
+        threadId,
+        clientContext,
+    }: { action: string; data: any } & ItemBaseType): Promise<MqttMessage> {
         if (clientContext) {
             data.client_context = clientContext;
         }
