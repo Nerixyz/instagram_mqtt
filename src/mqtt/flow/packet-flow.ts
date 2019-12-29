@@ -6,6 +6,9 @@ export abstract class PacketFlow<T> {
     private _result: T;
     private _error: string;
     protected _silent: boolean = false;
+    protected _promise: Promise<T>;
+    protected _resolve: (value: T) => void;
+    protected _reject: (error: Error | string) => void;
 
     public get silent(): boolean {
         return this._silent;
@@ -22,7 +25,17 @@ export abstract class PacketFlow<T> {
     public get result(): T {
         return this._result;
     }
+    get promise(): Promise<T> {
+        return this._promise;
+    }
     public abstract get name(): string;
+
+    constructor() {
+        this._promise = new Promise<T>((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
+    }
 
     public abstract start(): MqttPacket;
     public abstract accept(packet: MqttPacket): boolean;
@@ -32,11 +45,13 @@ export abstract class PacketFlow<T> {
         this._finished = true;
         this._success = true;
         this._result = result;
+        this._resolve(result);
     }
 
     protected errored(error: string = ''): void {
         this._finished = true;
         this._success = false;
         this._error = error;
+        this._reject(error);
     }
 }

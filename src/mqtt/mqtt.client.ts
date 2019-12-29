@@ -23,7 +23,7 @@ import {
 import { MqttPacket } from './mqtt.packet';
 import { PacketStream } from './packet-stream';
 import { PacketTypes } from './mqtt.constants';
-import { PublishRequestPacket } from './packets';
+import { ConnectRequestOptions, PublishRequestPacket } from './packets';
 import { MqttMessage } from './mqtt.message';
 import { TLSSocket, connect } from 'tls';
 
@@ -40,9 +40,9 @@ export class MqttClient extends EventEmitter {
     protected isDisconnected: boolean = false;
     protected url: URL.UrlWithStringQuery;
 
-    protected receivingFlows: PacketFlow<object>[] = [];
-    protected sendingFlows: PacketFlow<object>[] = [];
-    protected writtenFlow: PacketFlow<object>;
+    protected receivingFlows: PacketFlow<any>[] = [];
+    protected sendingFlows: PacketFlow<any>[] = [];
+    protected writtenFlow: PacketFlow<any>;
 
     protected connectionSettings: RegisterClientOptions;
 
@@ -85,7 +85,7 @@ export class MqttClient extends EventEmitter {
     protected emitOpen: () => void = () => this.emit('open');
     protected emitConnect: () => void = () => this.emit('connect');
 
-    protected emitFlow: (name: string, result: object) => void = (name, result) => this.emit(name, result);
+    protected emitFlow: (name: string, result: any) => void = (name, result) => this.emit(name, result);
 
     protected setupListeners() {
         this.socket.on('error', e => {
@@ -112,30 +112,31 @@ export class MqttClient extends EventEmitter {
         this.socket.on('data', buf => this.handleData(buf));
     }
 
-    public publish(message: MqttMessage) {
-        this.startFlow(new OutgoingPublishFlow(message));
+    public publish(message: MqttMessage): Promise<MqttMessage> {
+        return this.startFlow(new OutgoingPublishFlow(message));
     }
 
-    public subscribe(subscription: MqttSubscription) {
-        this.startFlow(new OutgoingSubscribeFlow(subscription));
+    public subscribe(subscription: MqttSubscription): Promise<MqttSubscription> {
+        return this.startFlow(new OutgoingSubscribeFlow(subscription));
     }
 
-    public unsubscribe(subscription: MqttSubscription) {
-        this.startFlow(new OutgoingUnsubscribeFlow(subscription));
+    public unsubscribe(subscription: MqttSubscription): Promise<MqttSubscription> {
+        return this.startFlow(new OutgoingUnsubscribeFlow(subscription));
     }
 
-    public disconnect() {
-        this.startFlow(new OutgoingDisconnectFlow(undefined));
+    public disconnect(): Promise<ConnectRequestOptions> {
+        return this.startFlow(new OutgoingDisconnectFlow(undefined));
     }
 
     protected registerClient(options: RegisterClientOptions) {
+        // result can be ignored
         this.startFlow(new OutgoingConnectFlow(options));
         this.connectTimer = this.executeDelayed(2000, () => {
             this.registerClient(options);
         });
     }
 
-    public startFlow(flow: PacketFlow<object>) {
+    public startFlow<T>(flow: PacketFlow<T>): Promise<T> {
         try {
             if (this.writtenFlow) {
                 this.sendingFlows.push(flow);
@@ -152,12 +153,14 @@ export class MqttClient extends EventEmitter {
                     this.receivingFlows.push(flow);
                 }
             }
+            return flow.promise;
         } catch (e) {
             this.emitWarning(e);
+            return Promise.reject(e);
         }
     }
 
-    protected continueFlow(flow: PacketFlow<object>, packet: MqttPacket) {
+    protected continueFlow<T>(flow: PacketFlow<T>, packet: MqttPacket) {
         try {
             const response = flow.next(packet);
             if (response) {
@@ -176,7 +179,7 @@ export class MqttClient extends EventEmitter {
         }
     }
 
-    protected finishFlow(flow: PacketFlow<object>) {
+    protected finishFlow<T>(flow: PacketFlow<T>) {
         if (!flow) return;
         if (flow.success) {
             if (!flow.silent) {

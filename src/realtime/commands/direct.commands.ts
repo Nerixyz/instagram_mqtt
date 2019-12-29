@@ -3,6 +3,7 @@ import { Topics } from '../../constants';
 import { compressDeflate } from '../../shared';
 import * as Chance from 'chance';
 import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';
+import { MqttMessage } from '../../mqtt';
 
 interface ItemBaseType {
     threadId: string;
@@ -46,10 +47,11 @@ export class DirectCommands {
             payload: await compressDeflate(
                 Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)]),
             ),
+            qosLevel: 1,
         });
     }
 
-    private async sendCommand({ action, data, threadId, clientContext }: { action: string; data: any } & ItemBaseType) {
+    private async sendCommand({ action, data, threadId, clientContext }: { action: string; data: any } & ItemBaseType): Promise<MqttMessage> {
         if (clientContext) {
             data.client_context = clientContext;
         }
@@ -60,7 +62,7 @@ export class DirectCommands {
         });
         return this.client.publish({
             topic: Topics.SEND_MESSAGE.id,
-            qosLevel: 0,
+            qosLevel: 1,
             payload: await compressDeflate(json),
         });
     }
