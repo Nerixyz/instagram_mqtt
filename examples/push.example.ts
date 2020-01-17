@@ -24,6 +24,7 @@ const existsAsync = promisify(exists);
     // 'push' is emitted on every push notification
     ig.fbns.on('push', logEvent('push'));
     // 'auth' is emitted whenever the auth is sent to the client
+    // the listener has to be added before connecting
     ig.fbns.on('auth', async (auth) => {
         // logs the auth
         logEvent('auth')(auth);
@@ -37,6 +38,7 @@ const existsAsync = promisify(exists);
     ig.fbns.on('warning', logEvent('warning'));
 
     // this sends the connect packet to the server and starts the connection
+    // the promise will resolve once the client is fully connected (once /push/register/ is received)
     await ig.fbns.connect();
 })();
 

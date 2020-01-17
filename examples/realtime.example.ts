@@ -10,6 +10,7 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
     ig.state.generateDevice(process.env.IG_USERNAME);
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
 
+    // an example on how to subscribe to live comments
     const subToLiveComments = (broadcastId) =>
         // you can add other GraphQL subs using .subscribe
         ig.realtime.graphQlSubscribe(GraphQLSubscriptions.getLiveRealtimeCommentsSubscription(broadcastId));
@@ -27,6 +28,7 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
     ig.realtime.on('error', console.error);
     ig.realtime.on('close', () => console.error('RealtimeClient closed'));
     // connect
+    // this will resolve once all initial subscriptions have been sent
     await ig.realtime.connect({
         graphQlSubs: [
             // these are some subscriptions
