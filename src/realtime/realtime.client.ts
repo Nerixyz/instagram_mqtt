@@ -14,8 +14,6 @@ import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { MqttMessage } from '../mqtt';
 
-const _realtimeDebug = debugChannel('realtime');
-
 export declare interface RealtimeClient {
     on(event: 'error', cb: (e: Error) => void);
 
@@ -61,6 +59,8 @@ export interface RealtimeClientInitOptions {
 }
 
 export class RealtimeClient extends EventEmitter {
+    private realtimeDebug = debugChannel('realtime');
+
     private client: MQTToTClient;
     private connection: MQTToTConnection;
     private readonly ig: IgApiClient;
@@ -137,9 +137,9 @@ export class RealtimeClient extends EventEmitter {
     }
 
     public async connect(initOptions?: RealtimeClientInitOptions | string[]) {
-        _realtimeDebug('Connecting to realtime-broker...');
+        this.realtimeDebug('Connecting to realtime-broker...');
         this.setInitOptions(initOptions);
-        _realtimeDebug(`Overriding: ${Object.keys(this.initOptions.connectOverrides || {}).join(', ')}`);
+        this.realtimeDebug(`Overriding: ${Object.keys(this.initOptions.connectOverrides || {}).join(', ')}`);
         this.constructConnection();
         this.client = new MQTToTClient({
             url: REALTIME.HOST_NAME_V6,
@@ -150,7 +150,7 @@ export class RealtimeClient extends EventEmitter {
         const topicsArray = Object.values(Topics);
         this.client.on('message', async packet => {
             if (packet.payload === null) {
-                _realtimeDebug(`Received empty packet on topic ${packet.topic}`);
+                this.realtimeDebug(`Received empty packet on topic ${packet.topic}`);
                 this.emit('receive', packet.topic, packet.payload);
                 return true;
             }
@@ -177,13 +177,13 @@ export class RealtimeClient extends EventEmitter {
                 try {
                     this.emit('receive', topic, thriftRead(unzipped));
                 } catch (e) {
-                    _realtimeDebug(
+                    this.realtimeDebug(
                         `Error while reading packet: ${JSON.stringify({
                             topic: packet.topic,
                             unzipped: unzipped.toString('hex'),
                         })}`,
                     );
-                    _realtimeDebug(e);
+                    this.realtimeDebug(e);
                     this.emitWarning(e);
                     this.emit('receive', topic, unzipped.toString('utf8'));
                 }
@@ -195,7 +195,7 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
         return new Promise(resolve => {
             this.client.once('mqttotConnect', async () => {
-                _realtimeDebug('Connected. Checking initial subs.');
+                this.realtimeDebug('Connected. Checking initial subs.');
                 const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
                 await Promise.all([
                     (graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null),
@@ -224,7 +224,7 @@ export class RealtimeClient extends EventEmitter {
 
     public graphQlSubscribe(sub: string | string[]): Promise<MqttMessage> {
         sub = typeof sub === 'string' ? [sub] : sub;
-        _realtimeDebug(`Subscribing with GraphQL to ${sub.join(', ')}`);
+        this.realtimeDebug(`Subscribing with GraphQL to ${sub.join(', ')}`);
         return this.commands.updateSubscriptions({
             topic: Topics.REALTIME_SUB,
             data: {
@@ -235,7 +235,7 @@ export class RealtimeClient extends EventEmitter {
 
     public skywalkerSubscribe(sub: string | string[]): Promise<MqttMessage> {
         sub = typeof sub === 'string' ? [sub] : sub;
-        _realtimeDebug(`Subscribing with Skywalker to ${sub.join(', ')}`);
+        this.realtimeDebug(`Subscribing with Skywalker to ${sub.join(', ')}`);
         return this.commands.updateSubscriptions({
             topic: Topics.PUBSUB,
             data: {
@@ -245,7 +245,7 @@ export class RealtimeClient extends EventEmitter {
     }
 
     public irisSubscribe({ seq_id, snapshot_at_ms }: { seq_id: number; snapshot_at_ms: number }) {
-        _realtimeDebug(`Iris Sub to: seqId: ${seq_id}, snapshot: ${snapshot_at_ms}`);
+        this.realtimeDebug(`Iris Sub to: seqId: ${seq_id}, snapshot: ${snapshot_at_ms}`);
         return this.commands.updateSubscriptions({
             topic: Topics.IRIS_SUB,
             data: {

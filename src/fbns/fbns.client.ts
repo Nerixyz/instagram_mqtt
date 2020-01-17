@@ -8,7 +8,6 @@ import { ConnectResponsePacket, IdentifierPacket, PublishRequestPacket } from '.
 import { Chance } from 'chance';
 import * as querystring from 'querystring';
 import * as URL from 'url';
-const _fbnsDebug = debugChannel('fbns');
 
 export interface FbnsMessageData {
     token?: string;
@@ -211,6 +210,7 @@ export class FbnsClient extends EventEmitter {
     public set auth(value: FbnsDeviceAuth) {
         this._auth = value;
     }
+    private fbnsDebug = debugChannel('fbns');
     private client: MQTToTClient;
     private readonly ig: IgApiClient;
     private conn: MQTToTConnection;
@@ -232,7 +232,7 @@ export class FbnsClient extends EventEmitter {
     private emitPP = (e: string) => this.emit('pp', e);
 
     public buildConnection() {
-        _fbnsDebug('Constructing connection');
+        this.fbnsDebug('Constructing connection');
         this.conn = new MQTToTConnection({
             clientIdentifier: this._auth.clientId,
             clientInfo: {
@@ -260,7 +260,7 @@ export class FbnsClient extends EventEmitter {
     }
 
     public async connect({ enableTrace }: { enableTrace?: boolean } = {}): Promise<void> {
-        _fbnsDebug('Connecting to FBNS...');
+        this.fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.buildConnection();
         this.client = new MQTToTClient({
@@ -274,15 +274,15 @@ export class FbnsClient extends EventEmitter {
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
 
         this.client.on('mqttotConnect', async (res: ConnectResponsePacket) => {
-            _fbnsDebug('Connected to MQTT');
+            this.fbnsDebug('Connected to MQTT');
             const payload = res.payload.toString('utf8');
             if (payload.length === 0) {
-                _fbnsDebug('Received empty connect packet.');
+                this.fbnsDebug('Received empty connect packet.');
                 this.emitError(new Error('Received empty connect packet'));
                 this.connectPromiseInfo.reject(new Error('Empty auth packet.'));
                 return;
             }
-            _fbnsDebug(`Received auth: ${payload}`);
+            this.fbnsDebug(`Received auth: ${payload}`);
             this._auth.read(payload);
             this.emitAuth(this.auth);
             IdentifierPacket.generateIdentifier();
@@ -314,7 +314,7 @@ export class FbnsClient extends EventEmitter {
             case FbnsTopics.FBNS_REG_RESP.id: {
                 const data = await unzipAsync(msg.payload);
                 const payload = data.toString('utf8');
-                _fbnsDebug(`Received register response: ${payload}`);
+                this.fbnsDebug(`Received register response: ${payload}`);
 
                 const { token, error } = JSON.parse(payload);
                 if (error) {
@@ -341,7 +341,7 @@ export class FbnsClient extends EventEmitter {
                         this.emit(notification.collapseKey, notification);
                     }
                 } else {
-                    _fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
+                    this.fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
                     this.emitMessage(JSON.parse((await unzipAsync(msg.payload)).toString('utf8')));
                 }
                 break;
@@ -357,7 +357,7 @@ export class FbnsClient extends EventEmitter {
                 break;
             }
             default: {
-                _fbnsDebug(`Received unknown packet on ${msg.topic}: ${msg.payload.toString('base64')}`);
+                this.fbnsDebug(`Received unknown packet on ${msg.topic}: ${msg.payload.toString('base64')}`);
             }
         }
     }

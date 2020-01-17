@@ -2,9 +2,8 @@ import { IgApiClient } from 'instagram-private-api';
 import { Enumerable } from 'instagram-private-api/dist/decorators';
 import { debugChannel } from '../shared';
 
-const _authLog = debugChannel('fbns', 'device-auth');
-
 export class FbnsDeviceAuth {
+    private authLog = debugChannel('fbns', 'device-auth');
     public clientId: string;
     public userId: number;
     public password: string;
@@ -35,7 +34,7 @@ export class FbnsDeviceAuth {
     }
 
     public read(jsonStr: string) {
-        _authLog(`Reading auth json ${jsonStr ?? 'empty'}`);
+        this.authLog(`Reading auth json ${jsonStr ?? 'empty'}`);
         if (!jsonStr) return;
         this.json = jsonStr;
         const { ck, cs, di, ds, sr, rc } = JSON.parse(jsonStr);

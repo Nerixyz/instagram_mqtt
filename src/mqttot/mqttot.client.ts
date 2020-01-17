@@ -6,28 +6,26 @@ import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { compressDeflate, debugChannel } from '../shared';
 import { ConnectResponsePacket } from '../mqtt/packets';
 
-const __mqttotDebugChannel = debugChannel('mqttot');
-
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
 
-    protected _mqttotDebug = (msg: string, ...args: string[]) =>
-        __mqttotDebugChannel(`${this.url.host}: ${msg}`, ...args);
+    protected mqttotDebug = (msg: string, ...args: string[]) =>
+        debugChannel('mqttot')(`${this.url.host}: ${msg}`, ...args);
 
     public constructor(options: { url: string; payload: Buffer }) {
         super({ url: options.url });
         this.connectPayload = options.payload;
-        this._mqttotDebug(`Creating client`);
+        this.mqttotDebug(`Creating client`);
         this.registerListeners();
     }
 
     protected registerListeners() {
-        this.on('disconnect', () => this._mqttotDebug('Disconnected.'));
+        this.on('disconnect', () => this.mqttotDebug('Disconnected.'));
         const printErrorOrWarning = (type: string) => (e: Error | string) => {
             if (typeof e === 'string') {
-                this._mqttotDebug(`${type}: ${e}`);
+                this.mqttotDebug(`${type}: ${e}`);
             } else {
-                this._mqttotDebug(`${type}: ${e.message}\n\tStack: ${e.stack}`);
+                this.mqttotDebug(`${type}: ${e.message}\n\tStack: ${e.stack}`);
             }
         };
         this.on('error', printErrorOrWarning('Error'));
@@ -35,7 +33,7 @@ export class MQTToTClient extends MqttClient {
     }
 
     protected registerClient(options: RegisterClientOptions, noNewPromise: boolean = false): Promise<void> {
-        this._mqttotDebug(`Trying to register the client...`);
+        this.mqttotDebug(`Trying to register the client...`);
         let promise;
         if(noNewPromise){
             promise = this.startFlow(new MQTToTConnectFlow(this.connectPayload))
@@ -57,7 +55,7 @@ export class MQTToTClient extends MqttClient {
      * @returns {Promise<void>}
      */
     public async mqttotPublish(message: MqttMessage) {
-        this._mqttotDebug(`Publishing ${message.payload.byteLength}bytes to topic ${message.topic}`);
+        this.mqttotDebug(`Publishing ${message.payload.byteLength}bytes to topic ${message.topic}`);
         this.publish({
             topic: message.topic,
             payload: await compressDeflate(message.payload),
