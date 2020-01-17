@@ -9,6 +9,7 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
     // normal login
     ig.state.generateDevice(process.env.IG_USERNAME);
     await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
+    // now `ig` is a client with a valid session
 
     // an example on how to subscribe to live comments
     const subToLiveComments = (broadcastId) =>
@@ -30,6 +31,7 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
     // connect
     // this will resolve once all initial subscriptions have been sent
     await ig.realtime.connect({
+        // optional
         graphQlSubs: [
             // these are some subscriptions
             GraphQLSubscriptions.getAppPresenceSubscription(),
@@ -39,15 +41,26 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
             GraphQLSubscriptions.getDirectTypingSubscription(ig.state.cookieUserId),
             GraphQLSubscriptions.getAsyncAdSubscription(ig.state.cookieUserId),
         ],
+        // optional
         skywalkerSubs: [
             SkywalkerSubscriptions.directSub(ig.state.cookieUserId),
             SkywalkerSubscriptions.liveSub(ig.state.cookieUserId)
         ],
+        // optional
+        // this enables you to get direct messages
         irisData: await ig.feed.directInbox().request(),
+        // optional
+        // in here you can change connect options
+        // available are all properties defined in MQTToTConnectionClientInfo
+        connectOverrides: {
+        },
     });
+
+    // simulate turning the device off after 2s and turning it back on after another 2s
     setTimeout(() => {
         console.log('Device off');
         // from now on, you won't receive any realtime-data as you "aren't in the app"
+        // the keepAliveTimeout is somehow a 'constant' by instagram
         ig.realtime.direct.sendForegroundState({inForegroundApp: false, inForegroundDevice: false, keepAliveTimeout: 900});
     }, 2000);
     setTimeout(() => {
