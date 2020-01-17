@@ -1,10 +1,4 @@
-import {
-    RegionHintParser,
-    GraphqlParser,
-    IrisParser,
-    JsonParser,
-    SkywalkerParser,
-} from './realtime/parsers';
+import { RegionHintParser, GraphqlParser, IrisParser, JsonParser, SkywalkerParser } from './realtime/parsers';
 import { Topic } from './topic';
 
 export const Topics: { [x: string]: Topic } = {
@@ -59,7 +53,7 @@ export const Topics: { [x: string]: Topic } = {
     FOREGROUND_STATE: {
         id: '102',
         path: '/t_fs',
-    }
+    },
 };
 
 export const INSTAGRAM_PACKAGE_NAME = 'com.instagram.android';

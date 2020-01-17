@@ -148,7 +148,7 @@ export class RealtimeClient extends EventEmitter {
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);
         const topicsArray = Object.values(Topics);
-        this.client.on('message', async packet => {
+        this.client.on('message', async (packet) => {
             if (packet.payload === null) {
                 this.realtimeDebug(`Received empty packet on topic ${packet.topic}`);
                 this.emit('receive', packet.topic, packet.payload);
@@ -193,15 +193,15 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('warning', w => this.emitWarning(w));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             this.client.once('mqttotConnect', async () => {
                 this.realtimeDebug('Connected. Checking initial subs.');
                 const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
                 await Promise.all([
-                    (graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null),
-                    (skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null),
-                    (irisData ? this.irisSubscribe(irisData) : null),
-                    ...(Object.values(Topics).map(topic => this.client.subscribe({ topic: topic.path }))),
+                    graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null,
+                    skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null,
+                    irisData ? this.irisSubscribe(irisData) : null,
+                    ...Object.values(Topics).map(topic => this.client.subscribe({ topic: topic.path })),
                 ]);
                 resolve();
             });
@@ -261,7 +261,7 @@ export class RealtimeClient extends EventEmitter {
         switch (topic) {
             case 'direct': {
                 const parsed = json;
-                parsed.data = parsed.data.map(e => {
+                parsed.data = parsed.data.map((e) => {
                     if (typeof e.value === 'string') {
                         e.value = JSON.parse(e.value);
                     }
@@ -284,7 +284,7 @@ export class RealtimeClient extends EventEmitter {
         for (const element of syncData) {
             const data = element.data;
             delete element.data;
-            data.forEach(e => {
+            data.forEach((e) => {
                 if (e.path && e.value) {
                     if (e.path.startsWith('/direct_v2/threads/')) {
                         const [, , , thread_id] = e.path.split('/');

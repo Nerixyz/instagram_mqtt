@@ -116,7 +116,7 @@ export class MqttParser {
                     this.stream.position = startPos;
                     exitParser = true;
                 })
-                .catch(e => {
+                .catch((e) => {
                     this.errorCallback(e);
                 });
             if (exitParser) break;

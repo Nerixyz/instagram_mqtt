@@ -215,7 +215,7 @@ export class FbnsClient extends EventEmitter {
     private readonly ig: IgApiClient;
     private conn: MQTToTConnection;
     private _auth: FbnsDeviceAuth;
-    private connectPromiseInfo: {resolve: () => void, reject: (error: Error) => void} = null;
+    private connectPromiseInfo: { resolve: () => void; reject: (error: Error) => void } = null;
 
     public constructor(ig: IgApiClient) {
         super();
@@ -306,7 +306,7 @@ export class FbnsClient extends EventEmitter {
             clean: true,
             enableTrace,
         });
-        return await new Promise((resolve, reject) => this.connectPromiseInfo = {resolve, reject});
+        return await new Promise((resolve, reject) => (this.connectPromiseInfo = { resolve, reject }));
     }
 
     private async handleMessage(msg: PublishRequestPacket) {
