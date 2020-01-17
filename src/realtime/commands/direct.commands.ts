@@ -1,6 +1,6 @@
 import { MQTToTClient } from '../../mqttot';
 import { Topics } from '../../constants';
-import { compressDeflate } from '../../shared';
+import { compressDeflate, debugChannel } from '../../shared';
 import * as Chance from 'chance';
 import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';
 import { MqttMessage } from '../../mqtt';
@@ -22,6 +22,7 @@ export interface ForegroundState {
 }
 
 export class DirectCommands {
+    private directDebug = debugChannel('realtime', 'direct');
     private client: MQTToTClient;
     private chance: Chance.Chance;
 
@@ -42,8 +43,9 @@ export class DirectCommands {
     }
 
     public async sendForegroundState(state: ForegroundState) {
+        this.directDebug(`Updated foreground state: ${JSON.stringify(state)}`);
         return this.client.publish({
-            topic: '102', // '/t_fs'
+            topic: Topics.FOREGROUND_STATE.id,
             payload: await compressDeflate(
                 Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)]),
             ),
