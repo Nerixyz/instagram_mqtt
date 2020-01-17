@@ -215,6 +215,7 @@ export class FbnsClient extends EventEmitter {
     private readonly ig: IgApiClient;
     private conn: MQTToTConnection;
     private _auth: FbnsDeviceAuth;
+    private connectPromiseInfo: {resolve: () => void, reject: (error: Error) => void} = null;
 
     public constructor(ig: IgApiClient) {
         super();
@@ -258,7 +259,7 @@ export class FbnsClient extends EventEmitter {
         });
     }
 
-    public async connect({ enableTrace }: { enableTrace?: boolean } = {}) {
+    public async connect({ enableTrace }: { enableTrace?: boolean } = {}): Promise<void> {
         _fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.buildConnection();
@@ -278,6 +279,7 @@ export class FbnsClient extends EventEmitter {
             if (payload.length === 0) {
                 _fbnsDebug('Received empty connect packet.');
                 this.emitError(new Error('Received empty connect packet'));
+                this.connectPromiseInfo.reject(new Error('Empty auth packet.'));
                 return;
             }
             _fbnsDebug(`Received auth: ${payload}`);
@@ -298,12 +300,13 @@ export class FbnsClient extends EventEmitter {
             // this.buildConnection(); ?
         });
 
-        this.client.connect({
+        await this.client.connect({
             keepAlive: 0,
             protocolLevel: 3,
             clean: true,
             enableTrace,
         });
+        return await new Promise((resolve, reject) => this.connectPromiseInfo = {resolve, reject});
     }
 
     private async handleMessage(msg: PublishRequestPacket) {
@@ -316,12 +319,15 @@ export class FbnsClient extends EventEmitter {
                 const { token, error } = JSON.parse(payload);
                 if (error) {
                     this.emitError(error);
+                    this.connectPromiseInfo.reject(error);
                     return;
                 }
                 try {
                     await this.sendPushRegister(token);
+                    this.connectPromiseInfo.resolve();
                 } catch (e) {
                     this.emitError(e);
+                    this.connectPromiseInfo.reject(e);
                 }
                 break;
             }

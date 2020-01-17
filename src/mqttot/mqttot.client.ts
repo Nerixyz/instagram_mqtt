@@ -1,4 +1,4 @@
-import { MqttClient } from '../mqtt';
+import { MqttClient, OutgoingConnectFlow, RegisterClientOptions } from '../mqtt';
 import { ConnectRequestOptions } from '../mqtt/packets';
 import { PacketFlow } from '../mqtt/flow';
 import { MqttPacket, MqttMessage, PacketTypes } from '../mqtt';
@@ -34,12 +34,21 @@ export class MQTToTClient extends MqttClient {
         this.on('warning', printErrorOrWarning('Warning'));
     }
 
-    protected registerClient(options: ConnectRequestOptions) {
+    protected registerClient(options: RegisterClientOptions, noNewPromise: boolean = false): Promise<void> {
         this._mqttotDebug(`Trying to register the client...`);
-        this.startFlow(new MQTToTConnectFlow(this.connectPayload));
+        let promise;
+        if(noNewPromise){
+            promise = this.startFlow(new MQTToTConnectFlow(this.connectPayload))
+        } else {
+            promise = new Promise<void>(resolve => {
+                this.startInfo = { resolve };
+            });
+            this.startFlow(new MQTToTConnectFlow(this.connectPayload)).then(() => this.startInfo.resolve());
+        }
         this.connectTimer = this.executeDelayed(2000, () => {
-            this.registerClient(options);
+            this.registerClient(options, true).then(() => this.startInfo.resolve());
         });
+        return promise;
     }
 
     /**

@@ -12,6 +12,7 @@ import { QueryIDs } from './subscriptions';
 import { DirectCommands } from './commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
+import { MqttMessage } from '../mqtt';
 
 const _realtimeDebug = debugChannel('realtime');
 
@@ -192,27 +193,24 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('warning', w => this.emitWarning(w));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
         this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
-        this.client.once('mqttotConnect', async () => {
-            _realtimeDebug('Connected.');
-            Object.values(Topics)
-                .map(topic => ({ topic: topic.path }))
-                .forEach(t => this.client.subscribe(t));
-            if (this.initOptions.graphQlSubs.length > 0) {
-                await this.graphQlSubscribe(this.initOptions.graphQlSubs);
-            }
-            if (this.initOptions.skywalkerSubs.length > 0) {
-                await this.skywalkerSubscribe(this.initOptions.skywalkerSubs);
-            }
-            if (this.initOptions.irisData) {
-                await this.irisSubscribe(this.initOptions.irisData);
-            }
-        });
-
-        this.client.connect({
-            keepAlive: 0,
-            protocolLevel: 3,
-            clean: true,
-            enableTrace: this.initOptions.enableTrace,
+        return new Promise(resolve => {
+            this.client.once('mqttotConnect', async () => {
+                _realtimeDebug('Connected. Checking initial subs.');
+                const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
+                await Promise.all([
+                    (graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null),
+                    (skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null),
+                    (irisData ? this.irisSubscribe(irisData) : null),
+                    ...(Object.values(Topics).map(topic => this.client.subscribe({ topic: topic.path }))),
+                ]);
+                resolve();
+            });
+            this.client.connect({
+                keepAlive: 0,
+                protocolLevel: 3,
+                clean: true,
+                enableTrace: this.initOptions.enableTrace,
+            });
         });
     }
 
@@ -224,25 +222,30 @@ export class RealtimeClient extends EventEmitter {
         'Use RealtimeClient.graphQlSubscribe instead',
     );
 
-    public graphQlSubscribe(subs: string | string[]) {
+    public graphQlSubscribe(sub: string | string[]): Promise<MqttMessage> {
+        sub = typeof sub === 'string' ? [sub] : sub;
+        _realtimeDebug(`Subscribing with GraphQL to ${sub.join(', ')}`);
         return this.commands.updateSubscriptions({
             topic: Topics.REALTIME_SUB,
             data: {
-                sub: typeof subs === 'string' ? [subs] : subs,
+                sub,
             },
         });
     }
 
-    public skywalkerSubscribe(subs: string | string[]) {
+    public skywalkerSubscribe(sub: string | string[]): Promise<MqttMessage> {
+        sub = typeof sub === 'string' ? [sub] : sub;
+        _realtimeDebug(`Subscribing with Skywalker to ${sub.join(', ')}`);
         return this.commands.updateSubscriptions({
             topic: Topics.PUBSUB,
             data: {
-                sub: typeof subs === 'string' ? [subs] : subs,
+                sub,
             },
         });
     }
 
     public irisSubscribe({ seq_id, snapshot_at_ms }: { seq_id: number; snapshot_at_ms: number }) {
+        _realtimeDebug(`Iris Sub to: seqId: ${seq_id}, snapshot: ${snapshot_at_ms}`);
         return this.commands.updateSubscriptions({
             topic: Topics.IRIS_SUB,
             data: {

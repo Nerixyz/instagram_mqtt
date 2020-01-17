@@ -49,6 +49,8 @@ export class MqttClient extends EventEmitter {
     protected timers: object[] = [];
     protected connectTimer: object;
 
+    protected startInfo: {resolve: () => void} = null;
+
     public constructor(options: MqttClientConstructorOptions) {
         super();
         this.url = URL.parse(options.url);
@@ -76,8 +78,10 @@ export class MqttClient extends EventEmitter {
             port: Number(this.url.port),
             enableTrace: options.enableTrace,
         });
-        this.setupListeners();
-        this.setConnecting();
+        return new Promise(resolve => {
+            this.setupListeners({resolve});
+            this.setConnecting();
+        });
     }
 
     protected emitError: (e) => void = e => this.emit('error', e);
@@ -87,7 +91,7 @@ export class MqttClient extends EventEmitter {
 
     protected emitFlow: (name: string, result: any) => void = (name, result) => this.emit(name, result);
 
-    protected setupListeners() {
+    protected setupListeners({resolve}: {resolve: () => void}) {
         this.socket.on('error', e => {
             if (this.isConnecting) {
                 this.setDisconnected();
@@ -102,7 +106,7 @@ export class MqttClient extends EventEmitter {
         });
         this.socket.on('secureConnect', () => {
             this.emitOpen();
-            this.registerClient(this.connectionSettings);
+            this.registerClient(this.connectionSettings).then(() => resolve());
         });
         this.socket.on('timeout', () => {
             this.setDisconnected();
@@ -128,12 +132,20 @@ export class MqttClient extends EventEmitter {
         return this.startFlow(new OutgoingDisconnectFlow(undefined));
     }
 
-    protected registerClient(options: RegisterClientOptions) {
-        // result can be ignored
-        this.startFlow(new OutgoingConnectFlow(options));
+    protected registerClient(options: RegisterClientOptions, noNewPromise: boolean = false): Promise<void> {
+        let promise;
+        if(noNewPromise){
+            promise = this.startFlow(new OutgoingConnectFlow(options))
+        } else {
+            promise = new Promise<void>(resolve => {
+                this.startInfo = { resolve };
+            });
+            this.startFlow(new OutgoingConnectFlow(options)).then(() => this.startInfo.resolve());
+        }
         this.connectTimer = this.executeDelayed(2000, () => {
-            this.registerClient(options);
+            this.registerClient(options, true).then(() => this.startInfo.resolve());
         });
+        return promise;
     }
 
     public startFlow<T>(flow: PacketFlow<T>): Promise<T> {
@@ -203,6 +215,7 @@ export class MqttClient extends EventEmitter {
             const packet = this.writtenFlow.start();
             if (packet) {
                 this.writePacketToSocket(packet);
+                this.handleSendingFlows();
             } else {
                 this.executeNextTick(() => this.finishFlow(this.writtenFlow));
             }
@@ -290,7 +303,7 @@ export class MqttClient extends EventEmitter {
                         val => val && !val.finished && (!val.finished || val !== usedFlow),
                     );
                 } else {
-                    this.emitWarning(new Error(`Unexpected packet: ${packet.packetType}`));
+                    this.emitWarning(new Error(`Unexpected packet: ${Object.keys(PacketTypes)[packet.packetType]}`));
                 }
                 break;
             }
@@ -300,7 +313,7 @@ export class MqttClient extends EventEmitter {
                 break;
             }
             default: {
-                this.emitWarning(new Error(`Cannot handle packet of type ${packet.packetType}`));
+                this.emitWarning(new Error(`Cannot handle packet of type ${Object.keys(PacketTypes)[packet.packetType]}`));
             }
         }
     }
