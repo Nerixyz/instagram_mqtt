@@ -9,7 +9,7 @@ export class DisconnectRequestPacket extends MqttPacket {
 
     public read(stream: PacketStream): void {
         super.read(stream);
-        this.assertPacketFlags(0);
+        // this.assertPacketFlags(0); = 2?
         this.assertRemainingPacketLength(0);
     }
 }

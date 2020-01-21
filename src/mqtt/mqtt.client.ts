@@ -241,6 +241,7 @@ export class MqttClient extends EventEmitter {
 
     protected async handleData(data: Buffer): Promise<void> {
         try {
+            console.log(data.length);
             const results = await this.parser.parse(data);
 
             if (results.length > 0) {

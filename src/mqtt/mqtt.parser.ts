@@ -83,44 +83,84 @@ export class MqttParser {
         },
     ];
 
+    /**
+     * Some workaround for async requests:
+     * This prevents the execution if there's already something in the buffer.
+     * Note: if something fails, this will lock forever
+     * @type {{unlock: () => void; resolve: null; lock: () => void; locked: boolean}}
+     */
+    private lock = {
+        locked: false,
+        lock: () => {
+            this.lock.locked = true;
+        },
+        unlock: () => {
+            this.lock.locked = false;
+            if(this.lock.resolve) {
+                this.lock.resolve();
+                this.lock.resolve = null;
+            }
+        },
+        resolve: null,
+    };
+
     public constructor(errorCallback?: (e: Error) => void) {
         this.stream = PacketStream.empty();
         this.errorCallback = errorCallback;
     }
 
     public async parse(data: Buffer): Promise<MqttPacket[]> {
+        await this.waitForLock();
+        this.lock.lock();
+        console.log(data.toString('hex'));
         let startPos = this.stream.position;
         this.stream.write(data);
-
+        console.log(startPos);
         this.stream.position = startPos;
         const results: MqttPacket[] = [];
-        while (this.stream.remainingBytes > 0) {
-            const type = this.stream.readByte() >> 4;
+        try {
+            while (this.stream.remainingBytes > 0) {
+                const type = this.stream.readByte() >> 4;
 
-            let packet;
-            try {
-                packet = this.mapping.find(x => x.type === type).packet();
-            } catch (e) {
-                continue;
-            }
+                let packet;
+                try {
+                    packet = this.mapping.find(x => x.type === type).packet();
+                } catch (e) {
+                    continue;
+                }
 
-            this.stream.seek(-1);
-            let exitParser = false;
-            await Bluebird.try(() => {
-                packet.read(this.stream);
-                results.push(packet);
-                this.stream.cut();
-                startPos = this.stream.position;
-            })
-                .catch(EndOfStreamError, () => {
-                    this.stream.position = startPos;
-                    exitParser = true;
+                this.stream.seek(-1);
+                let exitParser = false;
+                await Bluebird.try(() => {
+                    packet.read(this.stream);
+                    results.push(packet);
+                    this.stream.cut();
+                    startPos = this.stream.position;
                 })
-                .catch((e) => {
-                    this.errorCallback(e);
-                });
-            if (exitParser) break;
+                    .catch(EndOfStreamError, () => {
+                        this.stream.position = startPos;
+                        console.log(this.stream.position, this.stream.length);
+                        exitParser = true;
+                    })
+                    .catch((e) => {
+                        this.errorCallback(e);
+                    });
+                if (exitParser) break;
+            }
+        } catch(e) {
+            this.errorCallback(e);
         }
+        this.lock.unlock();
         return results;
+    }
+
+    private waitForLock(): Promise<void> {
+        if(this.lock.locked) {
+            return new Promise<void>(resolve => {
+                this.lock.resolve = resolve;
+            });
+        } else {
+            return Promise.resolve();
+        }
     }
 }

@@ -1,6 +1,7 @@
 import { IdentifiableBasePacket } from './identifiable.packet';
 import { PacketTypes } from '../mqtt.constants';
 import { PacketStream } from '../packet-stream';
+import { EndOfStreamError } from '../errors';
 
 export class PublishRequestPacket extends IdentifiableBasePacket {
     public get payload(): Buffer {
@@ -69,6 +70,8 @@ export class PublishRequestPacket extends IdentifiableBasePacket {
 
         const payloadLength = this.remainingPacketLength - (stream.position - lastPos);
         if (payloadLength === 0) return;
+        if(payloadLength > stream.length - stream.position)
+            throw new EndOfStreamError();
 
         this._payload = stream.read(payloadLength);
     }
