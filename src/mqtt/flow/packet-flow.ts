@@ -1,11 +1,11 @@
 import { MqttPacket } from '../mqtt.packet';
 
 export abstract class PacketFlow<T> {
-    private _finished: boolean = false;
-    private _success: boolean = false;
+    private _finished = false;
+    private _success = false;
     private _result: T;
     private _error: string;
-    protected _silent: boolean = false;
+    protected _silent = false;
     protected _promise: Promise<T>;
     protected _resolve: (value: T) => void;
     protected _reject: (error: Error | string) => void;
@@ -48,7 +48,7 @@ export abstract class PacketFlow<T> {
         this._resolve(result);
     }
 
-    protected errored(error: string = ''): void {
+    protected errored(error = ''): void {
         this._finished = true;
         this._success = false;
         this._error = error;

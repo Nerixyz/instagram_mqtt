@@ -5,8 +5,8 @@ export abstract class MqttPacket {
         return this._packetType;
     }
     private readonly _packetType: number;
-    protected packetFlags: number = 0;
-    protected remainingPacketLength: number = 0;
+    protected packetFlags = 0;
+    protected remainingPacketLength = 0;
 
     protected constructor(packetType: number) {
         this._packetType = packetType;

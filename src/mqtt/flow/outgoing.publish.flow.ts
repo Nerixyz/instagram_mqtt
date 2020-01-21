@@ -12,7 +12,7 @@ import { PublishReleasePacket } from '../packets';
 export class OutgoingPublishFlow extends PacketFlow<MqttMessage> {
     private readonly identifier: number;
     private readonly message: MqttMessage;
-    private receivedPubRec: boolean = false;
+    private receivedPubRec = false;
 
     public constructor(message: MqttMessage, identifier?: number) {
         super();

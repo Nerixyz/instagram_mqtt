@@ -6,7 +6,7 @@ export interface MessageSyncMessageWrapper extends Partial<IrisParserData> {
 }
 
 export type MessageSyncMessageType =
-    'text'
+    | 'text'
     | 'media'
     | 'raven_media'
     | 'voice_media'

@@ -24,63 +24,21 @@ export class MqttParser {
     protected stream: PacketStream;
     protected errorCallback: (e: Error) => void;
 
-    public mapping: { type: number; packet: () => MqttPacket }[] = [
-        {
-            type: PacketTypes.TYPE_CONNECT,
-            packet: () => new ConnectRequestPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_CONNACK,
-            packet: () => new ConnectResponsePacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PUBLISH,
-            packet: () => new PublishRequestPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PUBACK,
-            packet: () => new PublishAckPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PUBREC,
-            packet: () => new PublishReceivedPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PUBREL,
-            packet: () => new PublishReleasePacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PUBCOMP,
-            packet: () => new PublishCompletePacket(),
-        },
-        {
-            type: PacketTypes.TYPE_SUBSCRIBE,
-            packet: () => new SubscribeRequestPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_SUBACK,
-            packet: () => new SubscribeResponsePacket(),
-        },
-        {
-            type: PacketTypes.TYPE_UNSUBSCRIBE,
-            packet: () => new UnsubscribeRequestPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_UNSUBACK,
-            packet: () => new UnsubscribeResponsePacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PINGREQ,
-            packet: () => new PingRequestPacket(),
-        },
-        {
-            type: PacketTypes.TYPE_PINGRESP,
-            packet: () => new PingResponsePacket(),
-        },
-        {
-            type: PacketTypes.TYPE_DISCONNECT,
-            packet: () => new DisconnectRequestPacket(),
-        },
+    public mapping: [number, () => MqttPacket][] = [
+        [PacketTypes.TYPE_CONNECT, () => new ConnectRequestPacket()],
+        [PacketTypes.TYPE_CONNACK, () => new ConnectResponsePacket()],
+        [PacketTypes.TYPE_PUBLISH, () => new PublishRequestPacket()],
+        [PacketTypes.TYPE_PUBACK, () => new PublishAckPacket()],
+        [PacketTypes.TYPE_PUBREC, () => new PublishReceivedPacket()],
+        [PacketTypes.TYPE_PUBREL, () => new PublishReleasePacket()],
+        [PacketTypes.TYPE_PUBCOMP, () => new PublishCompletePacket()],
+        [PacketTypes.TYPE_SUBSCRIBE, () => new SubscribeRequestPacket()],
+        [PacketTypes.TYPE_SUBACK, () => new SubscribeResponsePacket()],
+        [PacketTypes.TYPE_UNSUBSCRIBE, () => new UnsubscribeRequestPacket()],
+        [PacketTypes.TYPE_UNSUBACK, () => new UnsubscribeResponsePacket()],
+        [PacketTypes.TYPE_PINGREQ, () => new PingRequestPacket()],
+        [PacketTypes.TYPE_PINGRESP, () => new PingResponsePacket()],
+        [PacketTypes.TYPE_DISCONNECT, () => new DisconnectRequestPacket()],
     ];
 
     /**
@@ -96,7 +54,7 @@ export class MqttParser {
         },
         unlock: () => {
             this.lock.locked = false;
-            if(this.lock.resolve) {
+            if (this.lock.resolve) {
                 this.lock.resolve();
                 this.lock.resolve = null;
             }
@@ -112,10 +70,8 @@ export class MqttParser {
     public async parse(data: Buffer): Promise<MqttPacket[]> {
         await this.waitForLock();
         this.lock.lock();
-        console.log(data.toString('hex'));
         let startPos = this.stream.position;
         this.stream.write(data);
-        console.log(startPos);
         this.stream.position = startPos;
         const results: MqttPacket[] = [];
         try {
@@ -124,7 +80,7 @@ export class MqttParser {
 
                 let packet;
                 try {
-                    packet = this.mapping.find(x => x.type === type).packet();
+                    packet = this.mapping.find(x => x[0] === type)[1]();
                 } catch (e) {
                     continue;
                 }
@@ -139,7 +95,6 @@ export class MqttParser {
                 })
                     .catch(EndOfStreamError, () => {
                         this.stream.position = startPos;
-                        console.log(this.stream.position, this.stream.length);
                         exitParser = true;
                     })
                     .catch((e) => {
@@ -147,7 +102,7 @@ export class MqttParser {
                     });
                 if (exitParser) break;
             }
-        } catch(e) {
+        } catch (e) {
             this.errorCallback(e);
         }
         this.lock.unlock();
@@ -155,8 +110,8 @@ export class MqttParser {
     }
 
     private waitForLock(): Promise<void> {
-        if(this.lock.locked) {
-            return new Promise<void>(resolve => {
+        if (this.lock.locked) {
+            return new Promise<void>((resolve) => {
                 this.lock.resolve = resolve;
             });
         } else {

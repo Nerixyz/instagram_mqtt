@@ -53,7 +53,7 @@ export class PacketStream {
      * @param {number} steps - steps to move
      * @returns {number} Position before moving
      */
-    private move(steps: number = 1): number {
+    private move(steps = 1): number {
         this._position += steps;
         if (this._position > this.length) throw new EndOfStreamError('Reached end of stream');
         return this._position - steps;

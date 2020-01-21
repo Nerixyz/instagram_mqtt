@@ -23,7 +23,7 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket {
     private _topic: string;
     private _qosLevel: number;
 
-    public constructor(topic?: string, qosLevel: number = 1) {
+    public constructor(topic?: string, qosLevel = 1) {
         super(PacketTypes.TYPE_SUBSCRIBE);
         this.assertValidQosLevel(qosLevel);
         this.assertValidString(topic);

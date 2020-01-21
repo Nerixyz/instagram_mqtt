@@ -31,7 +31,7 @@ export class MQTToTClient extends MqttClient {
         this.on('warning', printErrorOrWarning('Warning'));
     }
 
-    protected registerClient(options: RegisterClientOptions, noNewPromise: boolean = false): Promise<void> {
+    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<void> {
         this.mqttotDebug(`Trying to register the client...`);
         let promise;
         if (noNewPromise) {

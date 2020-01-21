@@ -35,9 +35,9 @@ export class MqttClient extends EventEmitter {
 
     public parser: MqttParser;
     public socket: TLSSocket;
-    protected isConnected: boolean = false;
-    protected isConnecting: boolean = false;
-    protected isDisconnected: boolean = false;
+    protected isConnected = false;
+    protected isConnecting = false;
+    protected isDisconnected = false;
     protected url: URL.UrlWithStringQuery;
 
     protected receivingFlows: PacketFlow<any>[] = [];
@@ -132,7 +132,7 @@ export class MqttClient extends EventEmitter {
         return this.startFlow(new OutgoingDisconnectFlow(undefined));
     }
 
-    protected registerClient(options: RegisterClientOptions, noNewPromise: boolean = false): Promise<void> {
+    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<void> {
         let promise;
         if (noNewPromise) {
             promise = this.startFlow(new OutgoingConnectFlow(options));
@@ -241,9 +241,7 @@ export class MqttClient extends EventEmitter {
 
     protected async handleData(data: Buffer): Promise<void> {
         try {
-            console.log(data.length);
             const results = await this.parser.parse(data);
-
             if (results.length > 0) {
                 results.forEach(r => this.handlePacket(r));
             }

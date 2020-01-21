@@ -212,7 +212,7 @@ export class BufferReader {
         return this._stack;
     }
 
-    private _position: number = 0;
+    private _position = 0;
     public get position(): number {
         return this._position;
     }
@@ -221,7 +221,7 @@ export class BufferReader {
         return this.buffer.length;
     }
 
-    private _field: number = 0;
+    private _field = 0;
     public get field(): number {
         return this._field;
     }

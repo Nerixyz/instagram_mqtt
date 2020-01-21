@@ -31,10 +31,10 @@ export class MQTToTConnectRequestPacket extends MqttPacket {
     }
 
     // only 3 is allowed
-    private protocolLevel: number = 3;
-    private _protocolName: string = 'MQTToT';
-    private _flags: number = 194;
-    private _keepAlive: number = 60;
+    private protocolLevel = 3;
+    private _protocolName = 'MQTToT';
+    private _flags = 194;
+    private _keepAlive = 60;
     public payload: Buffer;
 
     public constructor(payload?: Buffer) {
