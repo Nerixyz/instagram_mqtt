@@ -24,7 +24,8 @@
         }],
         "@typescript-eslint/camelcase": "off",
         "@typescript-eslint/consistent-type-definitions": "off",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/ban-ts-ignore": "off"
       }
     }
   ],
