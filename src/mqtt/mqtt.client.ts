@@ -63,7 +63,7 @@ export class MqttClient extends EventEmitter {
             this.stopExecuting = clearInterval;
         } catch (e) {
             /* eslint no-console: "off" */
-            console.error('some timers could\'t be registered!');
+            console.error("some timers could't be registered!");
             // process isn't defined
         }
     }
@@ -78,7 +78,7 @@ export class MqttClient extends EventEmitter {
             port: Number(this.url.port),
             enableTrace: options.enableTrace,
         });
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             this.setupListeners({ resolve });
             this.setConnecting();
         });
@@ -92,7 +92,7 @@ export class MqttClient extends EventEmitter {
     protected emitFlow: (name: string, result: any) => void = (name, result) => this.emit(name, result);
 
     protected setupListeners({ resolve }: { resolve: () => void }) {
-        this.socket.on('error', (e) => {
+        this.socket.on('error', e => {
             if (this.isConnecting) {
                 this.setDisconnected();
             }
@@ -137,7 +137,7 @@ export class MqttClient extends EventEmitter {
         if (noNewPromise) {
             promise = this.startFlow(new OutgoingConnectFlow(options));
         } else {
-            promise = new Promise<void>((resolve) => {
+            promise = new Promise<void>(resolve => {
                 this.startInfo = { resolve };
             });
             this.startFlow(new OutgoingConnectFlow(options)).then(() => this.startInfo.resolve());
@@ -234,7 +234,7 @@ export class MqttClient extends EventEmitter {
         const stream = PacketStream.empty();
         packet.write(stream);
         const data = stream.data;
-        this.socket.write(data, 'utf8', (err) => {
+        this.socket.write(data, 'utf8', err => {
             if (err) this.emitWarning(err);
         });
     }

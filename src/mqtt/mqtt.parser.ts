@@ -97,7 +97,7 @@ export class MqttParser {
                         this.stream.position = startPos;
                         exitParser = true;
                     })
-                    .catch((e) => {
+                    .catch(e => {
                         this.errorCallback(e);
                     });
                 if (exitParser) break;
@@ -111,7 +111,7 @@ export class MqttParser {
 
     private waitForLock(): Promise<void> {
         if (this.lock.locked) {
-            return new Promise<void>((resolve) => {
+            return new Promise<void>(resolve => {
                 this.lock.resolve = resolve;
             });
         } else {

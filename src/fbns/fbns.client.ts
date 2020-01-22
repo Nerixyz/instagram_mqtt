@@ -272,7 +272,9 @@ export class FbnsClient extends EventEmitter {
         this.client.on('error', e => this.emitError(e));
         this.client.on('message', msg => this.handleMessage(msg));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
-        this.client.on('disconnect', () => this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')));
+        this.client.on('disconnect', () =>
+            this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')),
+        );
 
         this.client.on('mqttotConnect', async (res: ConnectResponsePacket) => {
             this.fbnsDebug('Connected to MQTT');

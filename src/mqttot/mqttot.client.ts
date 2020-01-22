@@ -37,7 +37,7 @@ export class MQTToTClient extends MqttClient {
         if (noNewPromise) {
             promise = this.startFlow(new MQTToTConnectFlow(this.connectPayload));
         } else {
-            promise = new Promise<void>((resolve) => {
+            promise = new Promise<void>(resolve => {
                 this.startInfo = { resolve };
             });
             this.startFlow(new MQTToTConnectFlow(this.connectPayload)).then(() => this.startInfo.resolve());
