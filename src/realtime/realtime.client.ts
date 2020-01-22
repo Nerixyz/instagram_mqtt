@@ -66,6 +66,7 @@ export class RealtimeClient extends EventEmitter {
     private readonly ig: IgApiClient;
 
     private initOptions: RealtimeClientInitOptions;
+    private safeDisconnect = false;
 
     public commands: Commands;
     public direct: DirectCommands;
@@ -192,7 +193,7 @@ export class RealtimeClient extends EventEmitter {
         this.client.on('error', e => this.emitError(e));
         this.client.on('warning', w => this.emitWarning(w));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
-        this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
+        this.client.on('disconnect', () => this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')));
         return new Promise((resolve) => {
             this.client.once('mqttotConnect', async () => {
                 this.realtimeDebug('Connected. Checking initial subs.');
@@ -201,8 +202,8 @@ export class RealtimeClient extends EventEmitter {
                     graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null,
                     skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null,
                     irisData ? this.irisSubscribe(irisData) : null,
-                    ...Object.values(Topics).map(topic => this.client.subscribe({ topic: topic.path })),
                 ]);
+                Object.values(Topics).forEach(topic => this.client.subscribe({ topic: topic.id}));
                 resolve();
             });
             this.client.connect({
@@ -216,6 +217,11 @@ export class RealtimeClient extends EventEmitter {
 
     private emitError = (e: Error) => this.emit('error', e);
     private emitWarning = (e: Error) => this.emit('warning', e);
+
+    public disconnect() {
+        this.safeDisconnect = true;
+        return this.client.disconnect();
+    }
 
     public subscribe = deprecate(
         (subs: string | string[]) => this.graphQlSubscribe(subs),

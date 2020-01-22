@@ -216,6 +216,7 @@ export class FbnsClient extends EventEmitter {
     private conn: MQTToTConnection;
     private _auth: FbnsDeviceAuth;
     private connectPromiseInfo: { resolve: () => void; reject: (error: Error) => void } = null;
+    private safeDisconnect = false;
 
     public constructor(ig: IgApiClient) {
         super();
@@ -271,7 +272,7 @@ export class FbnsClient extends EventEmitter {
         this.client.on('error', e => this.emitError(e));
         this.client.on('message', msg => this.handleMessage(msg));
         this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
-        this.client.on('disconnect', () => this.emitError(new Error('MQTToTClient got disconnected.')));
+        this.client.on('disconnect', () => this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')));
 
         this.client.on('mqttotConnect', async (res: ConnectResponsePacket) => {
             this.fbnsDebug('Connected to MQTT');
@@ -307,6 +308,11 @@ export class FbnsClient extends EventEmitter {
             enableTrace,
         });
         return await new Promise((resolve, reject) => (this.connectPromiseInfo = { resolve, reject }));
+    }
+
+    public disconnect() {
+        this.safeDisconnect = true;
+        return this.client.disconnect();
     }
 
     private async handleMessage(msg: PublishRequestPacket) {

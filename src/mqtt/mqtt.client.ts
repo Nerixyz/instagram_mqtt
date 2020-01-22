@@ -307,7 +307,7 @@ export class MqttClient extends EventEmitter {
                 break;
             }
             case PacketTypes.TYPE_DISCONNECT: {
-                this.disconnect();
+                // ? this.disconnect();
                 this.setDisconnected();
                 break;
             }
