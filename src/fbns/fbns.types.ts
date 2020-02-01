@@ -116,67 +116,67 @@ export type NotificationEventCallback =
     // user?username={user}&launch_reel=1
     | NotificationCallback<'first_reel_post', { username: string; launch_reel?: string }>
     | NotificationCallback<
-    | 'resurrected_reel_post'
+          | 'resurrected_reel_post'
 
-    // first_bestie_post -> POSTS
-    | 'story_poll_vote'
-    | 'story_poll_close'
-    | 'story_producer_expire_media'
-    | 'story_poll_result_share'
-    | 'story_daily_digest'
+          // first_bestie_post -> POSTS
+          | 'story_poll_vote'
+          | 'story_poll_close'
+          | 'story_producer_expire_media'
+          | 'story_poll_result_share'
+          | 'story_daily_digest'
 
-    // ACCOUNTS
-    // ===========================================
-    | 'new_follower'
-    | 'private_user_follow_request'
-    | 'follow_request_approved'
-    | 'contactjoined'
-    | 'contact_joined_email'
-    | 'fb_friend_connected'
-    | 'follower_follow'
-    | 'follower_activity_reminders'
+          // ACCOUNTS
+          // ===========================================
+          | 'new_follower'
+          | 'private_user_follow_request'
+          | 'follow_request_approved'
+          | 'contactjoined'
+          | 'contact_joined_email'
+          | 'fb_friend_connected'
+          | 'follower_follow'
+          | 'follower_activity_reminders'
 
-    // COMMENTS
-    // ===========================================
-    | 'comment'
-    | 'mentioned_comment'
-    | 'comment_on_tag'
-    | 'comment_subscribed'
-    | 'comment_subscribed_on_like'
-    | 'reply_to_comment_with_threading'
+          // COMMENTS
+          // ===========================================
+          | 'comment'
+          | 'mentioned_comment'
+          | 'comment_on_tag'
+          | 'comment_subscribed'
+          | 'comment_subscribed_on_like'
+          | 'reply_to_comment_with_threading'
 
-    // LIKES
-    // ===========================================
-    | 'like'
-    | 'like_on_tag'
-    | 'comment_like'
+          // LIKES
+          // ===========================================
+          | 'like'
+          | 'like_on_tag'
+          | 'comment_like'
 
-    // DIRECT
-    // ===========================================
-    | 'direct_v2_message'
+          // DIRECT
+          // ===========================================
+          | 'direct_v2_message'
 
-    // LIVE
-    // ===========================================
-    | 'live_broadcast'
-    | 'live_with_broadcast'
-    | 'live_broadcast_revoke'
+          // LIVE
+          // ===========================================
+          | 'live_broadcast'
+          | 'live_with_broadcast'
+          | 'live_broadcast_revoke'
 
-    // BUSINESS
-    // ===========================================
-    | 'aymt'
-    | 'ad_preview'
-    | 'branded_content_tagged'
-    | 'business_profile'
+          // BUSINESS
+          // ===========================================
+          | 'aymt'
+          | 'ad_preview'
+          | 'branded_content_tagged'
+          | 'business_profile'
 
-    // UNSORTED
-    // ===========================================
-    | 'usertag'
-    | 'video_view_count'
-    | 'copyright_video'
-    | 'report_updated'
-    | 'promote_account'
-    | 'unseen_notification_reminders',
-    unknown
-    >
+          // UNSORTED
+          // ===========================================
+          | 'usertag'
+          | 'video_view_count'
+          | 'copyright_video'
+          | 'report_updated'
+          | 'promote_account'
+          | 'unseen_notification_reminders',
+          unknown
+      >
     | FuncArg<string, any>
     | [string, (...args: string[]) => void];

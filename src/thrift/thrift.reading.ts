@@ -202,9 +202,9 @@ function thriftReadSingleLevel(readResults: ThriftMessage[], descriptors: Thrift
 
     return otherFindings.length > 0
         ? {
-            ...result,
-            otherFindings,
-        }
+              ...result,
+              otherFindings,
+          }
         : result;
 }
 

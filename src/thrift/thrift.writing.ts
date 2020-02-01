@@ -7,7 +7,11 @@ export function thriftWriteFromObject(obj: ThriftSerializable, descriptors: Thri
     return writer.buffer;
 }
 
-function thriftWriteSingleLayerFromObject(obj: ThriftSerializable, descriptors: ThriftPacketDescriptor[], writer: BufferWriter): void {
+function thriftWriteSingleLayerFromObject(
+    obj: ThriftSerializable,
+    descriptors: ThriftPacketDescriptor[],
+    writer: BufferWriter,
+): void {
     const entries = Object.entries(obj);
 
     for (const entry of entries) {

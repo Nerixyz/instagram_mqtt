@@ -4,7 +4,6 @@ import { MQTToTClient } from '../../mqttot';
 import { MqttMessage } from '../../mqtt';
 
 export class Commands {
-
     public constructor(private client: MQTToTClient) {}
 
     private async publishToTopic(topic: string, compressedData: string | Buffer, qos: 0 | 1): Promise<MqttMessage> {

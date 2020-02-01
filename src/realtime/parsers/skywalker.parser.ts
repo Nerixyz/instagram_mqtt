@@ -1,6 +1,6 @@
 import { ParsedMessage, Parser } from './parser';
 import { Topic } from '../../topic';
-import { ThriftTypes, thriftRead, ThriftDescriptors, ThriftToObjectResult, thriftReadToObject } from '../../thrift';
+import { ThriftDescriptors, ThriftToObjectResult, thriftReadToObject } from '../../thrift';
 
 export class SkywalkerParser implements Parser {
     public static descriptors = [ThriftDescriptors.int32('topic', 1), ThriftDescriptors.binary('payload', 2)];

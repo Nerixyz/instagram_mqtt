@@ -73,6 +73,7 @@ export class MqttParser {
 
     public constructor(errorCallback?: (e: Error) => void) {
         this.stream = PacketStream.empty();
+        /* eslint @typescript-eslint/no-empty-function: "off" */
         this.errorCallback = errorCallback ?? (() => {});
     }
 
