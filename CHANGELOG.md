@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+ - **BREAKING:** FBNS is no longer a EventEmitter, instead it uses RXJS Subjects.
+    
+    See [push.example](examples/push.example.ts) for more details.
+ 
+ - **Internal:** More strict tsconfig.json
+
 ## 0.1.7
  - Move to `bigint`
  
