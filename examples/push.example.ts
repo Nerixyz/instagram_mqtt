@@ -7,9 +7,11 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 const existsAsync = promisify(exists);
 
+const {IG_USERNAME = '', IG_PASSWORD = ''} = process.env;
+
 (async () => {
     const ig: IgApiClientFbns = withFbns(new IgApiClient());
-    ig.state.generateDevice(process.env.IG_USERNAME);
+    ig.state.generateDevice(IG_USERNAME);
 
     // this will set the auth and the cookies for instagram
     await readState(ig);
@@ -17,15 +19,11 @@ const existsAsync = promisify(exists);
     // this logs the client in
     await loginToInstagram(ig);
 
-    // Example: listen to direct-messages
-    // 'direct_v2_message' is emitted whenever anything gets sent to the user
-    ig.fbns.on('direct_v2_message', logEvent('direct-message'));
-
-    // 'push' is emitted on every push notification
-    ig.fbns.on('push', logEvent('push'));
-    // 'auth' is emitted whenever the auth is sent to the client
+    // you received a notification
+    ig.fbns.push$.subscribe(logEvent('push'));
+    // the client received auth data
     // the listener has to be added before connecting
-    ig.fbns.on('auth', async (auth) => {
+    ig.fbns.auth$.subscribe(async (auth) => {
         // logs the auth
         logEvent('auth')(auth);
 
@@ -33,9 +31,9 @@ const existsAsync = promisify(exists);
         await saveState(ig);
     });
     // 'error' is emitted whenever the client experiences a fatal error
-    ig.fbns.on('error', logEvent('error'));
+    ig.fbns.error$.subscribe(logEvent('error'));
     // 'warning' is emitted whenever the client errors but the connection isn't affected
-    ig.fbns.on('warning', logEvent('warning'));
+    ig.fbns.warning$.subscribe(logEvent('warning'));
 
     // this sends the connect packet to the server and starts the connection
     // the promise will resolve once the client is fully connected (once /push/register/ is received)
@@ -54,7 +52,7 @@ async function readState(ig: IgApiClientExt) {
 
 async function loginToInstagram(ig: IgApiClientExt) {
     ig.request.end$.subscribe(() => saveState(ig));
-    await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
+    await ig.account.login(IG_USERNAME, IG_PASSWORD);
 }
 
 /**
@@ -62,6 +60,6 @@ async function loginToInstagram(ig: IgApiClientExt) {
  * @param name
  * @returns {(data) => void}
  */
-function logEvent(name) {
-    return data => console.log(name, data);
+function logEvent(name: string) {
+    return (data: any) => console.log(name, data);
 }

@@ -2,207 +2,15 @@ import { IgApiClient } from 'instagram-private-api';
 import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
 import { compressDeflate, createUserAgent, debugChannel, notUndefined, unzipAsync } from '../shared';
-import { EventEmitter } from 'events';
 import { MQTToTConnection, MQTToTClient } from '../mqttot';
 import { ConnectResponsePacket, IdentifierPacket, PublishRequestPacket } from '../mqtt/packets';
 import { Chance } from 'chance';
 import * as querystring from 'querystring';
 import * as URL from 'url';
+import { Subject } from 'rxjs';
+import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
 
-export interface FbnsMessageData {
-    token?: string;
-    pn?: string;
-    nid?: string;
-    ck?: string;
-    fbpushnotif?: string;
-    num_endpoints?: string;
-}
-
-// internal
-export interface FbPushNotif {
-    t?: string;
-    m?: string;
-    tt?: string;
-    ig?: string;
-    collapse_key?: string;
-    i?: string;
-    a?: string;
-    sound?: string;
-    pi?: string;
-    c?: string;
-    u?: string;
-    s?: string;
-    igo?: string;
-    bc?: string;
-    ia?: string;
-    it?: string;
-    si?: string;
-    PushNotifID?: string;
-}
-
-export interface FbnsBadgeCount {
-    direct?: number;
-    ds?: number;
-    activities?: number;
-}
-
-export interface FbnsNotification {
-    original: FbPushNotif;
-
-    title?: string;
-    message?: string;
-    tickerText?: string;
-    igAction?: string;
-    igActionOverride?: string;
-    optionalImage?: string;
-    optionalAvatarUrl?: string;
-    collapseKey?: string;
-    sound?: string;
-    pushId?: string;
-    pushCategory?: string;
-    intendedRecipientUserId?: string;
-    sourceUserId?: string;
-    badgeCount?: FbnsBadgeCount;
-    inAppActors?: string;
-    actionPath?: string;
-    actionParams?: { [x: string]: string | string[] };
-    higherPriorityApps?: string;
-}
-
-export declare interface FbnsClient {
-    /**
-     * See: https://github.com/mgp25/Instagram-API/blob/master/src/Push.php
-     * TODO: inspect
-     * TODO: add regex?
-     * The following events are emitted:
-     */
-
-    on(event: 'warning', cb: (e: Error | object) => void);
-    // the client can't continue it's work
-    on(event: 'error', cb: (e: Error | object) => void);
-    // the client is authenticated (state can be saved)
-    on(event: 'auth', cb: (e: FbnsDeviceAuth) => void);
-    // a notification was received
-    on(event: 'push', cb: (e: FbnsNotification) => void);
-    // a beacon id gets sent
-    on(event: 'exp_logging', cb: (e: { beacon_id: number }) => void);
-    // idk
-    on(event: 'pp', eb: (e: string) => void);
-
-    // a packet without a notification was received
-    on(event: 'message', cb: (e: FbnsMessageData) => void);
-
-    on(event: 'silent_push', cb: (e: FbnsNotification) => void);
-
-    /*
-     *  Formatting:
-     *  {message},
-     *  {igAction = actionPath?actionParams}
-     *
-     *  Placeholders:
-     *  {user}      username
-     *  {mediaId}   1111111111111111111_1111111111
-     *  {threadId}  11111111111111111111111111111111111111
-     *  {id}        11111111111111111
-     *  {time}      1234567890
-     *  {text}      ANY_TEXT
-     *  {date}      FORMATTED_DATE
-     */
-
-    // POSTS:
-    // ===============================================
-    // '{user} just shared a post',
-    // media?id={mediaId}
-    on(event: 'post', cb: (e: FbnsNotification) => void);
-    // 'See {user}'s first post.',
-    // user?username={user}
-    on(event: 'first_post', cb: (e: FbnsNotification) => void);
-    // '{user} posted for the first time in a while. Be the first to add a comment.',
-    // media?id={mediaId}
-    on(event: 'resurrected_user_post', cb: (e: FbnsNotification) => void);
-    // '{user} just shared a post.',
-    // media?id={mediaId}
-    on(event: 'recent_follow_post', cb: (e: FbnsNotification) => void);
-    // 'Your Facebook friend {user} just shared their first Instagram post',
-    // user?username={user}
-    on(event: 'fb_first_post', cb: (e: FbnsNotification) => void);
-    // '{user} just shared a post with their close friends list.'
-    // media?id={mediaId}
-    // OR: (story)
-    // user?username={user}&launch_reel=1
-    on(event: 'first_bestie_post', cb: (e: FbnsNotification) => void);
-
-    // STORIES:
-    // ============================================
-    // 'See {users}'s first story on Instagram
-    // user?username={user}&launch_reel=1
-    on(event: 'first_reel_post', cb: (e: FbnsNotification) => void);
-    on(event: 'resurrected_reel_post', cb: (e: FbnsNotification) => void);
-
-    // first_bestie_post -> POSTS
-
-    on(event: 'story_poll_vote', cb: (e: FbnsNotification) => void);
-    on(event: 'story_poll_close', cb: (e: FbnsNotification) => void);
-    on(event: 'story_producer_expire_media', cb: (e: FbnsNotification) => void);
-    on(event: 'story_poll_result_share', cb: (e: FbnsNotification) => void);
-    on(event: 'story_daily_digest', cb: (e: FbnsNotification) => void);
-
-    // ACCOUNTS
-    // ===========================================
-    on(event: 'new_follower', cb: (e: FbnsNotification) => void);
-    on(event: 'private_user_follow_request', cb: (e: FbnsNotification) => void);
-    on(event: 'follow_request_approved', cb: (e: FbnsNotification) => void);
-    on(event: 'contactjoined', cb: (e: FbnsNotification) => void);
-    on(event: 'contact_joined_email', cb: (e: FbnsNotification) => void);
-    on(event: 'fb_friend_connected', cb: (e: FbnsNotification) => void);
-    on(event: 'follower_follow', cb: (e: FbnsNotification) => void);
-    on(event: 'follower_activity_reminders', cb: (e: FbnsNotification) => void);
-
-    // COMMENTS
-    // ===========================================
-    on(event: 'comment', cb: (e: FbnsNotification) => void);
-    on(event: 'mentioned_comment', cb: (e: FbnsNotification) => void);
-    on(event: 'comment_on_tag', cb: (e: FbnsNotification) => void);
-    on(event: 'comment_subscribed', cb: (e: FbnsNotification) => void);
-    on(event: 'comment_subscribed_on_like', cb: (e: FbnsNotification) => void);
-    on(event: 'reply_to_comment_with_threading', cb: (e: FbnsNotification) => void);
-
-    // LIKES
-    // ===========================================
-    on(event: 'like', cb: (e: FbnsNotification) => void);
-    on(event: 'like_on_tag', cb: (e: FbnsNotification) => void);
-    on(event: 'comment_like', cb: (e: FbnsNotification) => void);
-
-    // DIRECT
-    // ===========================================
-    on(event: 'direct_v2_message', cb: (e: FbnsNotification) => void);
-
-    // LIVE
-    // ===========================================
-    on(event: 'live_broadcast', cb: (e: FbnsNotification) => void);
-    on(event: 'live_with_broadcast', cb: (e: FbnsNotification) => void);
-    on(event: 'live_broadcast_revoke', cb: (e: FbnsNotification) => void);
-
-    // BUSINESS
-    // ===========================================
-    on(event: 'aymt', cb: (e: FbnsNotification) => void);
-    on(event: 'ad_preview', cb: (e: FbnsNotification) => void);
-    on(event: 'branded_content_tagged', cb: (e: FbnsNotification) => void);
-    on(event: 'business_profile', cb: (e: FbnsNotification) => void);
-
-    // UNSORTED
-    // ===========================================
-    on(event: 'usertag', cb: (e: FbnsNotification) => void);
-    on(event: 'video_view_count', cb: (e: FbnsNotification) => void);
-    on(event: 'copyright_video', cb: (e: FbnsNotification) => void);
-    on(event: 'report_updated', cb: (e: FbnsNotification) => void);
-    on(event: 'promote_account', cb: (e: FbnsNotification) => void);
-    on(event: 'unseen_notification_reminders', cb: (e: FbnsNotification) => void);
-
-    on(event: string, cb: (...args: any[] | undefined) => void);
-}
-
-export class FbnsClient extends EventEmitter {
+export class FbnsClient {
     public get auth(): FbnsDeviceAuth {
         return this._auth;
     }
@@ -212,25 +20,25 @@ export class FbnsClient extends EventEmitter {
     }
     private fbnsDebug = debugChannel('fbns');
     private client: MQTToTClient;
-    private readonly ig: IgApiClient;
     private conn: MQTToTConnection;
     private _auth: FbnsDeviceAuth;
-    private connectPromiseInfo: { resolve: () => void; reject: (error: Error) => void } = null;
+    private connectPromiseInfo: null | { resolve: () => void; reject: (error: Error) => void } = null;
     private safeDisconnect = false;
 
-    public constructor(ig: IgApiClient) {
-        super();
-        this.ig = ig;
+    // general push
+    push$ = new Subject<FbnsNotificationUnknown>();
+    error$ = new Subject<Error>();
+    warning$ = new Subject<Error>();
+    auth$ = new Subject<FbnsDeviceAuth>();
+    // message without fbpushnotif
+    message$ = new Subject<FbnsMessageData>();
+    logging$ = new Subject<{ beacon_id: number }>();
+    pp$ = new Subject<string>();
+    disconnect$ = new Subject<void>();
+
+    public constructor(private readonly ig: IgApiClient) {
         this._auth = new FbnsDeviceAuth(this.ig);
     }
-
-    private emitError = (e: Error | object) => this.emit('error', e);
-    private emitWarning = (e: Error | object) => this.emit('warning', e);
-    private emitAuth = (e: FbnsDeviceAuth) => this.emit('auth', e);
-    private emitPush = (e: FbnsNotification) => this.emit('push', e);
-    private emitMessage = (e: FbnsMessageData) => this.emit('message', e);
-    private emitLogging = (e: { beacon_id: number }) => this.emit('exp_logging', e);
-    private emitPP = (e: string) => this.emit('pp', e);
 
     public buildConnection() {
         this.fbnsDebug('Constructing connection');
@@ -268,12 +76,14 @@ export class FbnsClient extends EventEmitter {
             url: FBNS.HOST_NAME_V6,
             payload: await compressDeflate(this.conn.toThrift()),
         });
-        this.client.on('warning', w => this.emitWarning(w));
-        this.client.on('error', e => this.emitError(e));
+        this.client.on('warning', w => this.warning$.next(w));
+        this.client.on('error', e => this.error$.next(e));
         this.client.on('message', msg => this.handleMessage(msg));
-        this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
+        this.client.on('close', () => this.error$.next(new Error('MQTToTClient was closed')));
         this.client.on('disconnect', () =>
-            this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')),
+            this.safeDisconnect
+                ? this.disconnect$.next()
+                : this.error$.next(new Error('MQTToTClient got disconnected.')),
         );
 
         this.client.on('mqttotConnect', async (res: ConnectResponsePacket) => {
@@ -281,13 +91,13 @@ export class FbnsClient extends EventEmitter {
             const payload = res.payload.toString('utf8');
             if (payload.length === 0) {
                 this.fbnsDebug('Received empty connect packet.');
-                this.emitError(new Error('Received empty connect packet'));
-                this.connectPromiseInfo.reject(new Error('Empty auth packet.'));
+                this.error$.next(new Error('Received empty connect packet'));
+                this.connectPromiseInfo?.reject(new Error('Empty auth packet.'));
                 return;
             }
             this.fbnsDebug(`Received auth: ${payload}`);
             this._auth.read(payload);
-            this.emitAuth(this.auth);
+            this.auth$.next(this.auth);
             IdentifierPacket.generateIdentifier();
             await this.client.mqttotPublish({
                 topic: FbnsTopics.FBNS_REG_REQ.id,
@@ -326,16 +136,16 @@ export class FbnsClient extends EventEmitter {
 
                 const { token, error } = JSON.parse(payload);
                 if (error) {
-                    this.emitError(error);
-                    this.connectPromiseInfo.reject(error);
+                    this.error$.next(error);
+                    this.connectPromiseInfo?.reject(error);
                     return;
                 }
                 try {
                     await this.sendPushRegister(token);
-                    this.connectPromiseInfo.resolve();
+                    this.connectPromiseInfo?.resolve();
                 } catch (e) {
-                    this.emitError(e);
-                    this.connectPromiseInfo.reject(e);
+                    this.error$.next(e);
+                    this.connectPromiseInfo?.reject(e);
                 }
                 break;
             }
@@ -344,24 +154,21 @@ export class FbnsClient extends EventEmitter {
 
                 if (notUndefined(payload.fbpushnotif)) {
                     const notification = FbnsClient.createNotificationFromJson(payload.fbpushnotif);
-                    this.emitPush(notification);
-                    if (notUndefined(notification.collapseKey)) {
-                        this.emit(notification.collapseKey, notification);
-                    }
+                    this.push$.next(notification);
                 } else {
                     this.fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
-                    this.emitMessage(JSON.parse((await unzipAsync(msg.payload)).toString('utf8')));
+                    this.message$.next(JSON.parse((await unzipAsync(msg.payload)).toString('utf8')));
                 }
                 break;
             }
             case FbnsTopics.FBNS_EXP_LOGGING.id: {
                 const payload = JSON.parse((await unzipAsync(msg.payload)).toString('utf8'));
-                this.emitLogging(payload);
+                this.logging$.next(payload);
                 break;
             }
             case FbnsTopics.PP.id: {
                 const payload = msg.payload.toString('utf8');
-                this.emitPP(payload);
+                this.pp$.next(payload);
                 break;
             }
             default: {
@@ -389,10 +196,10 @@ export class FbnsClient extends EventEmitter {
         return body;
     }
 
-    private static createNotificationFromJson(json: string): FbnsNotification {
+    private static createNotificationFromJson(json: string): FbnsNotificationUnknown {
         const data: FbPushNotif = JSON.parse(json);
 
-        const notification: FbnsNotification = Object.defineProperty({}, 'description', {
+        const notification: FbnsNotificationUnknown = Object.defineProperty({}, 'description', {
             enumerable: false,
             value: data,
         });

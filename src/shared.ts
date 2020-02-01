@@ -44,6 +44,8 @@ export async function unzipAsync(data: string | Buffer) {
 export const debugChannel = (...path: string[]): ((msg: string, ...additionalData: any) => void) =>
     debug(['ig', 'mqtt', ...path].join(':'));
 
-export const notUndefined = (a?: any) => typeof a !== 'undefined';
+export function notUndefined<T>(a: T | undefined): a is T {
+    return typeof a !== 'undefined';
+}
 
 export type BigInteger = string | number | bigint;

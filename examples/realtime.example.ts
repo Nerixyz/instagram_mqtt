@@ -3,16 +3,18 @@ import { GraphQLSubscriptions } from '../src/realtime/subscriptions';
 import { IgApiClient } from 'instagram-private-api';
 import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
 
+const {IG_USERNAME = '', IG_PASSWORD = ''} = process.env;
+
 (async () => {
     // this extends the IgApiClient with realtime features
     const ig: IgApiClientRealtime = withRealtime(new IgApiClient());
     // normal login
-    ig.state.generateDevice(process.env.IG_USERNAME);
-    await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
+    ig.state.generateDevice(IG_USERNAME);
+    await ig.account.login(IG_USERNAME, IG_PASSWORD);
     // now `ig` is a client with a valid session
 
     // an example on how to subscribe to live comments
-    const subToLiveComments = (broadcastId) =>
+    const subToLiveComments = (broadcastId: string) =>
         // you can add other GraphQL subs using .subscribe
         ig.realtime.graphQlSubscribe(GraphQLSubscriptions.getLiveRealtimeCommentsSubscription(broadcastId));
 
@@ -74,6 +76,6 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
  * @param name
  * @returns {(data) => void}
  */
-function logEvent(name) {
-    return data => console.log(name, data);
+function logEvent(name: string) {
+    return (data: any) => console.log(name, data);
 }
