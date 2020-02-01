@@ -79,13 +79,11 @@ Everything using some kind of event is communicating over this client.
  - Direct Messaging
 # FbnsClient
 FBNS is for notifications (so it's readonly).
-You can subscribe to a notification type using
+You can subscribe to a notification using
 ```typescript
 // const fbns: FbnsClient = ...;
-fbns.on(TYPE, notification => ...);
+fbns.push$.subscripbe(notification => ...);
 ```
-The events are described [here](src/fbns/fbns.client.ts).
-And [here](https://github.com/mgp25/Instagram-API/blob/master/src/Push.php).
 Note: this library provides the query (actionPath/Params) as an object (actionParams)
  so you can use `actionParams.YOUR_KEY`.
  
