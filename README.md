@@ -19,6 +19,10 @@ npm install instagram_mqtt
 
 ## Version Infos
 To see what's new, visit the [changelog](CHANGELOG.md).
+
+### 0.2.0
+If you're updating to 0.2.0, look at the [changelog](CHANGELOG.md) for breaking changes!
+
 ### below 0.1.5 (old)
 Up to version 0.1.5 the clients worked on their own.
 To init them they are constructed with a reference to the IgApiClient:
