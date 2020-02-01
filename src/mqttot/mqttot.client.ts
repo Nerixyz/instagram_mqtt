@@ -31,7 +31,7 @@ export class MQTToTClient extends MqttClient {
         this.on('warning', printErrorOrWarning('Warning'));
     }
 
-    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<void> {
+    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<any> {
         this.mqttotDebug(`Trying to register the client...`);
         let promise;
         if (noNewPromise) {
@@ -79,7 +79,7 @@ export class MQTToTConnectFlow extends PacketFlow<ConnectResponsePacket> {
         return 'mqttotConnect';
     }
 
-    public next(packet: ConnectResponsePacket): MqttPacket {
+    public next(packet: ConnectResponsePacket): undefined {
         this.succeeded(packet);
         return undefined;
     }

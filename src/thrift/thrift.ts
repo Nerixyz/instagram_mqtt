@@ -1,10 +1,12 @@
 export interface ThriftMessage {
     context: string;
     field: number;
-    value;
+    value: any;
     /* see  FbnsTypes*/
     type: number;
 }
+
+export type ThriftSerializable = string | number | boolean | bigint | Array<ThriftSerializable> | {[x: string]: ThriftSerializable}
 
 export const ThriftTypes = {
     STOP: 0x00,
@@ -110,14 +112,9 @@ export const ThriftDescriptors = {
     }),
 };
 
-export type Int64 = number | bigint | object;
+export type Int64 = number | bigint;
 
 export function int64ToNumber(i64: Int64): number {
     if (typeof i64 === 'number') return i64;
-    if (typeof i64 === 'bigint') return Number(i64);
-    if (typeof i64 === 'object') {
-        // @ts-ignore
-        return i64.toNumber();
-    }
-    throw new Error('Unknown Int64-type');
+    return Number(i64);
 }

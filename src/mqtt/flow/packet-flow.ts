@@ -39,7 +39,7 @@ export abstract class PacketFlow<T> {
 
     public abstract start(): MqttPacket;
     public abstract accept(packet: MqttPacket): boolean;
-    public abstract next(packet: MqttPacket): MqttPacket;
+    public abstract next(packet: MqttPacket): MqttPacket | undefined | null;
 
     protected succeeded(result: T): void {
         this._finished = true;

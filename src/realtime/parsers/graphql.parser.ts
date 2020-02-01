@@ -10,10 +10,10 @@ export class GraphqlParser implements Parser {
 
     public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<GraphQlMessage>[] {
         const msg = thriftReadToObject<GraphQlMessage>(payload, GraphqlParser.descriptors);
-        if (msg.payload.match(/[{[]/)) {
+        if (msg.payload?.match(/[{[]/)) {
             msg.json = JSON.parse(msg.payload);
         }
-        // @ts-ignore
+        // @ts-ignore - msg is a GraphQlMessage
         return [{ topic, data: msg }];
     }
 }

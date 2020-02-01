@@ -96,7 +96,7 @@ function getReadFunction(
                     const keyFunc = getReadFunction(keyType);
                     const valueFunc = getReadFunction(valueType);
 
-                    const entries: { key; value }[] = [];
+                    const entries: { key: any; value: any }[] = [];
 
                     for (let i = 0; i < size; i++) {
                         entries.push({
@@ -138,22 +138,22 @@ export function thriftReadToObject<T>(message: Buffer, descriptors: ThriftPacket
     const result: ThriftToObjectResult<T> = thriftReadSingleLevel(topLevel, descriptors);
     const structs: ThriftToObjectStruct[] = [];
 
-    for (const message of readResult) {
-        if (message.context.length === 0) continue;
+    for (const readData of readResult) {
+        if (readData.context.length === 0) continue;
 
-        const fieldPath = message.context.split('/').map(c => Number(c));
+        const fieldPath = readData.context.split('/').map(c => Number(c));
         const possible = structs.findIndex(s => isEqual(s.fieldPath, fieldPath));
         if (possible !== -1) {
-            structs[possible].items.push(message);
+            structs[possible].items.push(readData);
         } else {
-            structs.push({ fieldPath: fieldPath, items: [message] });
+            structs.push({ fieldPath, items: [readData] });
         }
     }
     for (const struct of structs) {
-        let descriptor: ThriftPacketDescriptor;
+        let descriptor: ThriftPacketDescriptor | undefined;
         for (const level of struct.fieldPath) {
             if (descriptor) {
-                descriptor = descriptor.structDescriptors.find(x => x.field === level);
+                descriptor = descriptor.structDescriptors?.find(x => x.field === level);
             } else {
                 descriptor = descriptors.find(x => x.field === level);
             }
@@ -161,7 +161,11 @@ export function thriftReadToObject<T>(message: Buffer, descriptors: ThriftPacket
             if (!descriptor) break;
         }
         if (descriptor) {
-            result[descriptor.fieldName] = thriftReadSingleLevel(struct.items, descriptor.structDescriptors);
+            defineEnumerableProperty(
+                result,
+                descriptor.fieldName,
+                thriftReadSingleLevel(struct.items, descriptor.structDescriptors ?? []),
+            );
         } else {
             if (result.otherFindings) result.otherFindings.push(struct);
             else result.otherFindings = [struct];
@@ -185,12 +189,12 @@ function thriftReadSingleLevel(readResults: ThriftMessage[], descriptors: Thrift
             if (descriptor.type === ThriftTypes.MAP_BINARY_BINARY) {
                 const res = {};
                 for (const pair of message.value) {
-                    res[pair.key.value] = pair.value.value;
+                    defineEnumerableProperty(res, pair.key.value, pair.value.value);
                 }
-                result[descriptor.fieldName] = res;
+                defineEnumerableProperty(result, descriptor.fieldName, res);
                 continue;
             }
-            result[descriptor.fieldName] = message.value;
+            defineEnumerableProperty(result, descriptor.fieldName, message.value);
         } else {
             otherFindings.push(message);
         }
@@ -198,11 +202,14 @@ function thriftReadSingleLevel(readResults: ThriftMessage[], descriptors: Thrift
 
     return otherFindings.length > 0
         ? {
-              ...result,
-              otherFindings,
-          }
+            ...result,
+            otherFindings,
+        }
         : result;
 }
+
+const defineEnumerableProperty = (object: any, name: string, value: any) =>
+    Object.defineProperty(object, name, { value, enumerable: true });
 
 export class BufferReader {
     private buffer: Buffer;
@@ -229,7 +236,7 @@ export class BufferReader {
     public readInt16 = this.readSmallInt;
     public readInt32 = this.readSmallInt;
 
-    public constructor(buffer) {
+    public constructor(buffer: Buffer) {
         this.buffer = buffer;
     }
 
@@ -247,7 +254,7 @@ export class BufferReader {
         while (this._position < this.length) {
             const byte = this.readByte();
             result |= (byte & 0x7f) << shift;
-            if ((byte & 0x80) == 0) {
+            if ((byte & 0x80) === 0) {
                 break;
             }
             shift += 7;
@@ -340,7 +347,7 @@ export class BufferReader {
     }
 
     public popStack() {
-        this._field = this._stack.pop();
+        this._field = this._stack.pop() ?? -1;
     }
 
     public static fromZigZag = (n: number) => (n >> 1) ^ -(n & 1);

@@ -1,13 +1,13 @@
-import { Int64, ThriftPacketDescriptor, ThriftTypes } from './thrift';
+import { Int64, ThriftPacketDescriptor, ThriftSerializable, ThriftTypes } from './thrift';
 
-export function thriftWriteFromObject(obj, descriptors: ThriftPacketDescriptor[]): Buffer {
+export function thriftWriteFromObject(obj: ThriftSerializable, descriptors: ThriftPacketDescriptor[]): Buffer {
     const writer = BufferWriter.empty();
     thriftWriteSingleLayerFromObject(obj, descriptors, writer);
     writer.writeStop();
     return writer.buffer;
 }
 
-function thriftWriteSingleLayerFromObject(obj, descriptors: ThriftPacketDescriptor[], writer: BufferWriter): void {
+function thriftWriteSingleLayerFromObject(obj: ThriftSerializable, descriptors: ThriftPacketDescriptor[], writer: BufferWriter): void {
     const entries = Object.entries(obj);
 
     for (const entry of entries) {
@@ -50,15 +50,12 @@ function thriftWriteSingleLayerFromObject(obj, descriptors: ThriftPacketDescript
                 break;
             }
             case ThriftTypes.INT_64: {
-                if (typeof value === 'object') {
-                    // @ts-ignore (no types :c )
-                    writer.writeInt64Buffer(descriptor.field, value);
-                } else if (typeof value === 'number') {
+                if (typeof value === 'number') {
                     writer.writeInt64Buffer(descriptor.field, BigInt(value));
                 } else if (typeof value === 'bigint') {
                     writer.writeInt64Buffer(descriptor.field, value);
                 } else {
-                    throw new Error(`Value of ${name} is neither an object nor a number`);
+                    throw new Error(`Value of ${name} is neither a bigint nor a number`);
                 }
                 break;
             }
@@ -69,7 +66,7 @@ function thriftWriteSingleLayerFromObject(obj, descriptors: ThriftPacketDescript
             }
             case ThriftTypes.STRUCT: {
                 writer.writeStruct(descriptor.field);
-                thriftWriteSingleLayerFromObject(value, descriptor.structDescriptors, writer);
+                thriftWriteSingleLayerFromObject(value, descriptor.structDescriptors ?? [], writer);
                 writer.writeStop();
                 break;
             }
@@ -136,7 +133,7 @@ export class BufferWriter {
     }
 
     private constructor(data?: string, length?: number, buffer?: Buffer) {
-        this._buffer = data ? Buffer.from(data) : length ? Buffer.alloc(length) : buffer ? buffer : undefined;
+        this._buffer = data ? Buffer.from(data) : length ? Buffer.alloc(length) : buffer ? buffer : Buffer.from([]);
         this._position = 0;
     }
 
@@ -194,8 +191,7 @@ export class BufferWriter {
     }
 
     private writeBuffer(buf: Buffer): this {
-        if (this._buffer) this._buffer = Buffer.concat([this._buffer, buf]);
-        else this._buffer = buf;
+        this._buffer = Buffer.concat([this._buffer, buf]);
         this.move(buf.length);
         return this;
     }
@@ -203,13 +199,6 @@ export class BufferWriter {
     private writeByte(byte: number): this {
         const buf = Buffer.alloc(1);
         buf.writeUInt8(byte, 0);
-        this.writeBuffer(buf);
-        return this;
-    }
-
-    private writeSByte(byte: number): this {
-        const buf = Buffer.alloc(1);
-        buf.writeInt8(byte, 0);
         this.writeBuffer(buf);
         return this;
     }
@@ -223,17 +212,13 @@ export class BufferWriter {
     }
 
     private writeLong(num: Int64 | { int: Int64; num: number }): this {
-        // @ts-ignore
-        if (num.int) {
-            // @ts-ignore
+        if (typeof num === 'object') {
             num = num.int;
         }
-        if (typeof num === 'bigint') {
-            this.writeBigint(BufferWriter.bigintToZigZag(num));
-        } else {
-            // @ts-ignore
-            this.writeVarInt64(BufferWriter.int64ToZigZag(num));
+        if (typeof num !== 'bigint') {
+            num = BigInt(num);
         }
+        this.writeBigint(BufferWriter.bigintToZigZag(num));
         return this;
     }
 
@@ -364,7 +349,7 @@ export class BufferWriter {
     }
 
     public popStack() {
-        this._field = this._stack.pop();
+        this._field = this._stack.pop() ?? -1;
     }
 
     public toString() {
