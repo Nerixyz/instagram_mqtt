@@ -56,7 +56,9 @@ export function withFbns(client: IgApiClient | IgApiClientExt): IgApiClientFbns 
     if (client instanceof IgApiClientExt) {
         client.addStateHook({
             name: 'fbns',
+            // @ts-ignore
             onExport: (client: IgApiClientFbns) => client.fbns.auth.toString(),
+            // @ts-ignore
             onImport: (data: string, client: IgApiClientFbns) => client.fbns.auth.read(data),
         });
     }

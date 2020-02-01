@@ -47,28 +47,37 @@ export class MqttParser {
      * Note: if something fails, this will lock forever
      * @type {{unlock: () => void; resolve: null; lock: () => void; locked: boolean}}
      */
-    private lock = {
+    private lock: Lock = {
         locked: false,
-        lock: () => {
-            this.lock.locked = true;
+        lock() {
+            this.locked = true;
         },
-        unlock: () => {
-            this.lock.locked = false;
-            if (this.lock.resolve) {
-                this.lock.resolve();
-                this.lock.resolve = null;
+        unlock() {
+            this.locked = false;
+            if (this.resolve) {
+                this.resolve();
+                this.resolve = null;
             }
         },
         resolve: null,
+        wait() {
+            if (this.locked) {
+                return new Promise<void>(resolve => {
+                    this.resolve = resolve;
+                });
+            } else {
+                return Promise.resolve();
+            }
+        },
     };
 
     public constructor(errorCallback?: (e: Error) => void) {
         this.stream = PacketStream.empty();
-        this.errorCallback = errorCallback;
+        this.errorCallback = errorCallback ?? (() => {});
     }
 
     public async parse(data: Buffer): Promise<MqttPacket[]> {
-        await this.waitForLock();
+        await this.lock.wait();
         this.lock.lock();
         let startPos = this.stream.position;
         this.stream.write(data);
@@ -78,8 +87,9 @@ export class MqttParser {
             while (this.stream.remainingBytes > 0) {
                 const type = this.stream.readByte() >> 4;
 
-                let packet;
+                let packet: MqttPacket;
                 try {
+                    // @ts-ignore - if undefined -> catched
                     packet = this.mapping.find(x => x[0] === type)[1]();
                 } catch (e) {
                     continue;
@@ -108,14 +118,12 @@ export class MqttParser {
         this.lock.unlock();
         return results;
     }
+}
 
-    private waitForLock(): Promise<void> {
-        if (this.lock.locked) {
-            return new Promise<void>(resolve => {
-                this.lock.resolve = resolve;
-            });
-        } else {
-            return Promise.resolve();
-        }
-    }
+interface Lock {
+    resolve: (() => void) | null;
+    locked: boolean;
+    lock: () => void;
+    unlock: () => void;
+    wait: () => Promise<void>;
 }

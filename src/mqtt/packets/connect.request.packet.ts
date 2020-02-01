@@ -28,7 +28,7 @@ export class ConnectRequestPacket extends MqttPacket {
         if (options.will) {
             if (options.will.retained) flags |= 0x1 << 5;
 
-            flags |= (options.will.qosLevel & 0x03) << 3;
+            flags |= ((options.will.qosLevel ?? 0) & 0x03) << 3;
             flags |= 0x1 << 2;
         }
         if (options.clean) flags |= 0x1 << 1;
@@ -39,11 +39,11 @@ export class ConnectRequestPacket extends MqttPacket {
     public write(stream: PacketStream): void {
         const { protocolLevel, protocolName, flags, clientId, keepAlive, will, username, password } = this.options;
         const data = PacketStream.empty()
-            .writeString(protocolName)
-            .writeByte(protocolLevel)
-            .writeByte(flags)
-            .writeWord(keepAlive)
-            .writeString(clientId);
+            .writeString(protocolName ?? 'MQTT')
+            .writeByte(protocolLevel ?? 3)
+            .writeByte(flags ?? ConnectRequestPacket.makeFlags(this.options))
+            .writeWord(keepAlive ?? 60)
+            .writeString(clientId ?? 'mqtt_' + random(0, 200000));
 
         if (will) data.writeString(will.topic).writeString(will.payload.toString());
         if (username) data.writeString(username);

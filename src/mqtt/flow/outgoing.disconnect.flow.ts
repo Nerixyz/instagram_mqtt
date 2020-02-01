@@ -19,7 +19,7 @@ export class OutgoingDisconnectFlow extends PacketFlow<ConnectRequestOptions> {
         return 'disconnect';
     }
 
-    public next(): MqttPacket {
+    public next(): undefined {
         return undefined;
     }
 

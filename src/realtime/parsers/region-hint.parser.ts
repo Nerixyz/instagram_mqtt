@@ -1,9 +1,11 @@
 import { ParsedMessage, Parser } from './parser';
 import { Topic } from '../../topic';
-import { ThriftTypes, thriftRead } from '../../thrift';
+import { ThriftTypes, thriftRead, ThriftToObjectResult, ThriftDescriptors, thriftReadToObject } from '../../thrift';
 
 export class RegionHintParser implements Parser {
-    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<any>[] {
-        return [{ topic, data: thriftRead(payload).find(x => x.type === ThriftTypes.BINARY && x.field === 1).value }];
+    public static descriptors = [ThriftDescriptors.binary('hint', 1)];
+
+    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<ThriftToObjectResult<{ hint: string }>>[] {
+        return [{ topic, data: thriftReadToObject(payload, RegionHintParser.descriptors) }];
     }
 }

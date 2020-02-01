@@ -14,24 +14,28 @@ import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { MqttMessage } from '../mqtt';
 
+/**
+ * TODO: update this to use rxjs
+ * expected version: ^0.3
+ */
 export declare interface RealtimeClient {
-    on(event: 'error', cb: (e: Error) => void);
+    on(event: 'error', cb: (e: Error) => void): this;
 
-    on(event: 'warning', cb: (e: any | Error) => void);
+    on(event: 'warning', cb: (e: any | Error) => void): this;
 
-    on(event: 'receive', cb: (topic: Topic, messages?: ParsedMessage<any>[]) => void);
+    on(event: 'receive', cb: (topic: Topic, messages?: ParsedMessage<any>[]) => void): this;
 
-    on(event: 'close', cb: () => void);
+    on(event: 'close', cb: () => void): this;
 
-    on(event: 'realtimeSub', cb: (message: ParsedMessage<any>) => void);
+    on(event: 'realtimeSub', cb: (message: ParsedMessage<any>) => void): this;
 
-    on(event: 'direct', cb: (directData: RealtimeSubDirectDataWrapper) => void);
+    on(event: 'direct', cb: (directData: RealtimeSubDirectDataWrapper) => void): this;
 
-    on(event: 'iris', cb: (irisData: Partial<IrisParserData> & any) => void);
+    on(event: 'iris', cb: (irisData: Partial<IrisParserData> & any) => void): this;
 
-    on(event: 'message', cb: (message: MessageSyncMessageWrapper) => void);
+    on(event: 'message', cb: (message: MessageSyncMessageWrapper) => void): this;
 
-    on(event: 'appPresence', cb: (data: AppPresenceEventWrapper) => void);
+    on(event: 'appPresence', cb: (data: AppPresenceEventWrapper) => void): this;
 
     on(
         event: 'clientConfigUpdate',
@@ -43,9 +47,9 @@ export declare interface RealtimeClient {
                 client_subscription_id: '17849856529644700' | string;
             };
         }) => void,
-    );
+    ): this;
 
-    on(event: string, cb: (...args: any[] | undefined) => void);
+    on(event: string, cb: (...args: any[]) => void): this;
 }
 
 //export declare type OnReceiveCallback = (messages: ParsedMessage<any>[]) => void;
@@ -201,8 +205,8 @@ export class RealtimeClient extends EventEmitter {
                 this.realtimeDebug('Connected. Checking initial subs.');
                 const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
                 await Promise.all([
-                    graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null,
-                    skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null,
+                    graphQlSubs && graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null,
+                    skywalkerSubs && skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null,
                     irisData ? this.irisSubscribe(irisData) : null,
                 ]);
                 Object.values(Topics).forEach(topic => this.client.subscribe({ topic: topic.id }));
@@ -269,13 +273,13 @@ export class RealtimeClient extends EventEmitter {
         switch (topic) {
             case 'direct': {
                 const parsed = json;
-                parsed.data = parsed.data.map(e => {
+                parsed.data = parsed.data.map((e: any) => {
                     if (typeof e.value === 'string') {
                         e.value = JSON.parse(e.value);
                     }
                     return e;
                 });
-                parsed.data.forEach(data => this.emit('direct', data));
+                parsed.data.forEach((data: RealtimeSubDirectDataWrapper) => this.emit('direct', data));
                 break;
             }
             default: {

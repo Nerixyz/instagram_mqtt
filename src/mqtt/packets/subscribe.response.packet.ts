@@ -54,7 +54,8 @@ export class SubscribeResponsePacket extends IdentifiableBasePacket {
         return returnCode === 128;
     }
 
-    public getReturnCodeName(returnCode: number) {
+    public getReturnCodeName(returnCode: 0 | 1 | 2 | 128) {
+        // @ts-ignore - this is valid
         return SubscribeResponsePacket.qosLevels[`q${returnCode.toString()}`];
     }
 

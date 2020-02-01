@@ -17,8 +17,8 @@ export class UnsubscribeRequestPacket extends IdentifiableBasePacket {
     public constructor(topic?: string) {
         super(PacketTypes.TYPE_UNSUBSCRIBE);
         this.packetFlags = 2;
-        this.assertValidString(topic);
-        this._topic = topic;
+        this.assertValidString(topic ?? '');
+        this._topic = topic ?? '';
     }
 
     public read(stream: PacketStream): void {

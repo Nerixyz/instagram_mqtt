@@ -39,7 +39,7 @@ export class MQTToTConnectRequestPacket extends MqttPacket {
 
     public constructor(payload?: Buffer) {
         super(PacketTypes.TYPE_CONNECT);
-        this.payload = payload;
+        this.payload = payload ?? Buffer.from([]);
     }
 
     public read(stream: PacketStream): void {

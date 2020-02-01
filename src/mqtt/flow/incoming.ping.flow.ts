@@ -2,7 +2,7 @@ import { PacketFlow } from './packet-flow';
 import { MqttPacket } from '../mqtt.packet';
 import { PingResponsePacket } from '../packets';
 
-export class IncomingPingFlow extends PacketFlow<object> {
+export class IncomingPingFlow extends PacketFlow<undefined> {
     public accept(): boolean {
         return false;
     }
@@ -11,7 +11,7 @@ export class IncomingPingFlow extends PacketFlow<object> {
         return 'pong';
     }
 
-    public next(): MqttPacket {
+    public next(): undefined {
         return undefined;
     }
 

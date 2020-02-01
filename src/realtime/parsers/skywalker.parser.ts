@@ -1,17 +1,18 @@
 import { ParsedMessage, Parser } from './parser';
 import { Topic } from '../../topic';
-import { ThriftTypes, thriftRead } from '../../thrift';
+import { ThriftTypes, thriftRead, ThriftDescriptors, ThriftToObjectResult, thriftReadToObject } from '../../thrift';
 
 export class SkywalkerParser implements Parser {
-    public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<any>[] {
-        const msg = thriftRead(payload);
+    public static descriptors = [ThriftDescriptors.int32('topic', 1), ThriftDescriptors.binary('payload', 2)];
+
+    public parseMessage(
+        topic: Topic,
+        payload: Buffer,
+    ): ParsedMessage<ThriftToObjectResult<{ topic: number; payload: string }>>[] {
         return [
             {
                 topic,
-                data: {
-                    topic: msg.find(x => x.type === ThriftTypes.INT_32 && x.field === 1).value,
-                    payload: JSON.parse(msg.find(x => x.type === ThriftTypes.BINARY && x.field === 2).value),
-                },
+                data: thriftReadToObject(payload, SkywalkerParser.descriptors),
             },
         ];
     }

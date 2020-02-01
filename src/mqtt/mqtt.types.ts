@@ -16,4 +16,4 @@ export type RegisterClientOptions = ConnectRequestOptions;
 export type ExecuteNextTick = (action: () => void) => void;
 export type ExecutePeriodically = (timeInMs: number, action: () => void) => object;
 export type ExecuteDelayed = (timeInMs: number, action: () => void) => object;
-export type StopExecuting = (ref) => void;
+export type StopExecuting = (ref: any) => void;

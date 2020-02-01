@@ -26,8 +26,8 @@ export class SubscribeRequestPacket extends IdentifiableBasePacket {
     public constructor(topic?: string, qosLevel = 1) {
         super(PacketTypes.TYPE_SUBSCRIBE);
         this.assertValidQosLevel(qosLevel);
-        this.assertValidString(topic);
-        this._topic = topic;
+        this.assertValidString(topic ?? '');
+        this._topic = topic ?? '';
         this._qosLevel = qosLevel;
     }
 

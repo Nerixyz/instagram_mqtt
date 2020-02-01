@@ -30,7 +30,7 @@ export class OutgoingConnectFlow extends PacketFlow<ConnectRequestOptions> {
         return 'connect';
     }
 
-    public next(packet: MqttPacket): MqttPacket {
+    public next(packet: MqttPacket): undefined{
         const response = packet as ConnectResponsePacket;
         if (response.isSuccess) {
             this.succeeded(this.options);

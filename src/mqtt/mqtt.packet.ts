@@ -68,7 +68,7 @@ export abstract class MqttPacket {
         } while (num > 0);
     }
 
-    protected assertPacketFlags(flags): void {
+    protected assertPacketFlags(flags: number): void {
         if (this.packetFlags !== flags) {
             throw new Error(`Expected flags ${flags} but got ${this.packetFlags}`);
         }

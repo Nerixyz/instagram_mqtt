@@ -3,7 +3,7 @@ import { MqttPacket } from '../mqtt.packet';
 import { PingRequestPacket } from '../packets';
 import { PacketTypes } from '../mqtt.constants';
 
-export class OutgoingPingFlow extends PacketFlow<object> {
+export class OutgoingPingFlow extends PacketFlow<undefined> {
     public accept(packet: MqttPacket): boolean {
         return packet.packetType === PacketTypes.TYPE_PINGRESP;
     }
@@ -12,7 +12,7 @@ export class OutgoingPingFlow extends PacketFlow<object> {
         return 'ping';
     }
 
-    public next(): MqttPacket {
+    public next(): undefined {
         this.succeeded(undefined);
         return undefined;
     }

@@ -40,10 +40,10 @@ export class MQTToTClient extends MqttClient {
             promise = new Promise<void>(resolve => {
                 this.startInfo = { resolve };
             });
-            this.startFlow(new MQTToTConnectFlow(this.connectPayload)).then(() => this.startInfo.resolve());
+            this.startFlow(new MQTToTConnectFlow(this.connectPayload)).then(() => this.startInfo?.resolve());
         }
         this.connectTimer = this.executeDelayed(2000, () => {
-            this.registerClient(options, true).then(() => this.startInfo.resolve());
+            this.registerClient(options, true).then(() => this.startInfo?.resolve());
         });
         return promise;
     }

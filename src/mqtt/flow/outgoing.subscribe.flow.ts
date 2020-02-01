@@ -26,7 +26,7 @@ export class OutgoingSubscribeFlow extends PacketFlow<MqttSubscription> {
         return 'subscribe';
     }
 
-    public next(packet: SubscribeResponsePacket): MqttPacket {
+    public next(packet: SubscribeResponsePacket): undefined {
         if (packet.returnCodes.every(value => !packet.isError(value))) {
             this.succeeded(this.subscription);
         } else {

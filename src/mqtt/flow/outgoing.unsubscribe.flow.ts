@@ -1,10 +1,8 @@
 import { PacketFlow } from './packet-flow';
 import { MqttSubscription } from '../mqtt.types';
 import { MqttPacket } from '../mqtt.packet';
-import { IdentifiableBasePacket } from '../packets/identifiable.packet';
-import { UnsubscribeRequestPacket } from '../packets/unsubscribe.request.packet';
+import { IdentifiableBasePacket, UnsubscribeRequestPacket, UnsubscribeResponsePacket } from '../packets';
 import { PacketTypes } from '../mqtt.constants';
-import { UnsubscribeResponsePacket } from '../packets/unsubscribe.response.packet';
 
 export class OutgoingUnsubscribeFlow extends PacketFlow<MqttSubscription> {
     private readonly identifier: number;
@@ -27,7 +25,7 @@ export class OutgoingUnsubscribeFlow extends PacketFlow<MqttSubscription> {
         return 'unsubscribe';
     }
 
-    public next(): MqttPacket {
+    public next(): undefined {
         this.succeeded(this.subscription);
         return undefined;
     }

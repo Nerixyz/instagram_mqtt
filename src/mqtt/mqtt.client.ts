@@ -42,14 +42,14 @@ export class MqttClient extends EventEmitter {
 
     protected receivingFlows: PacketFlow<any>[] = [];
     protected sendingFlows: PacketFlow<any>[] = [];
-    protected writtenFlow: PacketFlow<any>;
+    protected writtenFlow?: PacketFlow<any>;
 
     protected connectionSettings: RegisterClientOptions;
 
     protected timers: object[] = [];
     protected connectTimer: object;
 
-    protected startInfo: { resolve: () => void } = null;
+    protected startInfo?: { resolve: () => void } = undefined;
 
     public constructor(options: MqttClientConstructorOptions) {
         super();
@@ -73,6 +73,7 @@ export class MqttClient extends EventEmitter {
         if (this.isConnected || this.isConnecting) {
             throw new Error('This client is already in use.');
         }
+        // @ts-ignore - CommonConnectOptions has enableTrace
         this.socket = connect({
             host: this.url.hostname,
             port: Number(this.url.port),
@@ -84,8 +85,8 @@ export class MqttClient extends EventEmitter {
         });
     }
 
-    protected emitError: (e) => void = e => this.emit('error', e);
-    protected emitWarning: (e) => void = e => this.emit('warning', e);
+    protected emitError: (e: Error) => void = e => this.emit('error', e);
+    protected emitWarning: (e: Error | string) => void = e => this.emit('warning', e);
     protected emitOpen: () => void = () => this.emit('open');
     protected emitConnect: () => void = () => this.emit('connect');
 
@@ -129,10 +130,10 @@ export class MqttClient extends EventEmitter {
     }
 
     public disconnect(): Promise<ConnectRequestOptions> {
-        return this.startFlow(new OutgoingDisconnectFlow(undefined));
+        return this.startFlow(new OutgoingDisconnectFlow(this.connectionSettings));
     }
 
-    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<void> {
+    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<any> {
         let promise;
         if (noNewPromise) {
             promise = this.startFlow(new OutgoingConnectFlow(options));
@@ -140,10 +141,10 @@ export class MqttClient extends EventEmitter {
             promise = new Promise<void>(resolve => {
                 this.startInfo = { resolve };
             });
-            this.startFlow(new OutgoingConnectFlow(options)).then(() => this.startInfo.resolve());
+            this.startFlow(new OutgoingConnectFlow(options)).then(() => this.startInfo?.resolve());
         }
         this.connectTimer = this.executeDelayed(2000, () => {
-            this.registerClient(options, true).then(() => this.startInfo.resolve());
+            this.registerClient(options, true).then(() => this.startInfo?.resolve());
         });
         return promise;
     }
@@ -204,7 +205,7 @@ export class MqttClient extends EventEmitter {
     }
 
     protected handleSendingFlows() {
-        let flow: PacketFlow<object> = undefined;
+        let flow: PacketFlow<object> | null = null;
         if (this.writtenFlow) {
             flow = this.writtenFlow;
             this.writtenFlow = undefined;
@@ -212,18 +213,19 @@ export class MqttClient extends EventEmitter {
 
         if (this.sendingFlows.length > 0) {
             this.writtenFlow = this.sendingFlows.pop();
-            const packet = this.writtenFlow.start();
+            const packet = this.writtenFlow?.start();
             if (packet) {
                 this.writePacketToSocket(packet);
                 this.handleSendingFlows();
             } else {
-                this.executeNextTick(() => this.finishFlow(this.writtenFlow));
+                // ugly, but writtenFlow can be undefined
+                this.executeNextTick(() => (this.writtenFlow ? this.finishFlow(this.writtenFlow) : null));
             }
         }
 
         if (flow) {
             if (flow.finished) {
-                this.executeNextTick(() => this.finishFlow(flow));
+                this.executeNextTick(() => (flow ? this.finishFlow(flow) : null));
             } else {
                 this.receivingFlows.push(flow);
             }
@@ -287,7 +289,7 @@ export class MqttClient extends EventEmitter {
             case PacketTypes.TYPE_PUBREC:
             case PacketTypes.TYPE_PUBCOMP: {
                 let flowFound = false;
-                let usedFlow = undefined;
+                let usedFlow: any | undefined;
                 for (const flow of this.receivingFlows) {
                     if (flow.accept(packet)) {
                         flowFound = true;

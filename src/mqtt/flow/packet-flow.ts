@@ -37,7 +37,7 @@ export abstract class PacketFlow<T> {
         });
     }
 
-    public abstract start(): MqttPacket;
+    public abstract start(): MqttPacket | undefined;
     public abstract accept(packet: MqttPacket): boolean;
     public abstract next(packet: MqttPacket): MqttPacket | undefined | null;
 

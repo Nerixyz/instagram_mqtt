@@ -5,7 +5,7 @@ export class PublishReleasePacket extends IdentifierPacket {
     public constructor(identifier?: number) {
         super(PacketTypes.TYPE_PUBREL);
         this.packetFlags = 2;
-        this.identifier = identifier;
+        this.identifier = identifier ?? IdentifierPacket.generateIdentifier();
     }
 
     protected getExpectedPacketFlags(): number {

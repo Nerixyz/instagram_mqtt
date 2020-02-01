@@ -43,7 +43,7 @@ export class OutgoingPublishFlow extends PacketFlow<MqttMessage> {
         return 'publish';
     }
 
-    public next(packet: MqttPacket): MqttPacket {
+    public next(packet: MqttPacket): undefined | MqttPacket {
         const packetType = packet.packetType;
 
         if (packetType === PacketTypes.TYPE_PUBACK || packetType === PacketTypes.TYPE_PUBCOMP) {

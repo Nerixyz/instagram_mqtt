@@ -31,7 +31,7 @@ export class PacketStream {
     private _position: number;
 
     private constructor(data?: string, length?: number, buffer?: Buffer) {
-        this._data = data ? Buffer.from(data) : length ? Buffer.alloc(length) : buffer ? buffer : undefined;
+        this._data = data ? Buffer.from(data) : length ? Buffer.alloc(length) : buffer ? buffer : Buffer.from([]);
         this.position = 0;
     }
 

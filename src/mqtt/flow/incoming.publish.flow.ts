@@ -35,12 +35,12 @@ export class IncomingPublishFlow extends PacketFlow<MqttMessage> {
         this.succeeded(this.message);
 
         const response = new PublishCompletePacket();
-        response.identifier = this.identifier;
+        response.identifier = this.identifier ?? -1;
         return response;
     }
 
-    public start(): MqttPacket {
-        let packet: IdentifiableBasePacket;
+    public start(): MqttPacket | undefined {
+        let packet: IdentifiableBasePacket | undefined = undefined;
         let emit = true;
         if (this.message.qosLevel === 1) {
             packet = new PublishAckPacket();
@@ -50,7 +50,7 @@ export class IncomingPublishFlow extends PacketFlow<MqttMessage> {
         }
 
         if (packet) {
-            packet.identifier = this.identifier;
+            packet.identifier = this.identifier ?? -1;
         }
 
         if (emit) {

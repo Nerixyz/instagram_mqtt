@@ -6,7 +6,7 @@ export interface ThriftMessage {
     type: number;
 }
 
-export type ThriftSerializable = string | number | boolean | bigint | Array<ThriftSerializable> | {[x: string]: ThriftSerializable}
+export type ThriftSerializable = string | number | boolean | bigint | Array<ThriftSerializable> | {[x: string]: ThriftSerializable} | object
 
 export const ThriftTypes = {
     STOP: 0x00,

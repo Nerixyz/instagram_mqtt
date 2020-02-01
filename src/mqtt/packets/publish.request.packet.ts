@@ -54,8 +54,8 @@ export class PublishRequestPacket extends IdentifiableBasePacket {
 
     public constructor(topic?: string, payload?: Buffer | string | undefined) {
         super(PacketTypes.TYPE_PUBLISH);
-        this._topic = topic;
-        this._payload = payload ? (payload instanceof Buffer ? payload : Buffer.from(payload)) : undefined;
+        this._topic = topic ?? '';
+        this._payload = payload ? (payload instanceof Buffer ? payload : Buffer.from(payload)) : Buffer.from([]);
     }
 
     public read(stream: PacketStream): void {
