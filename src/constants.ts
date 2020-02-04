@@ -1,7 +1,7 @@
 import { RegionHintParser, GraphqlParser, IrisParser, JsonParser, SkywalkerParser } from './realtime/parsers';
 import { Topic } from './topic';
 
-export const Topics: { [x: string]: Topic } = {
+export const Topics = {
     PP: {
         id: '34',
         path: '/pp',
@@ -17,10 +17,6 @@ export const Topics: { [x: string]: Topic } = {
         path: '/pubsub',
         parser: new SkywalkerParser(),
     },
-    SEND_MESSAGE: {
-        id: '132',
-        path: '/ig_send_message',
-    },
     SEND_MESSAGE_RESPONSE: {
         id: '133',
         path: '/ig_send_message_response',
@@ -29,6 +25,7 @@ export const Topics: { [x: string]: Topic } = {
     IRIS_SUB: {
         id: '134',
         path: '/ig_sub_iris',
+        parser: null,
     },
     IRIS_SUB_RESPONSE: {
         id: '135',
@@ -53,6 +50,12 @@ export const Topics: { [x: string]: Topic } = {
     FOREGROUND_STATE: {
         id: '102',
         path: '/t_fs',
+        parser: null,
+    },
+    SEND_MESSAGE: {
+        id: '132',
+        path: '/ig_send_message',
+        parser: null,
     },
 };
 

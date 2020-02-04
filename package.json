@@ -45,6 +45,7 @@
     "eslint-config-prettier": "^6.9.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
+    "ts-xor": "^1.0.8",
     "typescript": "^3.7.2"
   },
   "types": "dist/index.d.ts"

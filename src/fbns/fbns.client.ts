@@ -3,12 +3,14 @@ import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
 import { compressDeflate, createUserAgent, debugChannel, notUndefined, unzipAsync } from '../shared';
 import { MQTToTConnection, MQTToTClient } from '../mqttot';
-import { ConnectResponsePacket, IdentifierPacket, PublishRequestPacket } from '../mqtt/packets';
+import { IdentifierPacket } from '../mqtt/packets';
 import { Chance } from 'chance';
 import * as querystring from 'querystring';
 import * as URL from 'url';
 import { Subject } from 'rxjs';
 import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
+import { MqttMessage } from '../mqtt';
+import { first } from 'rxjs/operators';
 
 export class FbnsClient {
     public get auth(): FbnsDeviceAuth {
@@ -18,11 +20,11 @@ export class FbnsClient {
     public set auth(value: FbnsDeviceAuth) {
         this._auth = value;
     }
+
     private fbnsDebug = debugChannel('fbns');
     private client: MQTToTClient;
     private conn: MQTToTConnection;
     private _auth: FbnsDeviceAuth;
-    private connectPromiseInfo: null | { resolve: () => void; reject: (error: Error) => void } = null;
     private safeDisconnect = false;
 
     // general push
@@ -68,7 +70,7 @@ export class FbnsClient {
         });
     }
 
-    public async connect({ enableTrace }: { enableTrace?: boolean } = {}): Promise<void> {
+    public async connect({ enableTrace }: { enableTrace?: boolean } = {}): Promise<any> {
         this.fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.buildConnection();
@@ -76,24 +78,30 @@ export class FbnsClient {
             url: FBNS.HOST_NAME_V6,
             payload: await compressDeflate(this.conn.toThrift()),
         });
-        this.client.on('warning', w => this.warning$.next(w));
-        this.client.on('error', e => this.error$.next(e));
-        this.client.on('message', msg => this.handleMessage(msg));
-        this.client.on('close', () => this.error$.next(new Error('MQTToTClient was closed')));
-        this.client.on('disconnect', () =>
+        this.client.$warning.subscribe(this.warning$);
+        this.client.$error.subscribe(this.error$);
+        this.client.$disconnect.subscribe(() =>
             this.safeDisconnect
                 ? this.disconnect$.next()
                 : this.error$.next(new Error('MQTToTClient got disconnected.')),
         );
+        this.client
+            .listen<MqttMessage>({ topic: FbnsTopics.FBNS_MESSAGE.id })
+            .subscribe(msg => this.handleMessage(msg));
+        this.client
+            .listen<MqttMessage>({ topic: FbnsTopics.FBNS_EXP_LOGGING.id })
+            .subscribe(async msg => this.logging$.next(JSON.parse((await unzipAsync(msg.payload)).toString('utf8'))));
+        this.client
+            .listen<MqttMessage>({ topic: FbnsTopics.PP.id })
+            .subscribe(msg => this.pp$.next(msg.payload.toString('utf8')));
 
-        this.client.on('mqttotConnect', async (res: ConnectResponsePacket) => {
+        this.client.$connect.subscribe(async res => {
             this.fbnsDebug('Connected to MQTT');
             const payload = res.payload.toString('utf8');
             if (payload.length === 0) {
                 this.fbnsDebug('Received empty connect packet.');
                 this.error$.next(new Error('Received empty connect packet'));
-                this.connectPromiseInfo?.reject(new Error('Empty auth packet.'));
-                return;
+                throw new Error('Empty auth packet.');
             }
             this.fbnsDebug(`Received auth: ${payload}`);
             this._auth.read(payload);
@@ -112,24 +120,18 @@ export class FbnsClient {
             });
             // this.buildConnection(); ?
         });
-
         await this.client.connect({
             keepAlive: 0,
             protocolLevel: 3,
             clean: true,
             enableTrace,
         });
-        return await new Promise((resolve, reject) => (this.connectPromiseInfo = { resolve, reject }));
-    }
 
-    public disconnect() {
-        this.safeDisconnect = true;
-        return this.client.disconnect();
-    }
-
-    private async handleMessage(msg: PublishRequestPacket) {
-        switch (msg.topic) {
-            case FbnsTopics.FBNS_REG_RESP.id: {
+        return await this.client
+            .listen<MqttMessage>({ topic: FbnsTopics.FBNS_REG_RESP.id })
+            .pipe(first())
+            .toPromise()
+            .then(async msg => {
                 const data = await unzipAsync(msg.payload);
                 const payload = data.toString('utf8');
                 this.fbnsDebug(`Received register response: ${payload}`);
@@ -137,43 +139,31 @@ export class FbnsClient {
                 const { token, error } = JSON.parse(payload);
                 if (error) {
                     this.error$.next(error);
-                    this.connectPromiseInfo?.reject(error);
-                    return;
+                    throw error;
                 }
                 try {
                     await this.sendPushRegister(token);
-                    this.connectPromiseInfo?.resolve();
                 } catch (e) {
                     this.error$.next(e);
-                    this.connectPromiseInfo?.reject(e);
+                    throw e;
                 }
-                break;
-            }
-            case FbnsTopics.FBNS_MESSAGE.id: {
-                const payload: FbnsMessageData = JSON.parse((await unzipAsync(msg.payload)).toString('utf8'));
+            });
+    }
 
-                if (notUndefined(payload.fbpushnotif)) {
-                    const notification = FbnsClient.createNotificationFromJson(payload.fbpushnotif);
-                    this.push$.next(notification);
-                } else {
-                    this.fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
-                    this.message$.next(JSON.parse((await unzipAsync(msg.payload)).toString('utf8')));
-                }
-                break;
-            }
-            case FbnsTopics.FBNS_EXP_LOGGING.id: {
-                const payload = JSON.parse((await unzipAsync(msg.payload)).toString('utf8'));
-                this.logging$.next(payload);
-                break;
-            }
-            case FbnsTopics.PP.id: {
-                const payload = msg.payload.toString('utf8');
-                this.pp$.next(payload);
-                break;
-            }
-            default: {
-                this.fbnsDebug(`Received unknown packet on ${msg.topic}: ${msg.payload.toString('base64')}`);
-            }
+    public disconnect() {
+        this.safeDisconnect = true;
+        return this.client.disconnect();
+    }
+
+    private async handleMessage(msg: MqttMessage) {
+        const payload: FbnsMessageData = JSON.parse((await unzipAsync(msg.payload)).toString('utf8'));
+
+        if (notUndefined(payload.fbpushnotif)) {
+            const notification = FbnsClient.createNotificationFromJson(payload.fbpushnotif);
+            this.push$.next(notification);
+        } else {
+            this.fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
+            this.message$.next(JSON.parse((await unzipAsync(msg.payload)).toString('utf8')));
         }
     }
 

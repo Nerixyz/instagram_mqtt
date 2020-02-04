@@ -1,25 +1,26 @@
-import { MqttClient, RegisterClientOptions } from '../mqtt';
+import { MqttClient } from '../mqtt';
 import { PacketFlow } from '../mqtt/flow';
 import { MqttPacket, MqttMessage, PacketTypes } from '../mqtt';
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { compressDeflate, debugChannel } from '../shared';
 import { ConnectResponsePacket } from '../mqtt/packets';
+import * as URL from 'url';
 
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
 
-    protected mqttotDebug = (msg: string, ...args: string[]) =>
-        debugChannel('mqttot')(`${this.url.host}: ${msg}`, ...args);
+    protected mqttotDebug: (msg: string) => void;
 
     public constructor(options: { url: string; payload: Buffer }) {
         super({ url: options.url });
+        this.mqttotDebug = (msg: string, ...args: string[]) =>
+            debugChannel('mqttot')(`${URL.parse(options.url).host}: ${msg}`, ...args);
         this.connectPayload = options.payload;
         this.mqttotDebug(`Creating client`);
         this.registerListeners();
     }
 
     protected registerListeners() {
-        this.on('disconnect', () => this.mqttotDebug('Disconnected.'));
         const printErrorOrWarning = (type: string) => (e: Error | string) => {
             if (typeof e === 'string') {
                 this.mqttotDebug(`${type}: ${e}`);
@@ -27,25 +28,13 @@ export class MQTToTClient extends MqttClient {
                 this.mqttotDebug(`${type}: ${e.message}\n\tStack: ${e.stack}`);
             }
         };
-        this.on('error', printErrorOrWarning('Error'));
-        this.on('warning', printErrorOrWarning('Warning'));
+        this.$warning.subscribe(printErrorOrWarning('Error'));
+        this.$error.subscribe(printErrorOrWarning('Warning'));
+        this.$disconnect.subscribe(() => this.mqttotDebug('Disconnected.'));
     }
 
-    protected registerClient(options: RegisterClientOptions, noNewPromise = false): Promise<any> {
-        this.mqttotDebug(`Trying to register the client...`);
-        let promise;
-        if (noNewPromise) {
-            promise = this.startFlow(new MQTToTConnectFlow(this.connectPayload));
-        } else {
-            promise = new Promise<void>(resolve => {
-                this.startInfo = { resolve };
-            });
-            this.startFlow(new MQTToTConnectFlow(this.connectPayload)).then(() => this.startInfo?.resolve());
-        }
-        this.connectTimer = this.executeDelayed(2000, () => {
-            this.registerClient(options, true).then(() => this.startInfo?.resolve());
-        });
-        return promise;
+    protected getConnectFlow(): PacketFlow<any> {
+        return new MQTToTConnectFlow(this.connectPayload);
     }
 
     /**

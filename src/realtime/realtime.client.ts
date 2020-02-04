@@ -13,6 +13,8 @@ import { DirectCommands } from './commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { MqttMessage } from '../mqtt';
+import { filter, first } from 'rxjs/operators';
+import { unzipSync } from 'zlib';
 
 /**
  * TODO: update this to use rxjs
@@ -153,55 +155,65 @@ export class RealtimeClient extends EventEmitter {
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);
         const topicsArray = Object.values(Topics);
-        this.client.on('message', async packet => {
-            if (packet.payload === null) {
-                this.realtimeDebug(`Received empty packet on topic ${packet.topic}`);
-                this.emit('receive', packet.topic, packet.payload);
-                return true;
-            }
-            const unzipped = await unzipAsync(packet.payload);
-            const topic = topicsArray.find(t => t.id === packet.topic);
-            if (topic && topic.parser) {
-                const parsedMessages = topic.parser.parseMessage(topic, unzipped);
-                switch (topic) {
-                    case Topics.REALTIME_SUB: {
-                        // @ts-ignore - GraphQl parser returns [{topic, data}] => this is possible
-                        this.handleRealtimeSub(parsedMessages);
-                        break;
+        this.client.$message
+            .pipe(
+                filter(m => {
+                    if (m.payload === null) {
+                        this.realtimeDebug(`Received empty packet on topic ${m.topic}`);
+                        this.emit('receive', m.topic, m.payload);
+                        return false;
                     }
-                    case Topics.MESSAGE_SYNC: {
-                        this.handleMessageSync(parsedMessages.map(m => m.data));
-                        break;
-                    }
-                    default: {
-                        this.emit('receive', topic, parsedMessages);
-                        break;
+                    return true;
+                }),
+            )
+            .subscribe(async packet => {
+                const unzipped = await unzipAsync(packet.payload);
+                const topic = topicsArray.find(t => t.id === packet.topic);
+                if (topic && topic.parser) {
+                    const parsedMessages = topic.parser.parseMessage(topic, unzipped);
+                    this.emit('receive', topic, parsedMessages);
+                } else {
+                    try {
+                        this.emit('receive', topic, thriftRead(unzipped));
+                    } catch (e) {
+                        this.realtimeDebug(
+                            `Error while reading packet: ${JSON.stringify({
+                                topic: packet.topic,
+                                unzipped: unzipped.toString('hex'),
+                            })}`,
+                        );
+                        this.realtimeDebug(e);
+                        this.emitWarning(e);
+                        this.emit('receive', topic, unzipped.toString('utf8'));
                     }
                 }
-            } else {
-                try {
-                    this.emit('receive', topic, thriftRead(unzipped));
-                } catch (e) {
-                    this.realtimeDebug(
-                        `Error while reading packet: ${JSON.stringify({
-                            topic: packet.topic,
-                            unzipped: unzipped.toString('hex'),
-                        })}`,
-                    );
-                    this.realtimeDebug(e);
-                    this.emitWarning(e);
-                    this.emit('receive', topic, unzipped.toString('utf8'));
-                }
-            }
-        });
-        this.client.on('error', e => this.emitError(e));
-        this.client.on('warning', w => this.emitWarning(w));
-        this.client.on('close', () => this.emitError(new Error('MQTToTClient was closed')));
-        this.client.on('disconnect', () =>
+            });
+        {
+            const { MESSAGE_SYNC, REALTIME_SUB } = Topics;
+            this.client
+                .listen({
+                    topic: REALTIME_SUB.id,
+                    transformer: ({ payload }) => REALTIME_SUB.parser.parseMessage(REALTIME_SUB, unzipSync(payload)),
+                })
+                .subscribe(data => this.handleRealtimeSub(data));
+            this.client
+                .listen({
+                    topic: MESSAGE_SYNC.id,
+                    transformer: ({ payload }) =>
+                        MESSAGE_SYNC.parser.parseMessage(MESSAGE_SYNC, unzipSync(payload)).map(msg => msg.data),
+                })
+                .subscribe(data => this.handleMessageSync(data));
+        }
+        this.client.$error.subscribe(e => this.emitError(e));
+        this.client.$warning.subscribe(w => this.emitWarning(w));
+        this.client.$disconnect.subscribe(() =>
             this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')),
         );
-        return new Promise(resolve => {
-            this.client.once('mqttotConnect', async () => {
+
+        const promise = this.client.$connect
+            .pipe(first())
+            .toPromise()
+            .then(async () => {
                 this.realtimeDebug('Connected. Checking initial subs.');
                 const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
                 await Promise.all([
@@ -210,15 +222,14 @@ export class RealtimeClient extends EventEmitter {
                     irisData ? this.irisSubscribe(irisData) : null,
                 ]);
                 Object.values(Topics).forEach(topic => this.client.subscribe({ topic: topic.id }));
-                resolve();
             });
-            this.client.connect({
-                keepAlive: 0,
-                protocolLevel: 3,
-                clean: true,
-                enableTrace: this.initOptions.enableTrace,
-            });
+        this.client.connect({
+            keepAlive: 0,
+            protocolLevel: 3,
+            clean: true,
+            enableTrace: this.initOptions.enableTrace,
         });
+        return promise;
     }
 
     private emitError = (e: Error) => this.emit('error', e);
@@ -267,9 +278,9 @@ export class RealtimeClient extends EventEmitter {
         });
     }
 
-    private handleRealtimeSub([message]: [{ topic: string; data: GraphQlMessage }]) {
-        const { topic, json, payload } = message.data;
-        this.emit('realtimeSub', message);
+    private handleRealtimeSub({ data, topic: messageTopic }: ParsedMessage<GraphQlMessage>) {
+        const { topic, json, payload } = data;
+        this.emit('realtimeSub', { data, messageTopic });
         switch (topic) {
             case 'direct': {
                 const parsed = json;

@@ -8,3 +8,4 @@ export * from './mqtt.packet';
 export * from './mqtt.parser';
 export * from './mqtt.types';
 export * from './packet-stream';
+export * from './mqtt.utilities';
