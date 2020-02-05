@@ -2,11 +2,6 @@ import { RegionHintParser, GraphqlParser, IrisParser, JsonParser, SkywalkerParse
 import { Topic } from './topic';
 
 export const Topics = {
-    PP: {
-        id: '34',
-        path: '/pp',
-        parser: new JsonParser(),
-    },
     GRAPHQL: {
         id: '9',
         path: '/graphql',
