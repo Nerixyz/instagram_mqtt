@@ -11,8 +11,8 @@ export class MQTToTClient extends MqttClient {
 
     protected mqttotDebug: (msg: string) => void;
 
-    public constructor(options: { url: string; payload: Buffer, enableTrace?: boolean }) {
-        super({ url: options.url, enableTrace: options.enableTrace});
+    public constructor(options: { url: string; payload: Buffer; enableTrace?: boolean }) {
+        super({ url: options.url, enableTrace: options.enableTrace });
         this.mqttotDebug = (msg: string, ...args: string[]) =>
             debugChannel('mqttot')(`${URL.parse(options.url).host}: ${msg}`, ...args);
         this.connectPayload = options.payload;

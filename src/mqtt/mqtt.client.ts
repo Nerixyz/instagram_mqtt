@@ -267,7 +267,7 @@ export class MqttClient {
                     ),
                 )
                     .then(m => this.$message.next(m))
-                    .catch(e => console.error(e, e.stack));
+                    .catch(e => this.$warning.next(e));
                 break;
             }
             case PacketTypes.TYPE_CONNACK: {

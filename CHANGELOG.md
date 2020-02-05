@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+ - Removed initial raw mqtt subscriptions (disconnect)
+ - Added proper keepAlive handling
+ - Added FBNS and Realtime keepAlive
+
 ## 0.2.0
  - **BREAKING:** FBNS is no longer a EventEmitter, instead it uses RXJS Subjects.
     

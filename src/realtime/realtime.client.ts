@@ -151,7 +151,7 @@ export class RealtimeClient extends EventEmitter {
         this.client = new MQTToTClient({
             url: REALTIME.HOST_NAME_V6,
             payload: await compressDeflate(this.connection.toThrift()),
-            enableTrace: this.initOptions.enableTrace
+            enableTrace: this.initOptions.enableTrace,
         });
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);
@@ -223,11 +223,13 @@ export class RealtimeClient extends EventEmitter {
                     irisData ? this.irisSubscribe(irisData) : null,
                 ]);
             });
-        this.client.connect({
-            keepAlive: 20,
-            protocolLevel: 3,
-            clean: true,
-        }).catch((e) => this.emitError(e));
+        this.client
+            .connect({
+                keepAlive: 20,
+                protocolLevel: 3,
+                clean: true,
+            })
+            .catch(e => this.emitError(e));
         return promise;
     }
 

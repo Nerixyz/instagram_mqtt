@@ -126,7 +126,7 @@ export class FbnsClient {
             protocolLevel: 3,
             clean: true,
         });
-        await this.client.subscribe({topic: FbnsTopics.FBNS_MESSAGE.id});
+        await this.client.subscribe({ topic: FbnsTopics.FBNS_MESSAGE.id });
 
         return await this.client
             .listen<MqttMessage>({ topic: FbnsTopics.FBNS_REG_RESP.id })
