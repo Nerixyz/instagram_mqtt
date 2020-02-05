@@ -80,7 +80,7 @@ export class MqttClient {
             connecting: false,
             disconnected: false,
         };
-        this.parser = options.parser ?? new MqttParser((e) => this.$error.next(e));
+        this.parser = options.parser ?? new MqttParser(e => this.$error.next(e));
         this.transport =
             options.transport ??
             new TlsTransport({
@@ -192,7 +192,7 @@ export class MqttClient {
         for (const flow of this.activeFlows) {
             if (flow.accept(packet)) {
                 const next = flow.next(packet);
-                if(next) {
+                if (next) {
                     this.sendPacket(next);
                 }
                 result = true;
@@ -249,13 +249,12 @@ export class MqttClient {
                 if (this.state.connectOptions?.keepAlive !== 0) {
                     const delay = (this.state.connectOptions?.keepAlive ?? 60) - 0.5;
                     this.mqttDebug(`Starting keep-alive-ping {delay: ${delay}}`);
-                    const ref = this.executePeriodically(
-                         delay * 1000,
-                        () => {
-                             const pingDebug = this.mqttDebug.extend('ping');
-                            this.startFlow(new OutgoingPingFlow()).then(() => pingDebug(`PingPong @ ${Date.now()}`)).catch(() => pingDebug('PingPong failed.'));
-                        },
-                    );
+                    const ref = this.executePeriodically(delay * 1000, () => {
+                        const pingDebug = this.mqttDebug.extend('ping');
+                        this.startFlow(new OutgoingPingFlow())
+                            .then(() => pingDebug(`PingPong @ ${Date.now()}`))
+                            .catch(() => pingDebug('PingPong failed.'));
+                    });
                     this.timers.push(ref);
                 }
                 // no break - continue
