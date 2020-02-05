@@ -70,9 +70,9 @@ export class MqttClient {
     }
 
     set keepAlive(value) {
-        if(this.state?.connectOptions) {
+        if (this.state?.connectOptions) {
             this.state.connectOptions.keepAlive = value;
-            if(value) {
+            if (value) {
                 this.updateKeepAlive(value);
             }
         }
@@ -221,7 +221,7 @@ export class MqttClient {
 
     protected updateKeepAlive(value: number) {
         value = Math.max(value - 0.5, 1);
-        if(this.keepAliveTimer) {
+        if (this.keepAliveTimer) {
             this.stopExecuting(this.keepAliveTimer);
         }
         this.mqttDebug(`Starting keep-alive-ping {delay: ${value}}`);
