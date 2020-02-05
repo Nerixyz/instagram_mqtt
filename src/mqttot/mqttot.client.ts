@@ -18,6 +18,7 @@ export class MQTToTClient extends MqttClient {
         this.connectPayload = options.payload;
         this.mqttotDebug(`Creating client`);
         this.registerListeners();
+        this.state.connectOptions = {keepAlive: 60};
     }
 
     protected registerListeners() {
