@@ -221,10 +221,9 @@ export class RealtimeClient extends EventEmitter {
                     skywalkerSubs && skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null,
                     irisData ? this.irisSubscribe(irisData) : null,
                 ]);
-                Object.values(Topics).forEach(topic => this.client.subscribe({ topic: topic.id }));
             });
         this.client.connect({
-            keepAlive: 0,
+            keepAlive: 20,
             protocolLevel: 3,
             clean: true,
             enableTrace: this.initOptions.enableTrace,
