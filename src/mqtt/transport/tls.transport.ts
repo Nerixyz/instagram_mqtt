@@ -14,6 +14,7 @@ export class TlsTransport extends Transport<{ url: string; enableTrace: boolean 
             host: url.hostname ?? '',
             port: Number(url.port),
             enableTrace: this.options.enableTrace,
+            timeout: 0,
         });
         this.socket.on('error', e => this.callbacks.error(e));
         this.socket.on('end', () => this.callbacks.disconnect());

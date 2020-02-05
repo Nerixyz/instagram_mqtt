@@ -75,7 +75,7 @@ export abstract class MqttPacket {
     }
 
     protected assertRemainingPacketLength(expected?: number): void {
-        if (expected && this.remainingPacketLength !== expected) {
+        if (typeof expected === 'number' && this.remainingPacketLength !== expected) {
             throw new Error(
                 `Expected remaining packet length of ${expected} bytes but got ${this.remainingPacketLength}`,
             );

@@ -9,7 +9,5 @@ export class PingResponsePacket extends MqttPacket {
 
     public read(stream: PacketStream): void {
         super.read(stream);
-        //this.assertPacketFlags(0);
-        this.assertRemainingPacketLength(0);
     }
 }
