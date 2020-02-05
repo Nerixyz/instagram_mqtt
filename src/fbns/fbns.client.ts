@@ -77,6 +77,7 @@ export class FbnsClient {
         this.client = new MQTToTClient({
             url: FBNS.HOST_NAME_V6,
             payload: await compressDeflate(this.conn.toThrift()),
+            enableTrace,
         });
         this.client.$warning.subscribe(this.warning$);
         this.client.$error.subscribe(this.error$);
@@ -124,7 +125,6 @@ export class FbnsClient {
             keepAlive: 0,
             protocolLevel: 3,
             clean: true,
-            enableTrace,
         });
 
         return await this.client

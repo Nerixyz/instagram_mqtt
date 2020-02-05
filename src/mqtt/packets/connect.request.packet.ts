@@ -96,5 +96,4 @@ export interface ConnectRequestOptions {
     username?: string;
     password?: string;
     clean?: boolean;
-    enableTrace?: boolean;
 }
