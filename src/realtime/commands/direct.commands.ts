@@ -1,6 +1,6 @@
 import { MQTToTClient } from '../../mqttot';
 import { Topics } from '../../constants';
-import { compressDeflate, debugChannel } from '../../shared';
+import { compressDeflate, debugChannel, notUndefined } from '../../shared';
 import * as Chance from 'chance';
 import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';
 import { MqttMessage } from '../../mqtt';
@@ -44,13 +44,21 @@ export class DirectCommands {
 
     public async sendForegroundState(state: ForegroundState) {
         this.directDebug(`Updated foreground state: ${JSON.stringify(state)}`);
-        return this.client.publish({
-            topic: Topics.FOREGROUND_STATE.id,
-            payload: await compressDeflate(
-                Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)]),
-            ),
-            qosLevel: 1,
-        });
+        return this.client
+            .publish({
+                topic: Topics.FOREGROUND_STATE.id,
+                payload: await compressDeflate(
+                    Buffer.concat([Buffer.alloc(1, 0), thriftWriteFromObject(state, this.foregroundStateConfig)]),
+                ),
+                qosLevel: 1,
+            })
+            .then(res => {
+                // updating the keepAlive to match the shared value
+                if (notUndefined(state.keepAliveTimeout)) {
+                    this.client.keepAlive = state.keepAliveTimeout;
+                }
+                return res;
+            });
     }
 
     private async sendCommand({
