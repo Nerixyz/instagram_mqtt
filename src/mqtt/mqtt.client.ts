@@ -65,11 +65,24 @@ export class MqttClient {
     $disconnect = new Subject<void>();
     $message = new Subject<MqttMessage>();
 
+    get keepAlive(): number {
+        return this.state?.connectOptions?.keepAlive ?? 0;
+    }
+
+    set keepAlive(value) {
+        if(this.state?.connectOptions) {
+            this.state.connectOptions.keepAlive = value;
+            if(value) {
+                this.updateKeepAlive(value);
+            }
+        }
+    }
+
     protected transport: Transport<unknown>;
     protected parser: MqttParser;
 
-    protected timers: object[] = [];
     protected connectTimer: object;
+    protected keepAliveTimer?: object;
 
     protected state: MqttClientState;
     protected activeFlows: PacketFlow<any>[] = [];
@@ -206,6 +219,20 @@ export class MqttClient {
         this.activeFlows = pull(this.activeFlows, ...this.activeFlows.filter(f => f.finished));
     }
 
+    protected updateKeepAlive(value: number) {
+        value = Math.max(value - 0.5, 1);
+        if(this.keepAliveTimer) {
+            this.stopExecuting(this.keepAliveTimer);
+        }
+        this.mqttDebug(`Starting keep-alive-ping {delay: ${value}}`);
+        this.keepAliveTimer = this.executePeriodically(value * 1000, () => {
+            const pingDebug = this.mqttDebug.extend('ping');
+            this.startFlow(new OutgoingPingFlow())
+                .then(() => pingDebug(`PingPong @ ${Date.now()}`))
+                .catch(() => pingDebug('PingPong failed.'));
+        });
+    }
+
     protected sendPacket(packet: MqttPacket) {
         const stream = PacketStream.empty();
         packet.write(stream);
@@ -246,16 +273,8 @@ export class MqttClient {
             case PacketTypes.TYPE_CONNACK: {
                 this.setConnected();
                 this.$connect.next(packet as ConnectResponsePacket);
-                if (this.state.connectOptions?.keepAlive !== 0) {
-                    const delay = (this.state.connectOptions?.keepAlive ?? 60) - 0.5;
-                    this.mqttDebug(`Starting keep-alive-ping {delay: ${delay}}`);
-                    const ref = this.executePeriodically(delay * 1000, () => {
-                        const pingDebug = this.mqttDebug.extend('ping');
-                        this.startFlow(new OutgoingPingFlow())
-                            .then(() => pingDebug(`PingPong @ ${Date.now()}`))
-                            .catch(() => pingDebug('PingPong failed.'));
-                    });
-                    this.timers.push(ref);
+                if (this.state?.connectOptions?.keepAlive) {
+                    this.updateKeepAlive(this.state.connectOptions.keepAlive);
                 }
                 // no break - continue
             }
@@ -303,6 +322,7 @@ export class MqttClient {
         this.state.connecting = false;
         this.state.connected = false;
         this.state.disconnected = true;
+        this.stopExecuting(this.keepAliveTimer);
     }
 }
 
