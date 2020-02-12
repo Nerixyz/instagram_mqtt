@@ -3,7 +3,7 @@ import { Topics } from '../../constants';
 import { compressDeflate, debugChannel, notUndefined } from '../../shared';
 import * as Chance from 'chance';
 import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';
-import { MqttMessage } from '../../mqtt';
+import { MqttMessageOutgoing } from 'mqtts';
 
 interface ItemBaseType {
     threadId: string;
@@ -66,7 +66,7 @@ export class DirectCommands {
         data,
         threadId,
         clientContext,
-    }: { action: string; data: any } & ItemBaseType): Promise<MqttMessage> {
+    }: { action: string; data: any } & ItemBaseType): Promise<MqttMessageOutgoing> {
         if (clientContext) {
             data.client_context = clientContext;
         }

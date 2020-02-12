@@ -3,13 +3,12 @@ import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
 import { compressDeflate, createUserAgent, debugChannel, notUndefined, unzipAsync } from '../shared';
 import { MQTToTConnection, MQTToTClient } from '../mqttot';
-import { IdentifierPacket } from '../mqtt/packets';
 import { Chance } from 'chance';
 import * as querystring from 'querystring';
 import * as URL from 'url';
 import { Subject } from 'rxjs';
 import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
-import { MqttMessage } from '../mqtt';
+import { MqttMessage, IdentifierPacket } from 'mqtts';
 import { first } from 'rxjs/operators';
 
 export class FbnsClient {

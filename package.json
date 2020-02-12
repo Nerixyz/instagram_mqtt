@@ -18,7 +18,7 @@
     "build": "rimraf dist && tsc -p tsconfig.build.json",
     "prepare": "npm run build",
     "lint": "eslint --fix --ext .js,.ts src/**",
-    "format": "prettier --write \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" --loglevel warn",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "precommit": "npm run typecheck && npm run lint && npm run format"
   },
@@ -33,6 +33,7 @@
     "debug": "^4.1.1",
     "instagram-private-api": "^1.34.0",
     "lodash": "^4.16.6",
+    "mqtts": "^0.1.0",
     "rxjs": "^6.5.4"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@ import { QueryIDs } from './subscriptions';
 import { DirectCommands } from './commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
-import { MqttMessage } from '../mqtt';
+import { MqttMessageOutgoing } from 'mqtts';
 import { filter, first } from 'rxjs/operators';
 import { unzipSync } from 'zlib';
 
@@ -246,7 +246,7 @@ export class RealtimeClient extends EventEmitter {
         'Use RealtimeClient.graphQlSubscribe instead',
     );
 
-    public graphQlSubscribe(sub: string | string[]): Promise<MqttMessage> {
+    public graphQlSubscribe(sub: string | string[]): Promise<MqttMessageOutgoing> {
         sub = typeof sub === 'string' ? [sub] : sub;
         this.realtimeDebug(`Subscribing with GraphQL to ${sub.join(', ')}`);
         return this.commands.updateSubscriptions({
@@ -257,7 +257,7 @@ export class RealtimeClient extends EventEmitter {
         });
     }
 
-    public skywalkerSubscribe(sub: string | string[]): Promise<MqttMessage> {
+    public skywalkerSubscribe(sub: string | string[]): Promise<MqttMessageOutgoing> {
         sub = typeof sub === 'string' ? [sub] : sub;
         this.realtimeDebug(`Subscribing with Skywalker to ${sub.join(', ')}`);
         return this.commands.updateSubscriptions({

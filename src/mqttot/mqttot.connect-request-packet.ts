@@ -1,4 +1,4 @@
-import { MqttPacket, PacketStream, PacketTypes } from '../mqtt';
+import { MqttPacket, PacketStream, PacketTypes } from 'mqtts';
 
 export class MQTToTConnectRequestPacket extends MqttPacket {
     public get protocolName(): string {

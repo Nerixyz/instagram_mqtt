@@ -1,10 +1,7 @@
-import { MqttClient } from '../mqtt';
-import { PacketFlow } from '../mqtt/flow';
-import { MqttPacket, MqttMessage, PacketTypes } from '../mqtt';
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { compressDeflate, debugChannel } from '../shared';
-import { ConnectResponsePacket } from '../mqtt/packets';
 import * as URL from 'url';
+import { ConnectResponsePacket, MqttClient, MqttMessage, MqttPacket, PacketFlow, PacketTypes } from 'mqtts';
 
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
