@@ -1,7 +1,7 @@
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { compressDeflate, debugChannel } from '../shared';
 import * as URL from 'url';
-import { ConnectResponsePacket, MqttClient, MqttMessage, MqttPacket, PacketFlow, PacketTypes } from 'mqtts';
+import { ConnectResponsePacket, MqttClient, MqttMessage, MqttPacket, PacketFlowFunc, PacketTypes } from 'mqtts';
 
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
@@ -31,8 +31,8 @@ export class MQTToTClient extends MqttClient {
         this.$disconnect.subscribe(() => this.mqttotDebug('Disconnected.'));
     }
 
-    protected getConnectFlow(): PacketFlow<any> {
-        return new MQTToTConnectFlow(this.connectPayload);
+    protected getConnectFlow(): PacketFlowFunc<any> {
+        return mqttotConnectFlow(this.connectPayload);
     }
 
     /**
@@ -50,28 +50,10 @@ export class MQTToTClient extends MqttClient {
     }
 }
 
-export class MQTToTConnectFlow extends PacketFlow<ConnectResponsePacket> {
-    private readonly payload: Buffer;
-
-    public constructor(payload: Buffer) {
-        super();
-        this.payload = payload;
-    }
-
-    public accept(packet: MqttPacket): boolean {
-        return packet.packetType === PacketTypes.TYPE_CONNACK;
-    }
-
-    public get name(): string {
-        return 'mqttotConnect';
-    }
-
-    public next(packet: ConnectResponsePacket): undefined {
-        this.succeeded(packet);
-        return undefined;
-    }
-
-    public start(): MqttPacket {
-        return new MQTToTConnectRequestPacket(this.payload);
-    }
+export function mqttotConnectFlow(payload: Buffer): PacketFlowFunc<ConnectResponsePacket> {
+    return success => ({
+        start: () => new MQTToTConnectRequestPacket(payload),
+        accept: packet => packet.packetType === PacketTypes.TYPE_CONNACK,
+        next: (packet: ConnectResponsePacket) => success(packet)
+    })
 }

@@ -1,4 +1,4 @@
-import { MqttPacket, PacketStream, PacketTypes } from 'mqtts';
+import { InvalidDirectionError, MqttPacket, PacketStream, PacketTypes } from 'mqtts';
 
 export class MQTToTConnectRequestPacket extends MqttPacket {
     public get protocolName(): string {
@@ -42,19 +42,8 @@ export class MQTToTConnectRequestPacket extends MqttPacket {
         this.payload = payload ?? Buffer.from([]);
     }
 
-    public read(stream: PacketStream): void {
-        super.read(stream);
-        this.assertPacketFlags(0);
-        this.assertRemainingPacketLength();
-
-        const originalPosition = stream.position;
-        this._protocolName = stream.readString();
-        this.protocolLevel = stream.readByte();
-        this._flags = stream.readByte();
-        this._keepAlive = stream.readWord();
-
-        const payloadLength = this.remainingPacketLength - (stream.position - originalPosition);
-        this.payload = stream.read(payloadLength);
+    public read(): void {
+        throw new InvalidDirectionError('read');
     }
 
     public write(stream: PacketStream): void {

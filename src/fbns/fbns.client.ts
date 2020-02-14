@@ -8,7 +8,7 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import { Subject } from 'rxjs';
 import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
-import { MqttMessage, IdentifierPacket } from 'mqtts';
+import { MqttMessage, MqttPacket } from 'mqtts';
 import { first } from 'rxjs/operators';
 
 export class FbnsClient {
@@ -106,7 +106,7 @@ export class FbnsClient {
             this.fbnsDebug(`Received auth: ${payload}`);
             this._auth.read(payload);
             this.auth$.next(this.auth);
-            IdentifierPacket.generateIdentifier();
+            MqttPacket.generateIdentifier();
             await this.client.mqttotPublish({
                 topic: FbnsTopics.FBNS_REG_REQ.id,
                 payload: Buffer.from(

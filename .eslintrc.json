@@ -10,7 +10,8 @@
   "parserOptions": {
     "ecmaVersion": 2018,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.json",
+    "createDefaultProgram": true
   },
   "overrides": [
     {
@@ -38,7 +39,7 @@
       }],
     "no-constant-condition": "off",
     "no-use-before-define": "off",
-    "arrow-parens": ["error", "as-needed", {"requireForBlockBody": true}],
+    "arrow-parens": ["error", "as-needed"],
     "no-console": "warn"
   }
 }
