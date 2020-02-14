@@ -1,7 +1,7 @@
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { compressDeflate, debugChannel } from '../shared';
 import * as URL from 'url';
-import { ConnectResponsePacket, MqttClient, MqttMessage, MqttPacket, PacketFlowFunc, PacketTypes } from 'mqtts';
+import { ConnectResponsePacket, MqttClient, MqttMessage, PacketFlowFunc, PacketTypes } from 'mqtts';
 
 export class MQTToTClient extends MqttClient {
     protected connectPayload: Buffer;
@@ -54,6 +54,6 @@ export function mqttotConnectFlow(payload: Buffer): PacketFlowFunc<ConnectRespon
     return success => ({
         start: () => new MQTToTConnectRequestPacket(payload),
         accept: packet => packet.packetType === PacketTypes.TYPE_CONNACK,
-        next: (packet: ConnectResponsePacket) => success(packet)
-    })
+        next: (packet: ConnectResponsePacket) => success(packet),
+    });
 }
