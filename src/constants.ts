@@ -31,11 +31,13 @@ export const Topics = {
         id: '146',
         path: '/ig_message_sync',
         parser: new IrisParser(),
+        noParse: true,
     },
     REALTIME_SUB: {
         id: '149',
         path: '/ig_realtime_sub',
         parser: new GraphqlParser(),
+        noParse: true,
     },
     REGION_HINT: {
         id: '150',

@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import { ParsedMessage, IrisParserData, GraphQlMessage } from './parsers';
 import { Commands } from './commands';
 import { thriftRead } from '../thrift';
-import { compressDeflate, debugChannel, unzipAsync } from '../shared';
+import { compressDeflate, debugChannel, tryUnzipAsync } from '../shared';
 import { Topic } from '../topic';
 import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper, AppPresenceEventWrapper } from './messages';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
@@ -168,9 +168,10 @@ export class RealtimeClient extends EventEmitter {
                 }),
             )
             .subscribe(async packet => {
-                const unzipped = await unzipAsync(packet.payload);
+                const unzipped = await tryUnzipAsync(packet.payload);
                 const topic = topicsArray.find(t => t.id === packet.topic);
-                if (topic && topic.parser) {
+                // @ts-ignore -- noParse may exist
+                if (topic && topic.parser && !topic.noParse) {
                     const parsedMessages = topic.parser.parseMessage(topic, unzipped);
                     this.emit('receive', topic, parsedMessages);
                 } else {

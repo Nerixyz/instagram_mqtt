@@ -36,6 +36,12 @@ export async function unzipAsync(data: string | Buffer) {
     return Bluebird.fromCallback<Buffer>(cb => unzip(data, cb));
 }
 
+export async function tryUnzipAsync(data: Buffer): Promise<Buffer> {
+    try {
+        return unzipAsync(data);
+    } catch(e) { return data;}
+}
+
 /**
  * Returns a debug function with a path starting with ig:mqtt
  * @param {string} path
