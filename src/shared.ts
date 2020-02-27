@@ -38,6 +38,9 @@ export async function unzipAsync(data: string | Buffer) {
 
 export async function tryUnzipAsync(data: Buffer): Promise<Buffer> {
     try {
+        if(data.readInt8(0) !== 0x78)
+            return data;
+
         return unzipAsync(data);
     } catch(e) { return data;}
 }

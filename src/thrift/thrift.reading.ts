@@ -276,7 +276,7 @@ export class BufferReader {
     }
 
     public zigzagToBigint(n: bigint): bigint {
-        return (n >> BigInt(1)) ^ ~(n & BigInt(1));
+        return (n >> BigInt(1)) ^ -(n & BigInt(1));
     }
 
     public readBigint(): { int: bigint; num: number } {

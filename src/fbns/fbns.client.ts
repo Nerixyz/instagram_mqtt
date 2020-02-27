@@ -1,7 +1,7 @@
 import { IgApiClient } from 'instagram-private-api';
 import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
-import { compressDeflate, createUserAgent, debugChannel, notUndefined, unzipAsync } from '../shared';
+import { compressDeflate, createUserAgent, debugChannel, notUndefined, tryUnzipAsync } from '../shared';
 import { MQTToTConnection, MQTToTClient } from '../mqttot';
 import { Chance } from 'chance';
 import * as querystring from 'querystring';
@@ -90,7 +90,7 @@ export class FbnsClient {
             .subscribe(msg => this.handleMessage(msg));
         this.client
             .listen<MqttMessage>({ topic: FbnsTopics.FBNS_EXP_LOGGING.id })
-            .subscribe(async msg => this.logging$.next(JSON.parse((await unzipAsync(msg.payload)).toString('utf8'))));
+            .subscribe(async msg => this.logging$.next(JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'))));
         this.client
             .listen<MqttMessage>({ topic: FbnsTopics.PP.id })
             .subscribe(msg => this.pp$.next(msg.payload.toString('utf8')));
@@ -132,7 +132,7 @@ export class FbnsClient {
             .pipe(first())
             .toPromise()
             .then(async msg => {
-                const data = await unzipAsync(msg.payload);
+                const data = await tryUnzipAsync(msg.payload);
                 const payload = data.toString('utf8');
                 this.fbnsDebug(`Received register response: ${payload}`);
 
@@ -156,14 +156,14 @@ export class FbnsClient {
     }
 
     private async handleMessage(msg: MqttMessage) {
-        const payload: FbnsMessageData = JSON.parse((await unzipAsync(msg.payload)).toString('utf8'));
+        const payload: FbnsMessageData = JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'));
 
         if (notUndefined(payload.fbpushnotif)) {
             const notification = FbnsClient.createNotificationFromJson(payload.fbpushnotif);
             this.push$.next(notification);
         } else {
             this.fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
-            this.message$.next(JSON.parse((await unzipAsync(msg.payload)).toString('utf8')));
+            this.message$.next(JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8')));
         }
     }
 
