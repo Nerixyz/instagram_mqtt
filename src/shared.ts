@@ -38,20 +38,26 @@ export async function unzipAsync(data: string | Buffer) {
 
 export async function tryUnzipAsync(data: Buffer): Promise<Buffer> {
     try {
-        if(data.readInt8(0) !== 0x78)
-            return data;
+        if (data.readInt8(0) !== 0x78) return data;
 
         return unzipAsync(data);
-    } catch(e) { return data;}
+    } catch (e) {
+        return data;
+    }
 }
 
 export function tryUnzipSync(data: Buffer): Buffer {
     try {
-        if(data.readInt8(0) !== 0x78)
-            return data;
+        if (data.readInt8(0) !== 0x78) return data;
 
         return unzipSync(data);
-    } catch(e) { return data;}
+    } catch (e) {
+        return data;
+    }
+}
+
+export function isJson(buffer: Buffer) {
+    return String.fromCharCode(buffer[0]).match(/[{[]/);
 }
 
 /**

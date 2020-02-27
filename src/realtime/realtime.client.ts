@@ -1,15 +1,14 @@
 import { IgApiClient } from 'instagram-private-api';
 import { REALTIME, Topics } from '../constants';
 import { EventEmitter } from 'events';
-import { ParsedMessage, IrisParserData, GraphQlMessage } from './parsers';
-import { Commands } from './commands';
+import { GraphQlMessage, IrisParserData, ParsedMessage } from './parsers';
+import { Commands, DirectCommands } from './commands';
 import { thriftRead } from '../thrift';
-import { compressDeflate, debugChannel, tryUnzipAsync, tryUnzipSync } from '../shared';
+import { compressDeflate, debugChannel, isJson, tryUnzipAsync, tryUnzipSync } from '../shared';
 import { Topic } from '../topic';
-import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper, AppPresenceEventWrapper } from './messages';
+import { AppPresenceEventWrapper, MessageSyncMessageWrapper, RealtimeSubDirectDataWrapper } from './messages';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
 import { QueryIDs } from './subscriptions';
-import { DirectCommands } from './commands';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { MqttMessageOutgoing } from 'mqtts';
@@ -175,7 +174,7 @@ export class RealtimeClient extends EventEmitter {
                     this.emit('receive', topic, parsedMessages);
                 } else {
                     try {
-                        this.emit('receive', topic, thriftRead(unzipped));
+                        this.emit('receive', topic, isJson(unzipped) ? unzipped.toString() : thriftRead(unzipped));
                     } catch (e) {
                         this.realtimeDebug(
                             `Error while reading packet: ${JSON.stringify({
@@ -280,28 +279,36 @@ export class RealtimeClient extends EventEmitter {
     }
 
     private handleRealtimeSub({ data, topic: messageTopic }: ParsedMessage<GraphQlMessage>) {
-        const { topic, json, payload } = data;
+        const { message } = data;
         this.emit('realtimeSub', { data, messageTopic });
-        switch (topic) {
-            case 'direct': {
-                const parsed = json;
-                parsed.data = parsed.data.map((e: any) => {
-                    if (typeof e.value === 'string') {
-                        e.value = JSON.parse(e.value);
+        if (typeof message === 'string') {
+            this.emitDirectEvent(JSON.parse(message));
+        } else {
+            const { topic, payload, json } = message;
+            switch (topic) {
+                case 'direct': {
+                    this.emitDirectEvent(json);
+                    break;
+                }
+                default: {
+                    const entries = Object.entries(QueryIDs);
+                    const query = entries.find(e => e[1] === topic);
+                    if (query) {
+                        this.emit(query[0], json || payload);
                     }
-                    return e;
-                });
-                parsed.data.forEach((data: RealtimeSubDirectDataWrapper) => this.emit('direct', data));
-                break;
-            }
-            default: {
-                const entries = Object.entries(QueryIDs);
-                const query = entries.find(e => e[1] === topic);
-                if (query) {
-                    this.emit(query[0], json || payload);
                 }
             }
         }
+    }
+
+    protected emitDirectEvent(parsed: any) {
+        parsed.data = parsed.data.map((e: any) => {
+            if (typeof e.value === 'string') {
+                e.value = JSON.parse(e.value);
+            }
+            return e;
+        });
+        parsed.data.forEach((data: RealtimeSubDirectDataWrapper) => this.emit('direct', data));
     }
 
     private handleMessageSync(syncData: IrisParserData[]) {

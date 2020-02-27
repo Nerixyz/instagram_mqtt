@@ -90,7 +90,9 @@ export class FbnsClient {
             .subscribe(msg => this.handleMessage(msg));
         this.client
             .listen<MqttMessage>({ topic: FbnsTopics.FBNS_EXP_LOGGING.id })
-            .subscribe(async msg => this.logging$.next(JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'))));
+            .subscribe(async msg =>
+                this.logging$.next(JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'))),
+            );
         this.client
             .listen<MqttMessage>({ topic: FbnsTopics.PP.id })
             .subscribe(msg => this.pp$.next(msg.payload.toString('utf8')));

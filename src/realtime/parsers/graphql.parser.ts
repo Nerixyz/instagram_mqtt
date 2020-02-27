@@ -1,6 +1,7 @@
 import { ParsedMessage, Parser } from './parser';
 import { Topic } from '../../topic';
 import { ThriftPacketDescriptor, ThriftDescriptors, thriftReadToObject } from '../../thrift';
+import { isJson } from '../../shared';
 
 export class GraphqlParser implements Parser<GraphQlMessage> {
     public static descriptors: ThriftPacketDescriptor[] = [
@@ -9,17 +10,16 @@ export class GraphqlParser implements Parser<GraphQlMessage> {
     ];
 
     public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<GraphQlMessage> {
-        const msg = thriftReadToObject<GraphQlMessage>(payload, GraphqlParser.descriptors);
-        if (msg.payload?.match(/[{[]/)) {
-            msg.json = JSON.parse(msg.payload);
+        const message: any = isJson(payload)
+            ? payload.toString()
+            : thriftReadToObject<{ payload: string; topic: string }>(payload, GraphqlParser.descriptors) ?? '';
+        if (message.payload) {
+            message.json = JSON.parse(message.payload);
         }
-        // @ts-ignore - msg is a GraphQlMessage
-        return { topic, data: msg };
+        return { topic, data: { message } };
     }
 }
 
 export interface GraphQlMessage {
-    topic: string;
-    payload: string;
-    json?: any;
+    message: string | { topic: string; payload: string; json: any };
 }

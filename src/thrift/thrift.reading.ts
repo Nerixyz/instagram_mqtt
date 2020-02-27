@@ -72,6 +72,7 @@ function getReadFunction(
                 value: reader.readString(reader.readVarInt()),
                 type,
             });
+        case ThriftTypes.SET:
         case ThriftTypes.LIST:
             return ({ reader, context }): ThriftMessage => {
                 const byte = reader.readByte();
