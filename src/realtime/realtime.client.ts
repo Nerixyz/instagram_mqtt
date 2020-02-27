@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import { ParsedMessage, IrisParserData, GraphQlMessage } from './parsers';
 import { Commands } from './commands';
 import { thriftRead } from '../thrift';
-import { compressDeflate, debugChannel, tryUnzipAsync } from '../shared';
+import { compressDeflate, debugChannel, tryUnzipAsync, tryUnzipSync } from '../shared';
 import { Topic } from '../topic';
 import { RealtimeSubDirectDataWrapper, MessageSyncMessageWrapper, AppPresenceEventWrapper } from './messages';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
@@ -14,7 +14,6 @@ import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { MqttMessageOutgoing } from 'mqtts';
 import { filter, first } from 'rxjs/operators';
-import { unzipSync } from 'zlib';
 
 /**
  * TODO: update this to use rxjs
@@ -195,14 +194,14 @@ export class RealtimeClient extends EventEmitter {
             this.client
                 .listen({
                     topic: REALTIME_SUB.id,
-                    transformer: ({ payload }) => REALTIME_SUB.parser.parseMessage(REALTIME_SUB, unzipSync(payload)),
+                    transformer: ({ payload }) => REALTIME_SUB.parser.parseMessage(REALTIME_SUB, tryUnzipSync(payload)),
                 })
                 .subscribe(data => this.handleRealtimeSub(data));
             this.client
                 .listen({
                     topic: MESSAGE_SYNC.id,
                     transformer: ({ payload }) =>
-                        MESSAGE_SYNC.parser.parseMessage(MESSAGE_SYNC, unzipSync(payload)).map(msg => msg.data),
+                        MESSAGE_SYNC.parser.parseMessage(MESSAGE_SYNC, tryUnzipSync(payload)).map(msg => msg.data),
                 })
                 .subscribe(data => this.handleMessageSync(data));
         }

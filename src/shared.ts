@@ -1,5 +1,5 @@
 import { IgApiClient } from 'instagram-private-api';
-import { deflate, unzip } from 'zlib';
+import { deflate, unzip, unzipSync } from 'zlib';
 import Bluebird = require('bluebird');
 import debug from 'debug';
 
@@ -42,6 +42,15 @@ export async function tryUnzipAsync(data: Buffer): Promise<Buffer> {
             return data;
 
         return unzipAsync(data);
+    } catch(e) { return data;}
+}
+
+export function tryUnzipSync(data: Buffer): Buffer {
+    try {
+        if(data.readInt8(0) !== 0x78)
+            return data;
+
+        return unzipSync(data);
     } catch(e) { return data;}
 }
 
