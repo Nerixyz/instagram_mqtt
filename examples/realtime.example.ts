@@ -37,7 +37,6 @@ const {IG_USERNAME = '', IG_PASSWORD = ''} = process.env;
         graphQlSubs: [
             // these are some subscriptions
             GraphQLSubscriptions.getAppPresenceSubscription(),
-            GraphQLSubscriptions.getClientConfigUpdateSubscription(),
             GraphQLSubscriptions.getZeroProvisionSubscription(ig.state.phoneId),
             GraphQLSubscriptions.getDirectStatusSubscription(),
             GraphQLSubscriptions.getDirectTypingSubscription(ig.state.cookieUserId),
