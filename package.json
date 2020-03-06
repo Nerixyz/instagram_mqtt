@@ -34,7 +34,7 @@
     "instagram-private-api": "^1.34.0",
     "lodash": "^4.16.6",
     "rxjs": "^6.5.4",
-    "mqtts": "^0.1.6"
+    "mqtts": "^0.1.9"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.26",
