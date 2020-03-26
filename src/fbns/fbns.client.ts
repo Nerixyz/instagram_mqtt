@@ -69,14 +69,17 @@ export class FbnsClient {
         });
     }
 
-    public async connect({ enableTrace, autoReconnect }: { enableTrace?: boolean, autoReconnect?: boolean } = {}): Promise<any> {
+    public async connect({
+        enableTrace,
+        autoReconnect,
+    }: { enableTrace?: boolean; autoReconnect?: boolean } = {}): Promise<any> {
         this.fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.client = new MQTToTClient({
             url: FBNS.HOST_NAME_V6,
             payloadProvider: () => {
                 this.buildConnection();
-                return  compressDeflate(this.conn.toThrift())
+                return compressDeflate(this.conn.toThrift());
             },
             enableTrace,
             autoReconnect: autoReconnect ?? true,
