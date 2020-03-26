@@ -106,9 +106,12 @@ export class FbnsClient {
         this.client.$connect.subscribe(async res => {
             this.fbnsDebug('Connected to MQTT');
             if (!res.payload?.length) {
-                this.fbnsDebug('Received empty connect packet.');
-                this.error$.next(new Error('Received empty connect packet'));
-                throw new Error('Empty auth packet.');
+                this.fbnsDebug(`Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`);
+                this.error$.next(new Error('Received empty connect packet. Try resetting your fbns state!'));
+                await this.client.disconnect();
+                this._auth = new FbnsDeviceAuth(this.ig);
+                this.auth$.next(this.auth);
+                throw new Error('Empty auth packet. Try resetting your fbns state!');
             }
             const payload = res.payload.toString('utf8');
             this.fbnsDebug(`Received auth: ${payload}`);
