@@ -102,12 +102,12 @@ export class FbnsClient {
 
         this.client.$connect.subscribe(async res => {
             this.fbnsDebug('Connected to MQTT');
-            const payload = res.payload.toString('utf8');
-            if (payload.length === 0) {
+            if (!res.payload?.length) {
                 this.fbnsDebug('Received empty connect packet.');
                 this.error$.next(new Error('Received empty connect packet'));
                 throw new Error('Empty auth packet.');
             }
+            const payload = res.payload.toString('utf8');
             this.fbnsDebug(`Received auth: ${payload}`);
             this._auth.read(payload);
             this.auth$.next(this.auth);
