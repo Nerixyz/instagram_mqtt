@@ -1,18 +1,31 @@
 import { MQTToTConnectRequestPacket } from './mqttot.connect-request-packet';
 import { compressDeflate, debugChannel } from '../shared';
 import * as URL from 'url';
-import { ConnectResponsePacket, MqttClient, MqttMessage, PacketFlowFunc, PacketTypes } from 'mqtts';
+import {
+    ConnectRequestOptions,
+    ConnectResponsePacket,
+    MqttClient,
+    MqttMessage,
+    PacketFlowFunc,
+    PacketTypes,
+} from 'mqtts';
 
 export class MQTToTClient extends MqttClient {
+    protected connectPayloadProvider: () => Promise<Buffer>;
     protected connectPayload: Buffer;
 
     protected mqttotDebug: (msg: string) => void;
 
-    public constructor(options: { url: string; payload: Buffer; enableTrace?: boolean }) {
-        super({ url: options.url, enableTrace: options.enableTrace });
+    public constructor(options: {
+        url: string;
+        payloadProvider: () => Promise<Buffer>;
+        enableTrace?: boolean;
+        autoReconnect: boolean;
+    }) {
+        super({ url: options.url, enableTrace: options.enableTrace, autoReconnect: options.autoReconnect });
         this.mqttotDebug = (msg: string, ...args: string[]) =>
             debugChannel('mqttot')(`${URL.parse(options.url).host}: ${msg}`, ...args);
-        this.connectPayload = options.payload;
+        this.connectPayloadProvider = options.payloadProvider;
         this.mqttotDebug(`Creating client`);
         this.registerListeners();
         this.state.connectOptions = { keepAlive: 60 };
@@ -29,6 +42,11 @@ export class MQTToTClient extends MqttClient {
         this.$warning.subscribe(printErrorOrWarning('Error'));
         this.$error.subscribe(printErrorOrWarning('Warning'));
         this.$disconnect.subscribe(() => this.mqttotDebug('Disconnected.'));
+    }
+
+    async connect(options?: ConnectRequestOptions): Promise<any> {
+        this.connectPayload = await this.connectPayloadProvider();
+        return super.connect(options);
     }
 
     protected getConnectFlow(): PacketFlowFunc<any> {

@@ -60,6 +60,7 @@ export interface RealtimeClientInitOptions {
     irisData?: { seq_id: number; snapshot_at_ms: number };
     connectOverrides?: MQTToTConnectionClientInfo;
     enableTrace?: boolean;
+    autoReconnect?: boolean;
 }
 
 export class RealtimeClient extends EventEmitter {
@@ -145,11 +146,14 @@ export class RealtimeClient extends EventEmitter {
         this.realtimeDebug('Connecting to realtime-broker...');
         this.setInitOptions(initOptions);
         this.realtimeDebug(`Overriding: ${Object.keys(this.initOptions.connectOverrides || {}).join(', ')}`);
-        this.constructConnection();
         this.client = new MQTToTClient({
             url: REALTIME.HOST_NAME_V6,
-            payload: await compressDeflate(this.connection.toThrift()),
+            payloadProvider: () => {
+                this.constructConnection();
+                return compressDeflate(this.connection.toThrift());
+            },
             enableTrace: this.initOptions.enableTrace,
+            autoReconnect: this.initOptions.autoReconnect ?? true,
         });
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);

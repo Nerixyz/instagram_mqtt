@@ -1,6 +1,6 @@
 {
   "name": "instagram_mqtt",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Realtime and Push Notification (FBNS) support for the instagram-private-api",
   "bugs": {
     "url": "https://github.com/Nerixyz/instagram_mqtt/issues"
@@ -33,7 +33,7 @@
     "debug": "^4.1.1",
     "instagram-private-api": "^1.34.0",
     "lodash": "^4.16.6",
-    "mqtts": "^0.1.11",
+    "mqtts": "^0.1.12",
     "rxjs": "^6.5.4"
   },
   "devDependencies": {
