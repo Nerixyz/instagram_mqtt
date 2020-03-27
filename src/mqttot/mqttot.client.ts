@@ -3,7 +3,7 @@ import { compressDeflate, debugChannel } from '../shared';
 import * as URL from 'url';
 import {
     ConnectRequestOptions,
-    ConnectResponsePacket,
+    ConnectResponsePacket, isConnAck,
     MqttClient,
     MqttMessage,
     PacketFlowFunc,
@@ -69,9 +69,14 @@ export class MQTToTClient extends MqttClient {
 }
 
 export function mqttotConnectFlow(payload: Buffer): PacketFlowFunc<ConnectResponsePacket> {
-    return success => ({
+    return (success, error) => ({
         start: () => new MQTToTConnectRequestPacket(payload),
-        accept: packet => packet.packetType === PacketTypes.TYPE_CONNACK,
-        next: (packet: ConnectResponsePacket) => success(packet),
+        accept: isConnAck,
+        next: (packet: ConnectResponsePacket) => {
+            if(packet.isSuccess && packet.payload?.length)
+                success(packet);
+            else
+                error(new Error(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
+        },
     });
 }

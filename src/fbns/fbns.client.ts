@@ -109,9 +109,7 @@ export class FbnsClient {
                 this.fbnsDebug(`Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`);
                 this.error$.next(new Error('Received empty connect packet. Try resetting your fbns state!'));
                 await this.client.disconnect();
-                this._auth = new FbnsDeviceAuth(this.ig);
-                this.auth$.next(this.auth);
-                throw new Error('Empty auth packet. Try resetting your fbns state!');
+                return;
             }
             const payload = res.payload.toString('utf8');
             this.fbnsDebug(`Received auth: ${payload}`);
@@ -135,6 +133,9 @@ export class FbnsClient {
             keepAlive: 60,
             protocolLevel: 3,
             clean: true,
+        }).catch(e => {
+            this.fbnsDebug(`Connection failed: ${e}`);
+            throw e;
         });
         await this.client.subscribe({ topic: FbnsTopics.FBNS_MESSAGE.id });
 
