@@ -231,6 +231,7 @@ export class RealtimeClient extends EventEmitter {
                 keepAlive: 20,
                 protocolLevel: 3,
                 clean: true,
+                connectDelay: 60 * 1000,
             })
             .catch(e => this.emitError(e));
         return promise;

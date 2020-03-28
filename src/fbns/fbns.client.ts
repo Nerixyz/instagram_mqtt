@@ -106,7 +106,9 @@ export class FbnsClient {
         this.client.$connect.subscribe(async res => {
             this.fbnsDebug('Connected to MQTT');
             if (!res.payload?.length) {
-                this.fbnsDebug(`Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`);
+                this.fbnsDebug(
+                    `Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`,
+                );
                 this.error$.next(new Error('Received empty connect packet. Try resetting your fbns state!'));
                 await this.client.disconnect();
                 return;
@@ -129,14 +131,17 @@ export class FbnsClient {
             });
             // this.buildConnection(); ?
         });
-        await this.client.connect({
-            keepAlive: 60,
-            protocolLevel: 3,
-            clean: true,
-        }).catch(e => {
-            this.fbnsDebug(`Connection failed: ${e}`);
-            throw e;
-        });
+        await this.client
+            .connect({
+                keepAlive: 60,
+                protocolLevel: 3,
+                clean: true,
+                connectDelay: 60 * 1000,
+            })
+            .catch(e => {
+                this.fbnsDebug(`Connection failed: ${e}`);
+                throw e;
+            });
         await this.client.subscribe({ topic: FbnsTopics.FBNS_MESSAGE.id });
 
         return await this.client
