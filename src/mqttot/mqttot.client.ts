@@ -3,7 +3,8 @@ import { compressDeflate, debugChannel } from '../shared';
 import * as URL from 'url';
 import {
     ConnectRequestOptions,
-    ConnectResponsePacket, isConnAck,
+    ConnectResponsePacket,
+    isConnAck,
     MqttClient,
     MqttMessage,
     PacketFlowFunc,
@@ -41,7 +42,7 @@ export class MQTToTClient extends MqttClient {
         };
         this.$warning.subscribe(printErrorOrWarning('Error'));
         this.$error.subscribe(printErrorOrWarning('Warning'));
-        this.$disconnect.subscribe(() => this.mqttotDebug('Disconnected.'));
+        this.$disconnect.subscribe(e => this.mqttotDebug(`Disconnected. ${e}`));
     }
 
     async connect(options?: ConnectRequestOptions): Promise<any> {
@@ -73,10 +74,10 @@ export function mqttotConnectFlow(payload: Buffer): PacketFlowFunc<ConnectRespon
         start: () => new MQTToTConnectRequestPacket(payload),
         accept: isConnAck,
         next: (packet: ConnectResponsePacket) => {
-            if(packet.isSuccess && packet.payload?.length)
-                success(packet);
-            else
-                error(new Error(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
+            if (packet.isSuccess) {
+                if (packet.payload?.length) success(packet);
+                else error(new Error(`CONNACK: no payload: ${packet.payload}`));
+            } else error(new Error(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
         },
     });
 }
