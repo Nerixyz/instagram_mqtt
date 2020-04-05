@@ -8,7 +8,6 @@ import {
     MqttClient,
     MqttMessage,
     PacketFlowFunc,
-    PacketTypes,
 } from 'mqtts';
 
 export class MQTToTClient extends MqttClient {
