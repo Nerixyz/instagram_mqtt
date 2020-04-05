@@ -83,6 +83,7 @@ export class FbnsClient {
             },
             enableTrace,
             autoReconnect: autoReconnect ?? true,
+            requirePayload: true,
         });
         this.client.$warning.subscribe(this.warning$);
         this.client.$error.subscribe(this.error$);

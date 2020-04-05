@@ -154,6 +154,7 @@ export class RealtimeClient extends EventEmitter {
             },
             enableTrace: this.initOptions.enableTrace,
             autoReconnect: this.initOptions.autoReconnect ?? true,
+            requirePayload: false,
         });
         this.commands = new Commands(this.client);
         this.direct = new DirectCommands(this.client);

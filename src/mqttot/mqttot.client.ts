@@ -14,6 +14,7 @@ import {
 export class MQTToTClient extends MqttClient {
     protected connectPayloadProvider: () => Promise<Buffer>;
     protected connectPayload: Buffer;
+    protected requirePayload: boolean;
 
     protected mqttotDebug: (msg: string) => void;
 
@@ -22,6 +23,7 @@ export class MQTToTClient extends MqttClient {
         payloadProvider: () => Promise<Buffer>;
         enableTrace?: boolean;
         autoReconnect: boolean;
+        requirePayload: boolean;
     }) {
         super({ url: options.url, enableTrace: options.enableTrace, autoReconnect: options.autoReconnect });
         this.mqttotDebug = (msg: string, ...args: string[]) =>
@@ -30,6 +32,7 @@ export class MQTToTClient extends MqttClient {
         this.mqttotDebug(`Creating client`);
         this.registerListeners();
         this.state.connectOptions = { keepAlive: 60 };
+        this.requirePayload = options.requirePayload;
     }
 
     protected registerListeners() {
@@ -51,7 +54,7 @@ export class MQTToTClient extends MqttClient {
     }
 
     protected getConnectFlow(): PacketFlowFunc<any> {
-        return mqttotConnectFlow(this.connectPayload);
+        return mqttotConnectFlow(this.connectPayload, this.requirePayload);
     }
 
     /**
@@ -69,14 +72,14 @@ export class MQTToTClient extends MqttClient {
     }
 }
 
-export function mqttotConnectFlow(payload: Buffer): PacketFlowFunc<ConnectResponsePacket> {
+export function mqttotConnectFlow(payload: Buffer, requirePayload: boolean): PacketFlowFunc<ConnectResponsePacket> {
     return (success, error) => ({
         start: () => new MQTToTConnectRequestPacket(payload),
         accept: isConnAck,
         next: (packet: ConnectResponsePacket) => {
             if (packet.isSuccess) {
-                if (packet.payload?.length) success(packet);
-                else error(new Error(`CONNACK: no payload: ${packet.payload}`));
+                if (packet.payload?.length || !requirePayload) success(packet);
+                else error(new Error(`CONNACK: no payload (payloadExpected): ${packet.payload}`));
             } else error(new Error(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
         },
     });
