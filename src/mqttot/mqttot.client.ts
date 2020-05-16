@@ -9,6 +9,7 @@ import {
     MqttMessage,
     PacketFlowFunc,
 } from 'mqtts';
+import { ConnectionFailedError, EmptyPacketError } from '../errors';
 
 export class MQTToTClient extends MqttClient {
     protected connectPayloadProvider: () => Promise<Buffer>;
@@ -78,8 +79,8 @@ export function mqttotConnectFlow(payload: Buffer, requirePayload: boolean): Pac
         next: (packet: ConnectResponsePacket) => {
             if (packet.isSuccess) {
                 if (packet.payload?.length || !requirePayload) success(packet);
-                else error(new Error(`CONNACK: no payload (payloadExpected): ${packet.payload}`));
-            } else error(new Error(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
+                else error(new EmptyPacketError(`CONNACK: no payload (payloadExpected): ${packet.payload}`));
+            } else error(new ConnectionFailedError(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
         },
     });
 }

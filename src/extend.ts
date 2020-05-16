@@ -2,6 +2,7 @@ import { IgApiClient } from 'instagram-private-api';
 import { FbnsClient } from './fbns/fbns.client';
 import { RealtimeClient, RealtimeClientInitOptions } from './realtime/realtime.client';
 import { omit } from 'lodash';
+import { InvalidStateError } from './errors';
 
 export interface StateHook<T> {
     name: string;
@@ -41,7 +42,7 @@ export class IgApiClientExt extends IgApiClient {
     }
 
     public addStateHook(hook: StateHook<any>) {
-        if (this.sateHooks.some(x => x.name === hook.name)) throw new Error('Hook already registered');
+        if (this.sateHooks.some(x => x.name === hook.name)) throw new InvalidStateError('Hook already registered');
         this.sateHooks.push(hook);
     }
 }

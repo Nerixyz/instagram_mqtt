@@ -1,4 +1,5 @@
 import { Int64, ThriftPacketDescriptor, ThriftSerializable, ThriftTypes } from './thrift';
+import { IllegalArgumentError, ThriftError } from '../errors';
 
 export function thriftWriteFromObject(obj: ThriftSerializable, descriptors: ThriftPacketDescriptor[]): Buffer {
     const writer = BufferWriter.empty();
@@ -20,7 +21,7 @@ function thriftWriteSingleLayerFromObject(
         if (typeof value === 'undefined') continue;
 
         const descriptor = descriptors.find(d => d.fieldName === name);
-        if (!descriptor) throw new Error(`Descriptor for ${name} not found`);
+        if (!descriptor) throw new IllegalArgumentError(`Descriptor for ${name} not found`);
 
         switch (descriptor.type & 0xff) {
             case ThriftTypes.BOOLEAN:
@@ -33,7 +34,7 @@ function thriftWriteSingleLayerFromObject(
                 if (typeof value === 'number') {
                     writer.writeInt8(descriptor.field, value);
                 } else {
-                    throw new Error(`Value of ${name} is not a number`);
+                    throw new IllegalArgumentError(`Value of ${name} is not a number`);
                 }
                 break;
             }
@@ -41,7 +42,7 @@ function thriftWriteSingleLayerFromObject(
                 if (typeof value === 'number') {
                     writer.writeInt16(descriptor.field, value);
                 } else {
-                    throw new Error(`Value of ${name} is not a number`);
+                    throw new IllegalArgumentError(`Value of ${name} is not a number`);
                 }
                 break;
             }
@@ -49,7 +50,7 @@ function thriftWriteSingleLayerFromObject(
                 if (typeof value === 'number') {
                     writer.writeInt32(descriptor.field, value);
                 } else {
-                    throw new Error(`Value of ${name} is not a number`);
+                    throw new IllegalArgumentError(`Value of ${name} is not a number`);
                 }
                 break;
             }
@@ -59,7 +60,7 @@ function thriftWriteSingleLayerFromObject(
                 } else if (typeof value === 'bigint') {
                     writer.writeInt64Buffer(descriptor.field, value);
                 } else {
-                    throw new Error(`Value of ${name} is neither a bigint nor a number`);
+                    throw new IllegalArgumentError(`Value of ${name} is neither a bigint nor a number`);
                 }
                 break;
             }
@@ -78,7 +79,7 @@ function thriftWriteSingleLayerFromObject(
                 if (typeof value === 'string') {
                     writer.writeString(descriptor.field, value);
                 } else {
-                    throw new Error(`Value of ${name} is not a string`);
+                    throw new IllegalArgumentError(`Value of ${name} is not a string`);
                 }
                 break;
             }
@@ -99,12 +100,12 @@ function thriftWriteSingleLayerFromObject(
                         }
                     }
                 } else {
-                    throw new Error(`Map of type ${descriptor.type} not impl.`);
+                    throw new ThriftError(`Map of type ${descriptor.type} not impl.`);
                 }
                 break;
             }
             default: {
-                throw new Error(`Could not find type ${descriptor.type} for ${name}`);
+                throw new ThriftError(`Could not find type ${descriptor.type} for ${name}`);
             }
         }
     }
@@ -335,7 +336,7 @@ export class BufferWriter {
                 break;
             }
             default: {
-                throw new Error('not impl');
+                throw new ThriftError('not impl');
             }
         }
         return this;

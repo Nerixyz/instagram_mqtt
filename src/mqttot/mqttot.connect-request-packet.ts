@@ -1,4 +1,5 @@
 import { InvalidDirectionError, MqttPacket, PacketStream, PacketTypes } from 'mqtts';
+import { IllegalArgumentError } from '../errors';
 
 export class MQTToTConnectRequestPacket extends MqttPacket {
     public get protocolName(): string {
@@ -15,7 +16,7 @@ export class MQTToTConnectRequestPacket extends MqttPacket {
 
     public set keepAlive(value: number) {
         if (value > 0xffff) {
-            throw new Error('KeepAlive was greater than 0xffff');
+            throw new IllegalArgumentError('KeepAlive was greater than 0xffff');
         }
         this._keepAlive = value;
     }
@@ -25,7 +26,7 @@ export class MQTToTConnectRequestPacket extends MqttPacket {
 
     public set flags(value: number) {
         if (value > 0xff) {
-            throw new Error('Flags were greater than 0xff');
+            throw new IllegalArgumentError('Flags were greater than 0xff');
         }
         this._flags = value;
     }

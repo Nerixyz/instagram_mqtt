@@ -1,5 +1,6 @@
 import { ThriftMessage, ThriftPacketDescriptor, ThriftTypes, isThriftBoolean } from './thrift';
 import { isEqual } from 'lodash';
+import { InvalidStateError, ThriftError } from '../errors';
 
 export function thriftRead(message: Buffer): ThriftMessage[] {
     const reader = new BufferReader(message);
@@ -33,7 +34,7 @@ function getReadFunction(
     switch (type) {
         case ThriftTypes.STRUCT:
         case ThriftTypes.STOP: {
-            throw new Error(`Illegal state: got type ${type}`);
+            throw new InvalidStateError(`Invalid state: got type ${type}`);
         }
         case ThriftTypes.TRUE:
         case ThriftTypes.FALSE:
@@ -121,7 +122,7 @@ function getReadFunction(
                 };
             };
         default: {
-            throw new Error(`Unknown type: ${type}`);
+            throw new ThriftError(`Unknown type: ${type}`);
         }
     }
 }
@@ -336,7 +337,7 @@ export class BufferReader {
                 break;
             }
             default: {
-                throw new Error(`Type ${type} not impl.`);
+                throw new ThriftError(`Type ${type} not impl.`);
             }
         }
         return arr;

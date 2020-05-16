@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
 import { MqttMessage, MqttPacket } from 'mqtts';
 import { first } from 'rxjs/operators';
+import { ClientDisconnectedError, EmptyPacketError } from '../errors';
 
 export class FbnsClient {
     public get auth(): FbnsDeviceAuth {
@@ -90,7 +91,7 @@ export class FbnsClient {
         this.client.$disconnect.subscribe(() =>
             this.safeDisconnect
                 ? this.disconnect$.next()
-                : this.error$.next(new Error('MQTToTClient got disconnected.')),
+                : this.error$.next(new ClientDisconnectedError('MQTToTClient got disconnected.')),
         );
         this.client
             .listen<MqttMessage>({ topic: FbnsTopics.FBNS_MESSAGE.id })
@@ -110,7 +111,7 @@ export class FbnsClient {
                 this.fbnsDebug(
                     `Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`,
                 );
-                this.error$.next(new Error('Received empty connect packet. Try resetting your fbns state!'));
+                this.error$.next(new EmptyPacketError('Received empty connect packet. Try resetting your fbns state!'));
                 await this.client.disconnect();
                 return;
             }
