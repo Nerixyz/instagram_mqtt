@@ -215,27 +215,28 @@ export class RealtimeClient extends EventEmitter {
             this.safeDisconnect ? this.emit('disconnect') : this.emitError(new Error('MQTToTClient got disconnected.')),
         );
 
-        const promise = this.client.$connect
-            .pipe(first())
-            .toPromise()
-            .then(async () => {
+        return new Promise((resolve, reject) => {
+            this.client.$connect.subscribe(async () => {
                 this.realtimeDebug('Connected. Checking initial subs.');
                 const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
                 await Promise.all([
                     graphQlSubs && graphQlSubs.length > 0 ? this.graphQlSubscribe(graphQlSubs) : null,
                     skywalkerSubs && skywalkerSubs.length > 0 ? this.skywalkerSubscribe(skywalkerSubs) : null,
                     irisData ? this.irisSubscribe(irisData) : null,
-                ]);
+                ]).then(resolve);
             });
-        this.client
-            .connect({
-                keepAlive: 20,
-                protocolLevel: 3,
-                clean: true,
-                connectDelay: 60 * 1000,
-            })
-            .catch(e => this.emitError(e));
-        return promise;
+            this.client
+                .connect({
+                    keepAlive: 20,
+                    protocolLevel: 3,
+                    clean: true,
+                    connectDelay: 60 * 1000,
+                })
+                .catch(e => {
+                    this.emitError(e);
+                    reject(e);
+                });
+        });
     }
 
     private emitError = (e: Error) => this.emit('error', e);
