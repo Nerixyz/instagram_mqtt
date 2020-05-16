@@ -80,7 +80,12 @@ export function mqttotConnectFlow(payload: Buffer, requirePayload: boolean): Pac
             if (packet.isSuccess) {
                 if (packet.payload?.length || !requirePayload) success(packet);
                 else error(new EmptyPacketError(`CONNACK: no payload (payloadExpected): ${packet.payload}`));
-            } else error(new ConnectionFailedError(`CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`));
+            } else
+                error(
+                    new ConnectionFailedError(
+                        `CONNACK returnCode: ${packet.returnCode} errorName: ${packet.errorName}`,
+                    ),
+                );
         },
     });
 }

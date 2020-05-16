@@ -213,7 +213,9 @@ export class RealtimeClient extends EventEmitter {
         this.client.$error.subscribe(e => this.emitError(e));
         this.client.$warning.subscribe(w => this.emitWarning(w));
         this.client.$disconnect.subscribe(() =>
-            this.safeDisconnect ? this.emit('disconnect') : this.emitError(new ClientDisconnectedError('MQTToTClient got disconnected.')),
+            this.safeDisconnect
+                ? this.emit('disconnect')
+                : this.emitError(new ClientDisconnectedError('MQTToTClient got disconnected.')),
         );
 
         return new Promise((resolve, reject) => {
