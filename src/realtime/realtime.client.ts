@@ -12,7 +12,7 @@ import { QueryIDs } from './subscriptions';
 import { deprecate } from 'util';
 import { defaults } from 'lodash';
 import { MqttMessageOutgoing } from 'mqtts';
-import { filter, first } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { ClientDisconnectedError } from '../errors';
 
 /**
