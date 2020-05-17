@@ -77,6 +77,26 @@ export function withRealtime(
     return client;
 }
 
+export function withFbnsAndRealtime(
+    client: IgApiClient | IgApiClientExt,
+    initOptions?: RealtimeClientInitOptions,
+): IgApiClientMQTT {
+    client = assertClient(client);
+    Object.defineProperty(client, 'fbns', { value: new FbnsClient(client), enumerable: false });
+    Object.defineProperty(client, 'realtime', { value: new RealtimeClient(client, initOptions), enumerable: false });
+    if (client instanceof IgApiClientExt) {
+        client.addStateHook({
+            name: 'fbns',
+            // @ts-ignore
+            onExport: (client: IgApiClientMQTT) => client.fbns.auth.toString(),
+            // @ts-ignore
+            onImport: (data: string, client: IgApiClientMQTT) => client.fbns.auth.read(data),
+        });
+    }
+    // @ts-ignore
+    return client;
+}
+
 function assertClient(client: IgApiClient | IgApiClientExt): IgApiClientExt {
     if (!(client instanceof IgApiClientExt)) {
         return new IgApiClientExt();
