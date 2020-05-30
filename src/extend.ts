@@ -1,7 +1,6 @@
 import { IgApiClient } from 'instagram-private-api';
-import { FbnsClient } from './fbns/fbns.client';
-import { RealtimeClient, RealtimeClientInitOptions } from './realtime/realtime.client';
-import { omit } from 'lodash';
+import { FbnsClient } from './fbns';
+import { RealtimeClient, RealtimeClientInitOptions } from './realtime';
 import { InvalidStateError } from './errors';
 
 export interface StateHook<T> {
@@ -36,7 +35,9 @@ export class IgApiClientExt extends IgApiClient {
         super();
         this.addStateHook({
             name: 'client',
-            onExport: async client => omit(await client.state.serialize(), ['constants']),
+            // we want to remove 'constants'
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            onExport: async client => await client.state.serialize().then(({ constants, ...state }) => state),
             onImport: (data, client) => client.state.deserialize(data),
         });
     }

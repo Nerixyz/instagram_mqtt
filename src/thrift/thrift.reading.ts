@@ -1,5 +1,4 @@
 import { ThriftMessage, ThriftPacketDescriptor, ThriftTypes, isThriftBoolean } from './thrift';
-import { isEqual } from 'lodash';
 import { InvalidStateError, ThriftError } from '../errors';
 
 export function thriftRead(message: Buffer): ThriftMessage[] {
@@ -144,7 +143,7 @@ export function thriftReadToObject<T>(message: Buffer, descriptors: ThriftPacket
         if (readData.context.length === 0) continue;
 
         const fieldPath = readData.context.split('/').map(c => Number(c));
-        const possible = structs.findIndex(s => isEqual(s.fieldPath, fieldPath));
+        const possible = structs.findIndex(s => equalArrays(s.fieldPath, fieldPath));
         if (possible !== -1) {
             structs[possible].items.push(readData);
         } else {
@@ -353,4 +352,11 @@ export class BufferReader {
     }
 
     public static fromZigZag = (n: number) => (n >> 1) ^ -(n & 1);
+}
+
+function equalArrays<T>(left: T[], right: T[]): boolean {
+    if (!left || !right || left.length !== right.length) return false;
+
+    for (let i = 0; i < left.length; i++) if (left[i] !== right[i]) return false;
+    return true;
 }

@@ -10,7 +10,6 @@ import { AppPresenceEventWrapper, MessageSyncMessageWrapper, RealtimeSubDirectDa
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
 import { QueryIDs } from './subscriptions';
 import { deprecate } from 'util';
-import { defaults } from 'lodash';
 import { MqttMessageOutgoing } from 'mqtts';
 import { filter } from 'rxjs/operators';
 import { ClientDisconnectedError } from '../errors';
@@ -90,10 +89,11 @@ export class RealtimeClient extends EventEmitter {
 
     private setInitOptions(initOptions?: RealtimeClientInitOptions | string[]) {
         if (Array.isArray(initOptions)) initOptions = { graphQlSubs: initOptions };
-        this.initOptions = defaults<RealtimeClientInitOptions, RealtimeClientInitOptions>(initOptions || {}, {
+        this.initOptions = {
             graphQlSubs: [],
             skywalkerSubs: [],
-        });
+            ...(initOptions || {}),
+        };
     }
 
     private constructConnection() {
