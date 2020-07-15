@@ -1,7 +1,9 @@
 import { IgApiClient } from 'instagram-private-api';
 import { deflate, unzip, unzipSync } from 'zlib';
 import Bluebird = require('bluebird');
-import debug from 'debug';
+import debug, { Debug, Debugger } from 'debug';
+import { Observable } from "rxjs";
+import { MqttClient } from "mqtts";
 
 // TODO: map
 export function createUserAgent(ig: IgApiClient) {
@@ -65,7 +67,7 @@ export function isJson(buffer: Buffer) {
  * @param {string} path
  * @returns {(msg: string, ...additionalData: any) => void}
  */
-export const debugChannel = (...path: string[]): ((msg: string, ...additionalData: any) => void) =>
+export const debugChannel = (...path: string[]): Debugger =>
     debug(['ig', 'mqtt', ...path].join(':'));
 
 export function notUndefined<T>(a: T | undefined): a is T {
@@ -73,3 +75,25 @@ export function notUndefined<T>(a: T | undefined): a is T {
 }
 
 export type BigInteger = string | number | bigint;
+
+export type ToEventFn<T> = {
+    [x in keyof T]: T[x] extends Array<unknown> ? (...args: T[x]) => void : (e: T[x]) => void;
+};
+
+export function listenOnce<T>(client: MqttClient<any, any>, topic: string): Promise<T> {
+    return new Promise<T>(resolve => {
+        const removeFn = client.listen<T>(topic, msg => {
+            removeFn();
+            resolve(msg);
+        });
+    })
+}
+
+const MAX_STRING_LENGTH = 128;
+const ACTUAL_MAX_LEN = MAX_STRING_LENGTH - `"[${MAX_STRING_LENGTH}...]"`.length;
+export function prepareLogString(value: string): string {
+    if(value.length > ACTUAL_MAX_LEN ) {
+        value = `${value.substring(0, ACTUAL_MAX_LEN)}[${MAX_STRING_LENGTH}...]`;
+    }
+    return `"${value}"`;
+}

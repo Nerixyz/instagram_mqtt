@@ -1,6 +1,6 @@
 {
   "name": "instagram_mqtt",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "description": "Realtime and Push Notification (FBNS) support for the instagram-private-api",
   "bugs": {
     "url": "https://github.com/Nerixyz/instagram_mqtt/issues"
@@ -29,27 +29,27 @@
   "author": "nerix",
   "license": "MIT",
   "dependencies": {
-    "chance": "^1.1.4",
+    "chance": "^1.1.6",
     "debug": "^4.1.1",
-    "instagram-private-api": "^1.34.0",
-    "mqtts": "^0.1.16",
-    "rxjs": "^6.5.4"
+    "eventemitter3": "^4.0.4",
+    "instagram-private-api": "^1.41.0",
+    "mqtts": "https://github.com/Nerixyz/mqtts#alpha"
   },
   "devDependencies": {
-    "@types/bluebird": "^3.5.26",
+    "@types/bluebird": "^3.5.32",
     "@types/debug": "^4.1.5",
-    "@types/jest": "^25.1.2",
-    "@types/luxon": "^1.22.0",
-    "@typescript-eslint/eslint-plugin": "^2.17.0",
-    "@typescript-eslint/parser": "^2.17.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.10.1",
-    "jest": "^25.1.0",
-    "prettier": "^2.0.2",
-    "rimraf": "^3.0.0",
-    "ts-jest": "^25.2.0",
+    "@types/jest": "^26.0.4",
+    "@types/luxon": "^1.24.1",
+    "@typescript-eslint/eslint-plugin": "^3.6.0",
+    "@typescript-eslint/parser": "^3.6.0",
+    "eslint": "^7.4.0",
+    "eslint-config-prettier": "^6.11.0",
+    "jest": "^26.1.0",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.1.1",
     "ts-xor": "^1.0.8",
-    "typescript": "^3.7.2"
+    "typescript": "^3.9.6"
   },
   "types": "dist/index.d.ts"
 }
