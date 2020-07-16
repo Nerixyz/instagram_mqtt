@@ -2931,7 +2931,7 @@ mkdirp@^0.5.1:
 
 "mqtts@https://github.com/Nerixyz/mqtts#alpha":
   version "0.1.17"
-  resolved "https://github.com/Nerixyz/mqtts#028508f8160449e05a357b617897e3158123201a"
+  resolved "https://github.com/Nerixyz/mqtts#7138b98a545bb1fa45805a4a0deb483813f9c18f"
   dependencies:
     "@types/ws" "^7.2.5"
     debug "^4.1.1"

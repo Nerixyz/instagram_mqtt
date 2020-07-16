@@ -22,4 +22,5 @@ export interface FbnsNotificationEventParams {
   recent_follow_post: {id: string};
   fb_first_post: {username: string};
   first_bestie_post: {id: string};
+  direct_v2_message: {id: string, x: string};
 }
