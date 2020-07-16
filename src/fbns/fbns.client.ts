@@ -1,9 +1,9 @@
-import { IgApiClient } from 'instagram-private-api';
+import { IgApiClient, StatusResponse } from 'instagram-private-api';
 import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
 import {
     compressDeflate,
-    createUserAgent,
+    createFbnsUserAgent,
     debugChannel,
     listenOnce,
     notUndefined,
@@ -12,13 +12,12 @@ import {
 } from '../shared';
 import { MQTToTConnection, MQTToTClient, MQTToTConnectResponsePacket } from '../mqttot';
 import { Chance } from 'chance';
-import * as querystring from 'querystring';
-import * as URL from 'url';
-import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
+import { FbnsMessageData, FbnsNotificationUnknown } from './fbns.types';
 import { MqttMessage } from 'mqtts';
 import { ClientDisconnectedError, EmptyPacketError } from '../errors';
 import * as EventEmitter from 'eventemitter3';
 import { FbnsClientEvents } from './fbns.client.events';
+import { createNotificationFromJson } from './fbns.utilities';
 
 export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: string]: FbnsNotificationUnknown }>> {
     public get auth(): FbnsDeviceAuth {
@@ -40,13 +39,13 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
         this._auth = new FbnsDeviceAuth(this.ig);
     }
 
-    public buildConnection() {
+    public buildConnection(): void {
         this.fbnsDebug('Constructing connection');
         this.conn = new MQTToTConnection({
             clientIdentifier: this._auth.clientId,
             clientInfo: {
                 userId: BigInt(this._auth.userId),
-                userAgent: createUserAgent(this.ig),
+                userAgent: createFbnsUserAgent(this.ig),
                 clientCapabilities: 183,
                 endpointCapabilities: 128,
                 publishFormat: 1,
@@ -164,7 +163,7 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
         }
     }
 
-    public disconnect() {
+    public disconnect(): Promise<void> {
         this.safeDisconnect = true;
         return this.client.disconnect();
     }
@@ -173,7 +172,7 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
         const payload: FbnsMessageData = JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'));
 
         if (notUndefined(payload.fbpushnotif)) {
-            const notification = FbnsClient.createNotificationFromJson(payload.fbpushnotif);
+            const notification = createNotificationFromJson(payload.fbpushnotif);
             this.emit('push', notification);
             if (notification.collapseKey) this.emit(notification.collapseKey, notification);
         } else {
@@ -182,7 +181,7 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
         }
     }
 
-    public async sendPushRegister(token: string) {
+    public async sendPushRegister(token: string): Promise<StatusResponse> {
         const { body } = await this.ig.request.send({
             url: `/api/v1/push/register/`,
             method: 'POST',
@@ -199,80 +198,5 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
             },
         });
         return body;
-    }
-
-    private static createNotificationFromJson(json: string): FbnsNotificationUnknown {
-        const data: FbPushNotif = JSON.parse(json);
-
-        const notification: FbnsNotificationUnknown = Object.defineProperty({}, 'description', {
-            enumerable: false,
-            value: data,
-        });
-
-        if (notUndefined(data.t)) {
-            notification.title = data.t;
-        }
-        if (notUndefined(data.m)) {
-            notification.message = data.m;
-        }
-        if (notUndefined(data.tt)) {
-            notification.tickerText = data.tt;
-        }
-        if (notUndefined(data.ig)) {
-            notification.igAction = data.ig;
-            const url = URL.parse(data.ig);
-            if (url.pathname) {
-                notification.actionPath = url.pathname;
-            }
-            if (url.query) {
-                notification.actionParams = querystring.decode(url.query);
-            }
-        }
-        if (notUndefined(data.collapse_key)) {
-            notification.collapseKey = data.collapse_key;
-        }
-        if (notUndefined(data.i)) {
-            notification.optionalImage = data.i;
-        }
-        if (notUndefined(data.a)) {
-            notification.optionalAvatarUrl = data.a;
-        }
-        if (notUndefined(data.sound)) {
-            notification.sound = data.sound;
-        }
-        if (notUndefined(data.pi)) {
-            notification.pushId = data.pi;
-        }
-        if (notUndefined(data.c)) {
-            notification.pushCategory = data.c;
-        }
-        if (notUndefined(data.u)) {
-            notification.intendedRecipientUserId = data.u;
-        }
-        if (notUndefined(data.s) && data.s !== 'None') {
-            notification.sourceUserId = data.s;
-        }
-        if (notUndefined(data.igo)) {
-            notification.igActionOverride = data.igo;
-        }
-        if (notUndefined(data.bc)) {
-            const badgeCount: FbnsBadgeCount = {};
-            const parsed = JSON.parse(data.bc);
-            if (notUndefined(parsed.di)) {
-                badgeCount.direct = parsed.di;
-            }
-            if (notUndefined(parsed.ds)) {
-                badgeCount.ds = parsed.ds;
-            }
-            if (notUndefined(parsed.ac)) {
-                badgeCount.activities = parsed.ac;
-            }
-            notification.badgeCount = badgeCount;
-        }
-        if (notUndefined(data.ia)) {
-            notification.inAppActors = data.ia;
-        }
-
-        return notification;
     }
 }
