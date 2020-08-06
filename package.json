@@ -33,7 +33,7 @@
     "debug": "^4.1.1",
     "eventemitter3": "^4.0.4",
     "instagram-private-api": "^1.41.0",
-    "mqtts": "https://github.com/Nerixyz/mqtts#alpha"
+    "mqtts": "^1.0.0-alpha.0"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.32",
