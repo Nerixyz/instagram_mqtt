@@ -13,14 +13,14 @@ export class IgApiClientExt extends IgApiClient {
     protected sateHooks: StateHook<any>[] = [];
 
     public async exportState(): Promise<string> {
-        const data = {};
+        const data: Record<string, unknown> = {};
         for (const hook of this.sateHooks) {
-            Object.defineProperty(data, hook.name, { value: await hook.onExport(this), enumerable: true });
+            data[hook.name] = await hook.onExport(this);
         }
         return JSON.stringify(data);
     }
 
-    public async importState(state: string | object): Promise<void> {
+    public async importState(state: string | Record<string, unknown>): Promise<void> {
         if (typeof state === 'string') state = JSON.parse(state);
 
         for (const [key, value] of Object.entries(state)) {
@@ -42,7 +42,7 @@ export class IgApiClientExt extends IgApiClient {
         });
     }
 
-    public addStateHook(hook: StateHook<any>) {
+    public addStateHook(hook: StateHook<any>): void {
         if (this.sateHooks.some(x => x.name === hook.name)) throw new InvalidStateError('Hook already registered');
         this.sateHooks.push(hook);
     }
