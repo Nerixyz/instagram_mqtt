@@ -10,7 +10,7 @@ Make sure you've enabled [debugging](#debugging).
 -   Install the library
 
 ```
-npm i instagram_mqtt@1.0.0-alpha.0
+npm i instagram_mqtt@1.0.0-alpha.1
 ```
 
 -   Extend the `IgApiClient`
@@ -38,12 +38,6 @@ const igRealtime = withRealtime(new IgApiClient());
 
 To see what's new, visit the [changelog](CHANGELOG.md).
 
-## TODO
-
--   Proper descriptions for events
--   Error handling
--   Testing... a lot.
-
 # RealtimeClient
 
 The RealtimeClient is used, as the name implies, for in-app communication.
@@ -70,7 +64,7 @@ Your IDE should be able to auto complete the event names for you as Typescript t
 | message            | Direct messages                                                   | yes       |
 | clientConfigUpdate | Updates to quick experiments (may cause the client to disconnect) | yes       |
 | appPresence        | Presence updates                                                  | yes       |
-| <keyof QueryIDs>   | Messages regarding the specified query id                         | no        |
+| \<keyof QueryIDs\>   | Messages regarding the specified query id                         | no        |
 
 # FbnsClient
 
@@ -107,6 +101,20 @@ An example `.env` file would look like this:
 ```
 DEBUG=ig:mqtt:*
 ```
+
+# Extending
+## Mixins
+Since version 1.0, there is support for basic mixins. 
+A mixin is a class with an `apply()` method (extends Mixin base class).
+This method is called once the RealtimeClient is constructed. 
+You can use the `hook()` function to hook into methods (pre and post) and override the return value.
+By default, the `MessageSyncMixin` and the `RealtimeSubMixin` are used.
+
+## TODO
+
+-   Proper descriptions for events
+-   Error handling
+-   Testing... a lot.
 
 # Research
 
