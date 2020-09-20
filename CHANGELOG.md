@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.0 (alpha.1)
+ - Added Mixins - hook methods and extend functionality
+ - Removed deprecated methods/parameters
  - Fix for `extend` - indexing instead of using `Object.defineProperty()`
 
 ## 1.0 (alpha.0)
