@@ -38,18 +38,18 @@
   "devDependencies": {
     "@types/bluebird": "^3.5.32",
     "@types/debug": "^4.1.5",
-    "@types/jest": "^26.0.4",
-    "@types/luxon": "^1.24.1",
-    "@typescript-eslint/eslint-plugin": "^3.6.0",
-    "@typescript-eslint/parser": "^3.6.0",
-    "eslint": "^7.4.0",
+    "@types/jest": "^26.0.14",
+    "@types/luxon": "^1.25.0",
+    "@typescript-eslint/eslint-plugin": "^4.1.1",
+    "@typescript-eslint/parser": "^4.1.1",
+    "eslint": "^7.9.0",
     "eslint-config-prettier": "^6.11.0",
-    "jest": "^26.1.0",
-    "prettier": "^2.0.5",
+    "jest": "^26.4.2",
+    "prettier": "^2.1.2",
     "rimraf": "^3.0.2",
-    "ts-jest": "^26.1.1",
+    "ts-jest": "^26.3.0",
     "ts-xor": "^1.0.8",
-    "typescript": "^3.9.6"
+    "typescript": "^4.0.3"
   },
   "types": "dist/index.d.ts"
 }
