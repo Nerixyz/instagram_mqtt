@@ -31,24 +31,43 @@ export class MessageSyncMixin extends Mixin {
             }
             delete element.data;
             data.forEach(e => {
-                if (e.path && e.value) {
-                    if (e.path.startsWith('/direct_v2/threads/')) {
-                        const [, , , thread_id] = e.path.split('/');
-                        client.emit('message', {
-                            ...element,
-                            message: {
-                                path: e.path,
-                                op: e.op,
-                                thread_id,
-                                ...JSON.parse(e.value),
-                            },
-                        });
-                    }
-                } else {
+                if (!e.path) {
                     client.emit('iris', { ...element, ...e });
+                }
+                if (e.path.startsWith('/direct_v2/threads') && e.value) {
+                    client.emit('message', {
+                        ...element,
+                        message: {
+                            path: e.path,
+                            op: e.op,
+                            thread_id: MessageSyncMixin.getThreadIdFromPath(e.path),
+                            ...JSON.parse(e.value),
+                        },
+                    });
+                } else {
+                    client.emit('threadUpdate', {
+                        ...element,
+                        meta: {
+                            path: e.path,
+                            op: e.op,
+                            thread_id: MessageSyncMixin.getThreadIdFromPath(e.path),
+                        },
+                        update: {
+                            ...JSON.parse(e.value),
+                        },
+                    });
                 }
             });
         }
+    }
+
+    private static getThreadIdFromPath(path: string): string | undefined {
+        const itemMatch = path.match(/^\/direct_v2\/threads\/(\d+)/);
+        if (itemMatch) return itemMatch[1];
+        const inboxMatch = path.match(/^\/direct_v2\/inbox\/threads\/(\d+)/);
+        if (inboxMatch) return inboxMatch[1];
+
+        return undefined;
     }
 
     get name(): string {
