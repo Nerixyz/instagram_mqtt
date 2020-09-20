@@ -20,6 +20,9 @@ const { IG_USERNAME = '', IG_PASSWORD = '' } = process.env;
     // this is called with a wrapper use {message} to only get the "actual" message from the wrapper
     ig.realtime.on('message', logEvent('messageWrapper'));
 
+    // a thread is updated, e.g. admins/members added/removed
+    ig.realtime.on('threadUpdate', logEvent('threadUpdateWrapper'));
+
     // other direct messages - no messages
     ig.realtime.on('direct', logEvent('direct'));
 
