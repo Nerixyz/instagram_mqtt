@@ -10,7 +10,7 @@ Make sure you've enabled [debugging](#debugging).
 -   Install the library
 
 ```
-npm i instagram_mqtt@1.0.0-alpha.1
+npm i instagram_mqtt@1.0.0-alpha.2
 ```
 
 -   Extend the `IgApiClient`
