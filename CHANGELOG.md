@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0 (alpha.2)
+ - Split `message` event to `message` and `threadUpdate`
+
 ## 1.0 (alpha.1)
  - Added Mixins - hook methods and extend functionality
  - Removed deprecated methods/parameters
