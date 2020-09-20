@@ -105,10 +105,10 @@ DEBUG=ig:mqtt:*
 # Extending
 ## Mixins
 Since version 1.0, there is support for basic mixins. 
-A mixin is a class with an `apply()` method (extends Mixin base class).
+A mixin is a class with an `apply()` method (extends [Mixin](src/realtime/mixins/mixin.ts) base class).
 This method is called once the RealtimeClient is constructed. 
 You can use the `hook()` function to hook into methods (pre and post) and override the return value.
-By default, the `MessageSyncMixin` and the `RealtimeSubMixin` are used.
+By default, the [`MessageSyncMixin`](src/realtime/mixins/message-sync.mixin.ts) and the [`RealtimeSubMixin`](src/realtime/mixins/realtime-sub.mixin.ts) are used.
 
 ## TODO
 
