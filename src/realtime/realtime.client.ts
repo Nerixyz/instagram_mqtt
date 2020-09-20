@@ -1,18 +1,13 @@
 import { IgApiClient } from 'instagram-private-api';
 import { REALTIME, RealtimeTopicsArray, Topics } from '../constants';
-import { GraphQlMessage, IrisParserData, ParsedMessage } from './parsers';
 import { Commands, DirectCommands } from './commands';
 import { compressDeflate, debugChannel, prepareLogString, ToEventFn, tryUnzipAsync } from '../shared';
-import { RealtimeSubDirectDataWrapper } from './messages';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
-import { QueryIDs } from './subscriptions';
-import { deprecate } from 'util';
-import { MqttMessageOutgoing, stringifyObject } from 'mqtts';
+import { MqttMessageOutgoing } from 'mqtts';
 import { ClientDisconnectedError } from '../errors';
 import EventEmitter = require('eventemitter3');
 import { RealtimeClientEvents } from './realtime.client.events';
-
-//export declare type OnReceiveCallback = (messages: ParsedMessage<any>[]) => void;
+import { applyMixins, Mixin, MessageSyncMixin, RealtimeSubMixin } from './mixins';
 
 export interface RealtimeClientInitOptions {
     graphQlSubs?: string[];
@@ -21,13 +16,18 @@ export interface RealtimeClientInitOptions {
     connectOverrides?: MQTToTConnectionClientInfo;
     enableTrace?: boolean;
     autoReconnect?: boolean;
+    mixins?: Mixin[];
 }
 
 export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>> {
+    get mqtt(): MQTToTClient {
+        return this._mqtt;
+    }
+
     private realtimeDebug = debugChannel('realtime');
     private messageDebug = this.realtimeDebug.extend('message');
 
-    private client: MQTToTClient;
+    private _mqtt: MQTToTClient;
     private connection: MQTToTConnection;
     private readonly ig: IgApiClient;
 
@@ -40,12 +40,13 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
     /**
      *
      * @param {IgApiClient} ig
-     * @param {RealtimeClientInitOptions | string[]} initOptions string array is deprecated
+     * @param mixins - by default MessageSync and Realtime mixins are used
      */
-    public constructor(ig: IgApiClient, initOptions?: RealtimeClientInitOptions | string[]) {
+    public constructor(ig: IgApiClient, mixins: Mixin[] = [new MessageSyncMixin(), new RealtimeSubMixin()]) {
         super();
         this.ig = ig;
-        this.setInitOptions(initOptions);
+        this.realtimeDebug(`Applying mixins: ${mixins.map(m => m.name).join(', ')}`);
+        applyMixins(mixins, this, this.ig);
     }
 
     private setInitOptions(initOptions?: RealtimeClientInitOptions | string[]) {
@@ -87,13 +88,12 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             appSpecificInfo: {
                 app_version: this.ig.state.appVersion,
                 'X-IG-Capabilities': this.ig.state.capabilitiesHeader,
-                everclear_subscriptions:
-                    '{' +
-                    '"inapp_notification_subscribe_comment":"17899377895239777",' +
-                    '"inapp_notification_subscribe_comment_mention_and_reply":"17899377895239777",' +
-                    '"video_call_participant_state_delivery":"17977239895057311",' +
-                    '"presence_subscribe":"17846944882223835"' +
-                    '}',
+                everclear_subscriptions: JSON.stringify({
+                    inapp_notification_subscribe_comment: '17899377895239777',
+                    inapp_notification_subscribe_comment_mention_and_reply: '17899377895239777',
+                    video_call_participant_state_delivery: '17977239895057311',
+                    presence_subscribe: '17846944882223835',
+                }),
                 'User-Agent': userAgent,
                 'Accept-Language': this.ig.state.language.replace('_', '-'),
                 platform: 'android',
@@ -108,7 +108,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
         this.realtimeDebug('Connecting to realtime-broker...');
         this.setInitOptions(initOptions);
         this.realtimeDebug(`Overriding: ${Object.keys(this.initOptions.connectOverrides || {}).join(', ')}`);
-        this.client = new MQTToTClient({
+        this._mqtt = new MQTToTClient({
             url: REALTIME.HOST_NAME_V6,
             payloadProvider: () => {
                 this.constructConnection();
@@ -118,9 +118,9 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             autoReconnect: this.initOptions.autoReconnect ?? true,
             requirePayload: false,
         });
-        this.commands = new Commands(this.client);
-        this.direct = new DirectCommands(this.client);
-        this.client.on('message', async msg => {
+        this.commands = new Commands(this.mqtt);
+        this.direct = new DirectCommands(this.mqtt);
+        this.mqtt.on('message', async msg => {
             const unzipped = await tryUnzipAsync(msg.payload);
             const topic = RealtimeTopicsArray.find(t => t.id === msg.topic);
             if (topic && topic.parser && !topic.noParse) {
@@ -142,34 +142,16 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
                 this.emit('receiveRaw', msg);
             }
         });
-        this.client.listen(
-            {
-                topic: Topics.REALTIME_SUB.id,
-                transformer: async ({ payload }) =>
-                    Topics.REALTIME_SUB.parser.parseMessage(Topics.REALTIME_SUB, await tryUnzipAsync(payload)),
-            },
-            data => this.handleRealtimeSub(data),
-        );
-        this.client.listen(
-            {
-                topic: Topics.MESSAGE_SYNC.id,
-                transformer: async ({ payload }) =>
-                    Topics.MESSAGE_SYNC.parser
-                        .parseMessage(Topics.MESSAGE_SYNC, await tryUnzipAsync(payload))
-                        .map(msg => msg.data),
-            },
-            data => this.handleMessageSync(data),
-        );
-        this.client.on('error', e => this.emitError(e));
-        this.client.on('warning', w => this.emitWarning(w));
-        this.client.on('disconnect', () =>
+        this.mqtt.on('error', e => this.emitError(e));
+        this.mqtt.on('warning', w => this.emitWarning(w));
+        this.mqtt.on('disconnect', () =>
             this.safeDisconnect
                 ? this.emit('disconnect')
                 : this.emitError(new ClientDisconnectedError('MQTToTClient got disconnected.')),
         );
 
         return new Promise((resolve, reject) => {
-            this.client.on('connect', async () => {
+            this.mqtt.on('connect', async () => {
                 this.realtimeDebug('Connected. Checking initial subs.');
                 const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
                 await Promise.all([
@@ -178,7 +160,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
                     irisData ? this.irisSubscribe(irisData) : null,
                 ]).then(resolve);
             });
-            this.client
+            this.mqtt
                 .connect({
                     keepAlive: 20,
                     protocolLevel: 3,
@@ -197,13 +179,8 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
 
     public disconnect(): Promise<void> {
         this.safeDisconnect = true;
-        return this.client.disconnect();
+        return this.mqtt.disconnect();
     }
-
-    public subscribe = deprecate(
-        (subs: string | string[]) => this.graphQlSubscribe(subs),
-        'Use RealtimeClient.graphQlSubscribe instead',
-    );
 
     public graphQlSubscribe(sub: string | string[]): Promise<MqttMessageOutgoing> {
         sub = typeof sub === 'string' ? [sub] : sub;
@@ -228,9 +205,9 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
     }
 
     public irisSubscribe({
-        seq_id,
-        snapshot_at_ms,
-    }: {
+                             seq_id,
+                             snapshot_at_ms,
+                         }: {
         seq_id: number;
         snapshot_at_ms: number;
     }): Promise<MqttMessageOutgoing> {
@@ -242,63 +219,5 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
                 snapshot_at_ms,
             },
         });
-    }
-
-    private handleRealtimeSub({ data, topic: messageTopic }: ParsedMessage<GraphQlMessage>) {
-        const { message } = data;
-        this.emit('realtimeSub', { data, topic: messageTopic });
-        if (typeof message === 'string') {
-            this.emitDirectEvent(JSON.parse(message));
-        } else {
-            const { topic, payload, json } = message;
-            switch (topic) {
-                case 'direct': {
-                    this.emitDirectEvent(json);
-                    break;
-                }
-                default: {
-                    const entries = Object.entries(QueryIDs);
-                    const query = entries.find(e => e[1] === topic);
-                    if (query) {
-                        this.emit(query[0] as keyof typeof QueryIDs, json || payload);
-                    }
-                }
-            }
-        }
-    }
-
-    protected emitDirectEvent(parsed: any) {
-        parsed.data = parsed.data.map((e: any) => {
-            if (typeof e.value === 'string') {
-                e.value = JSON.parse(e.value);
-            }
-            return e;
-        });
-        parsed.data.forEach((data: RealtimeSubDirectDataWrapper) => this.emit('direct', data));
-    }
-
-    private handleMessageSync(syncData: IrisParserData[]) {
-        for (const element of syncData) {
-            const data = element.data;
-            delete element.data;
-            data.forEach(e => {
-                if (e.path && e.value) {
-                    if (e.path.startsWith('/direct_v2/threads/')) {
-                        const [, , , thread_id] = e.path.split('/');
-                        this.emit('message', {
-                            ...element,
-                            message: {
-                                path: e.path,
-                                op: e.op,
-                                thread_id,
-                                ...JSON.parse(e.value),
-                            },
-                        });
-                    }
-                } else {
-                    this.emit('iris', { ...element, ...e });
-                }
-            });
-        }
     }
 }
