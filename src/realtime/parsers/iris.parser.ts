@@ -14,5 +14,7 @@ export interface IrisParserData {
     seq_id: number;
     mutation_token: null | string;
     realtime: boolean;
+    op?: 'add' | 'replace' | string;
+    path?: string;
     sampled?: boolean;
 }
