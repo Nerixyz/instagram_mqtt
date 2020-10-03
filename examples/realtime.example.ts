@@ -4,14 +4,13 @@ import { GraphQLSubscriptions } from '../src/realtime/subscriptions';
 import { IgApiClient } from 'instagram-private-api';
 import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
 
-const { IG_USERNAME = '', IG_PASSWORD = '' } = process.env;
 
 (async () => {
     // this extends the IgApiClient with realtime features
     const ig: IgApiClientRealtime = withRealtime(new IgApiClient(), /* you may pass mixins in here */);
     // regular login
-    ig.state.generateDevice(IG_USERNAME);
-    await ig.account.login(IG_USERNAME, IG_PASSWORD);
+    // loginToInstagram()
+
     // now `ig` is a client with a valid session
 
     // whenever something gets sent and has no event, this is called
