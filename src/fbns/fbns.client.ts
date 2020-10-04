@@ -15,7 +15,7 @@ import { Chance } from 'chance';
 import { FbnsMessageData, FbnsNotificationUnknown } from './fbns.types';
 import { MqttMessage } from 'mqtts';
 import { ClientDisconnectedError, EmptyPacketError } from '../errors';
-import * as EventEmitter from 'eventemitter3';
+import EventEmitter = require('eventemitter3');
 import { FbnsClientEvents } from './fbns.client.events';
 import { createNotificationFromJson } from './fbns.utilities';
 
