@@ -8,6 +8,7 @@ import {
     MqttClient,
     MqttMessage,
     PacketFlowFunc,
+    TlsTransportProxyOptions,
 } from 'mqtts';
 import { ConnectionFailedError, EmptyPacketError } from '../errors';
 
@@ -22,10 +23,16 @@ export class MQTToTClient extends MqttClient {
         url: string;
         payloadProvider: () => Promise<Buffer>;
         enableTrace?: boolean;
+        proxyOptions?: TlsTransportProxyOptions;
         autoReconnect: boolean;
         requirePayload: boolean;
     }) {
-        super({ url: options.url, enableTrace: options.enableTrace, autoReconnect: options.autoReconnect });
+        super({
+            url: options.url,
+            enableTrace: options.enableTrace,
+            proxyOptions: options.proxyOptions,
+            autoReconnect: options.autoReconnect,
+        });
         this.mqttotDebug = (msg: string, ...args: string[]) =>
             debugChannel('mqttot')(`${URL.parse(options.url).host}: ${msg}`, ...args);
         this.connectPayloadProvider = options.payloadProvider;
