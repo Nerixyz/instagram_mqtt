@@ -10,7 +10,7 @@ import { AppPresenceEventWrapper, MessageSyncMessageWrapper, RealtimeSubDirectDa
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
 import { QueryIDs } from './subscriptions';
 import { deprecate } from 'util';
-import { MqttMessageOutgoing } from 'mqtts';
+import { MqttMessageOutgoing, TlsTransportProxyOptions } from 'mqtts';
 import { filter } from 'rxjs/operators';
 import { ClientDisconnectedError } from '../errors';
 
@@ -61,6 +61,7 @@ export interface RealtimeClientInitOptions {
     connectOverrides?: MQTToTConnectionClientInfo;
     enableTrace?: boolean;
     autoReconnect?: boolean;
+    proxyOptions?: TlsTransportProxyOptions;
 }
 
 export class RealtimeClient extends EventEmitter {
@@ -154,6 +155,7 @@ export class RealtimeClient extends EventEmitter {
                 return compressDeflate(this.connection.toThrift());
             },
             enableTrace: this.initOptions.enableTrace,
+            proxyOptions: this.initOptions.proxyOptions,
             autoReconnect: this.initOptions.autoReconnect ?? true,
             requirePayload: false,
         });
