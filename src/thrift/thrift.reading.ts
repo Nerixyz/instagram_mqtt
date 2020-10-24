@@ -303,7 +303,7 @@ export class BufferReader {
         return byte & 0x0f;
     }
 
-    public readString = (len: number): string => this.buffer.toString('UTF-8', this.move(len), this._position);
+    public readString = (len: number): string => this.buffer.toString('utf8', this.move(len), this._position);
 
     public readList(size: number, type: number): (number | boolean | string)[] {
         const arr = [];

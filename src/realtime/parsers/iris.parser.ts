@@ -1,10 +1,9 @@
 import { ParsedMessage, Parser } from './parser';
 import { Topic } from '../../topic';
 
-/*eslint @typescript-eslint/interface-name-prefix: "off" */
 export class IrisParser implements Parser<IrisParserData> {
     public parseMessage(topic: Topic, payload: Buffer): ParsedMessage<IrisParserData>[] {
-        return JSON.parse(payload.toString('UTF-8')).map((x: IrisParserData) => ({ topic, data: x }));
+        return JSON.parse(payload.toString('utf8')).map((x: IrisParserData) => ({ topic, data: x }));
     }
 }
 

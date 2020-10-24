@@ -326,6 +326,7 @@ export class RealtimeClient extends EventEmitter {
     private handleMessageSync(syncData: IrisParserData[]) {
         for (const element of syncData) {
             const data = element.data;
+            // @ts-ignore -- it's fine
             delete element.data;
             data.forEach(e => {
                 if (e.path && e.value) {
