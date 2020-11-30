@@ -7,6 +7,10 @@ This library integrates with the [instagram-private-api](https://github.com/dila
 
 # Getting started
 
+### Hold up!
+
+If you're new to this library, consider using the [alpha](https://github.com/Nerixyz/instagram_mqtt/tree/alpha) version. It will become stable in the next few weeks.
+
 1. Run
 
 ```
