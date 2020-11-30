@@ -57,6 +57,14 @@ import { SkywalkerSubscriptions } from '../src/realtime/subscriptions';
         // in here you can change connect options
         // available are all properties defined in MQTToTConnectionClientInfo
         connectOverrides: {},
+
+        // optional
+        // use this proxy
+        socksOptions: {
+            type: 5,
+            port: 12345,
+            host: '...'
+        }
     });
 
     // simulate turning the device off after 2s and turning it back on after another 2s

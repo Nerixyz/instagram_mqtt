@@ -40,6 +40,9 @@ const {IG_USERNAME = '', IG_PASSWORD = ''} = process.env;
     // this sends the connect packet to the server and starts the connection
     // the promise will resolve once the client is fully connected (once /push/register/ is received)
     await ig.fbns.connect();
+
+    // you can pass in an object with socks proxy options to use this proxy
+    // await ig.fbns.connect({socksOptions: {host: '...', port: 12345, type: 4}});
 })();
 
 async function saveState(ig: IgApiClientExt) {
