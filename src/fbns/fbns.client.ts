@@ -18,6 +18,7 @@ import { ClientDisconnectedError, EmptyPacketError } from '../errors';
 import EventEmitter = require('eventemitter3');
 import { FbnsClientEvents } from './fbns.client.events';
 import { createNotificationFromJson } from './fbns.utilities';
+import { SocksProxy } from 'socks';
 
 export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: string]: FbnsNotificationUnknown }>> {
     public get auth(): FbnsDeviceAuth {
@@ -70,7 +71,8 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
     public async connect({
         enableTrace,
         autoReconnect,
-    }: { enableTrace?: boolean; autoReconnect?: boolean } = {}): Promise<any> {
+        socksOptions
+    }: { enableTrace?: boolean; autoReconnect?: boolean, socksOptions?: SocksProxy } = {}): Promise<any> {
         this.fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.client = new MQTToTClient({
@@ -82,6 +84,7 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
             enableTrace,
             autoReconnect: autoReconnect ?? true,
             requirePayload: true,
+            socksOptions
         });
         this.client.on('warning', w => this.emit('warning', w));
         this.client.on('error', e => this.emit('error', e));

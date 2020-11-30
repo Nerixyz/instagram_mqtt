@@ -8,6 +8,7 @@ import { ClientDisconnectedError } from '../errors';
 import EventEmitter = require('eventemitter3');
 import { RealtimeClientEvents } from './realtime.client.events';
 import { applyMixins, Mixin, MessageSyncMixin, RealtimeSubMixin } from './mixins';
+import { SocksProxy } from 'socks';
 
 export interface RealtimeClientInitOptions {
     graphQlSubs?: string[];
@@ -17,6 +18,7 @@ export interface RealtimeClientInitOptions {
     enableTrace?: boolean;
     autoReconnect?: boolean;
     mixins?: Mixin[];
+    socksOptions?: SocksProxy
 }
 
 export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>> {
@@ -55,6 +57,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             graphQlSubs: [],
             skywalkerSubs: [],
             ...(initOptions || {}),
+            socksOptions: typeof initOptions === 'object' && !Array.isArray(initOptions) ? initOptions.socksOptions : undefined,
         };
     }
 
@@ -117,6 +120,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             enableTrace: this.initOptions.enableTrace,
             autoReconnect: this.initOptions.autoReconnect ?? true,
             requirePayload: false,
+            socksOptions: this.initOptions.socksOptions
         });
         this.commands = new Commands(this.mqtt);
         this.direct = new DirectCommands(this.mqtt);
