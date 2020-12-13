@@ -2,88 +2,45 @@
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/nerixyz/instagram_mqtt/Node%20CI?style=flat)](https://github.com/Nerixyz/instagram_mqtt/actions)
 
-Thanks to [valga](https://github.com/valga) for providing and maintaining the [PHP library](https://github.com/valga/fbns-react).
-This library integrates with the [instagram-private-api](https://github.com/dilame/instagram-private-api).
-
 # Getting started
 
-1. Run
+You'll install the `alpha`-version of this library. It may not be stable.
+Make sure you've enabled [debugging](#debugging).
+
+-   Install the library
 
 ```
-npm install instagram_mqtt
+npm i instagram_mqtt@alpha
+
+OR 
+
+yarn add instagram_mqtt@alpha
 ```
 
-2. Import the library `import { FbnsClient, RealtimeClient } from 'instagram_mqtt';`
-   (with require: `const {FbnsClient, RealtimeClient} = require('instagram_mqtt')`)
-   _Note: It's not recommended to use the clients directly. For further information look at the [examples](examples)._
-3. Login to Instagram
-4. [Use](examples) the clients.
+-   Extend the `IgApiClient`
+
+```typescript
+import { IgApiClient } from 'instagram-private-api';
+import { withFbnsAndRealtime, withFbns, withRealtime } from 'instagram_mqtt';
+
+// wrap the client
+// ig is now IgApiClientMQTT for typescript users
+const ig = withFbnsAndRealtime(new IgApiClient());
+
+// OR if you only want fbns/realtime
+const igFbns = withFbns(new IgApiClient());
+const igRealtime = withRealtime(new IgApiClient());
+
+// login like you usually do or load the state
+
+// use ig.realtime and ig.fbns
+```
+
+-   [Look at the examples](examples)
 
 ## Version Infos
 
 To see what's new, visit the [changelog](CHANGELOG.md).
-
-### 0.2.0
-
-If you're updating to 0.2.0, look at the [changelog](CHANGELOG.md) for breaking changes!
-
-### below 0.1.5 (old)
-
-Up to version 0.1.5 the clients worked on their own.
-To init them they are constructed with a reference to the IgApiClient:
-
-```typescript
-import { FbnsClient, RealtimeClient } from 'instagram_mqtt';
-import { IgApiClient } from 'instagram-private-api';
-
-const ig = new IgApiClient();
-// Initialize the client
-// This includes logging in (if you are below 0.1.6)
-// ig.account.login ...
-const fbns = new FbnsClient(ig);
-await fbns.connect();
-
-const realtime = new RealtimeClient(ig);
-await realtime.connect();
-```
-
-### 0.1.5 or above (new)
-
-The new way of using mqtt is done by "extending" the base client.
-_Note: this might change in a future version of the API_
-
-```typescript
-import {
-    withRealtime,
-    withFbns,
-    // only for typescript
-    IgApiClientMQTT,
-} from 'instagram_mqtt';
-import { IgApiClient } from 'instagram-private-api';
-
-// using FBNS
-const ig = withFbns(new IgApiClient());
-await ig.fbns.connect();
-
-// using realtime
-const ig = withRealtime(new IgApiClient());
-await ig.realtime.connect({
-    /* initial subscriptions */
-});
-
-// using both
-const ig = withFbns(withRealtime(new IgApiClient()));
-
-// using typescript you can declare ig like this:
-const ig: IgApiClientMQTT = withFbns(withRealtime(new IgApiClient()));
-// this way, your IDE will provide proper highlighting
-```
-
-## TODO
-
--   Proper descriptions for events
--   Error handling
--   Testing... a lot.
 
 # RealtimeClient
 
@@ -95,15 +52,37 @@ Everything using some kind of event is communicating over this client.
 -   Typing Events
 -   Presence Events
 -   Direct Messaging
+-   Live Comments
+-   Live Events
+
+## Events
+
+Your IDE should be able to auto complete the event names for you as Typescript types are in the npm package.
+
+
+| Name               | Description                                                       | Typed?    |
+| ------------------ | ----------------------------------------------------------------- | --------- |
+| realtimeSub        | Any message sent to `/ig_realtime_sub`                            | partially |
+| direct             | Direct _events_                                                   | yes       |
+| iris               | Any message sent to `/ig_message_sync` not handled by `message`   | partially |
+| message            | Direct messages                                                   | yes       |
+| clientConfigUpdate | Updates to quick experiments (may cause the client to disconnect) | yes       |
+| appPresence        | Presence updates                                                  | yes       |
+| \<keyof QueryIDs\>   | Messages regarding the specified query id                         | no        |
 
 # FbnsClient
 
 FBNS is for notifications (so it's readonly).
-You can subscribe to a notification using
+You can subscribe to any notification using
 
 ```typescript
-// const fbns: FbnsClient = ...;
-fbns.push$.subscripbe(notification => ...);
+ig.fbns.on('push' /* your handler */);
+```
+
+You can subscribe to a specific event using
+
+```typescript
+ig.fbns.on(/* desired collapseKey */, /* your handler */)
 ```
 
 Note: this library provides the query (actionPath/Params) as an object (actionParams)
@@ -119,20 +98,27 @@ Currently, the emitted "channels" are:
 -   `ig:mqtt:fbns`
 -   `ig:mqtt:mqttot`
 
+If you want to debug the `mqtts` library set it either to `*` or `ig:*,mqtts:*`.
+
 An example `.env` file would look like this:
 
 ```
 DEBUG=ig:mqtt:*
 ```
 
-_Note:_ In version 0.1.14 the debug library was changed to **debug** instead of the native **util.debuglog**.
-Thus the naming scheme is different `ig-mqtt-fbns` is now `ig:mqtt:fbns`
-and instead of `NODE_DEBUG` the environment variable `DEBUG` is used.
+# Extending
+## Mixins
+Since version 1.0, there is support for basic mixins. 
+A mixin is a class with an `apply()` method (extends [Mixin](src/realtime/mixins/mixin.ts) base class).
+This method is called once the RealtimeClient is constructed. 
+You can use the `hook()` function to hook into methods (pre and post) and override the return value.
+By default, the [`MessageSyncMixin`](src/realtime/mixins/message-sync.mixin.ts) and the [`RealtimeSubMixin`](src/realtime/mixins/realtime-sub.mixin.ts) are used.
 
-### Raw TLS Sockets
+## TODO
 
-To debug raw TLS Sockets you just have to set `enableTrace` to `true` while connecting:
-`ig.realtime.connect({enableTrace: true})` or `ig.fbns.connect({enableTrace: true})`
+-   Proper descriptions for events
+-   Error handling
+-   Testing... a lot.
 
 # Research
 
@@ -196,3 +182,8 @@ If you're using x86, make sure to install ARM translations for yor device
 in order to get ProxyDroid to work.
 
 Instructions are [here](https://github.com/dilame/instagram-private-api/blob/master/CONTRIBUTING.md#capturing-tls-requests).
+
+# Thanks
+
+Thanks to [valga](https://github.com/valga) for providing and maintaining the [PHP library](https://github.com/valga/fbns-react).
+This library integrates with the [instagram-private-api](https://github.com/dilame/instagram-private-api).

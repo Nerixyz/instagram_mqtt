@@ -1,18 +1,26 @@
-import { IgApiClient } from 'instagram-private-api';
+import { IgApiClient, StatusResponse } from 'instagram-private-api';
 import { FBNS, FbnsTopics, INSTAGRAM_PACKAGE_NAME } from '../constants';
 import { FbnsDeviceAuth } from './fbns.device-auth';
-import { compressDeflate, createUserAgent, debugChannel, notUndefined, tryUnzipAsync } from '../shared';
-import { MQTToTConnection, MQTToTClient } from '../mqttot';
+import {
+    compressDeflate,
+    createFbnsUserAgent,
+    debugChannel,
+    listenOnce,
+    notUndefined,
+    ToEventFn,
+    tryUnzipAsync,
+} from '../shared';
+import { MQTToTConnection, MQTToTClient, MQTToTConnectResponsePacket } from '../mqttot';
 import { Chance } from 'chance';
-import * as querystring from 'querystring';
-import * as URL from 'url';
-import { Subject } from 'rxjs';
-import { FbnsBadgeCount, FbnsMessageData, FbnsNotificationUnknown, FbPushNotif } from './fbns.types';
-import { MqttMessage, MqttPacket } from 'mqtts';
-import { first } from 'rxjs/operators';
+import { FbnsMessageData, FbnsNotificationUnknown } from './fbns.types';
+import { MqttMessage } from 'mqtts';
 import { ClientDisconnectedError, EmptyPacketError } from '../errors';
+import EventEmitter = require('eventemitter3');
+import { FbnsClientEvents } from './fbns.client.events';
+import { createNotificationFromJson } from './fbns.utilities';
+import { SocksProxy } from 'socks';
 
-export class FbnsClient {
+export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: string]: FbnsNotificationUnknown }>> {
     public get auth(): FbnsDeviceAuth {
         return this._auth;
     }
@@ -27,28 +35,18 @@ export class FbnsClient {
     private _auth: FbnsDeviceAuth;
     private safeDisconnect = false;
 
-    // general push
-    push$ = new Subject<FbnsNotificationUnknown>();
-    error$ = new Subject<Error>();
-    warning$ = new Subject<Error>();
-    auth$ = new Subject<FbnsDeviceAuth>();
-    // message without fbpushnotif
-    message$ = new Subject<FbnsMessageData>();
-    logging$ = new Subject<{ beacon_id: number }>();
-    pp$ = new Subject<string>();
-    disconnect$ = new Subject<void>();
-
     public constructor(private readonly ig: IgApiClient) {
+        super();
         this._auth = new FbnsDeviceAuth(this.ig);
     }
 
-    public buildConnection() {
+    public buildConnection(): void {
         this.fbnsDebug('Constructing connection');
         this.conn = new MQTToTConnection({
             clientIdentifier: this._auth.clientId,
             clientInfo: {
                 userId: BigInt(this._auth.userId),
-                userAgent: createUserAgent(this.ig),
+                userAgent: createFbnsUserAgent(this.ig),
                 clientCapabilities: 183,
                 endpointCapabilities: 128,
                 publishFormat: 1,
@@ -73,7 +71,8 @@ export class FbnsClient {
     public async connect({
         enableTrace,
         autoReconnect,
-    }: { enableTrace?: boolean; autoReconnect?: boolean } = {}): Promise<any> {
+        socksOptions
+    }: { enableTrace?: boolean; autoReconnect?: boolean, socksOptions?: SocksProxy } = {}): Promise<any> {
         this.fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.client = new MQTToTClient({
@@ -85,41 +84,42 @@ export class FbnsClient {
             enableTrace,
             autoReconnect: autoReconnect ?? true,
             requirePayload: true,
+            socksOptions
         });
-        this.client.$warning.subscribe(this.warning$);
-        this.client.$error.subscribe(this.error$);
-        this.client.$disconnect.subscribe(() =>
+        this.client.on('warning', w => this.emit('warning', w));
+        this.client.on('error', e => this.emit('error', e));
+        this.client.on('disconnect', reason =>
             this.safeDisconnect
-                ? this.disconnect$.next()
-                : this.error$.next(new ClientDisconnectedError('MQTToTClient got disconnected.')),
+                ? this.emit('disconnect', reason)
+                : this.emit('error', new ClientDisconnectedError(`MQTToTClient got disconnected. Reason: ${reason}`)),
         );
-        this.client
-            .listen<MqttMessage>({ topic: FbnsTopics.FBNS_MESSAGE.id })
-            .subscribe(msg => this.handleMessage(msg));
-        this.client
-            .listen<MqttMessage>({ topic: FbnsTopics.FBNS_EXP_LOGGING.id })
-            .subscribe(async msg =>
-                this.logging$.next(JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'))),
-            );
-        this.client
-            .listen<MqttMessage>({ topic: FbnsTopics.PP.id })
-            .subscribe(msg => this.pp$.next(msg.payload.toString('utf8')));
+        this.client.listen<MqttMessage>(FbnsTopics.FBNS_MESSAGE.id, msg => this.handleMessage(msg));
+        this.client.listen(
+            {
+                topic: FbnsTopics.FBNS_EXP_LOGGING.id,
+                transformer: async msg => JSON.parse((await tryUnzipAsync(msg.payload)).toString()),
+            },
+            msg => this.emit('logging', msg),
+        );
+        this.client.listen<MqttMessage>(FbnsTopics.PP.id, msg => this.emit('pp', msg.payload.toString()));
 
-        this.client.$connect.subscribe(async res => {
+        this.client.on('connect', async (res: MQTToTConnectResponsePacket) => {
             this.fbnsDebug('Connected to MQTT');
             if (!res.payload?.length) {
                 this.fbnsDebug(
                     `Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`,
                 );
-                this.error$.next(new EmptyPacketError('Received empty connect packet. Try resetting your fbns state!'));
+                this.emit(
+                    'error',
+                    new EmptyPacketError('Received empty connect packet. Try resetting your fbns state!'),
+                );
                 await this.client.disconnect();
                 return;
             }
             const payload = res.payload.toString('utf8');
             this.fbnsDebug(`Received auth: ${payload}`);
             this._auth.read(payload);
-            this.auth$.next(this.auth);
-            MqttPacket.generateIdentifier();
+            this.emit('auth', this.auth);
             await this.client.mqttotPublish({
                 topic: FbnsTopics.FBNS_REG_REQ.id,
                 payload: Buffer.from(
@@ -133,6 +133,7 @@ export class FbnsClient {
             });
             // this.buildConnection(); ?
         });
+
         await this.client
             .connect({
                 keepAlive: 60,
@@ -146,30 +147,26 @@ export class FbnsClient {
             });
         await this.client.subscribe({ topic: FbnsTopics.FBNS_MESSAGE.id });
 
-        return await this.client
-            .listen<MqttMessage>({ topic: FbnsTopics.FBNS_REG_RESP.id })
-            .pipe(first())
-            .toPromise()
-            .then(async msg => {
-                const data = await tryUnzipAsync(msg.payload);
-                const payload = data.toString('utf8');
-                this.fbnsDebug(`Received register response: ${payload}`);
+        const msg = await listenOnce<MqttMessage>(this.client, FbnsTopics.FBNS_REG_RESP.id);
 
-                const { token, error } = JSON.parse(payload);
-                if (error) {
-                    this.error$.next(error);
-                    throw error;
-                }
-                try {
-                    await this.sendPushRegister(token);
-                } catch (e) {
-                    this.error$.next(e);
-                    throw e;
-                }
-            });
+        const data = await tryUnzipAsync(msg.payload);
+        const payload = data.toString('utf8');
+        this.fbnsDebug(`Received register response: ${payload}`);
+
+        const { token, error } = JSON.parse(payload);
+        if (error) {
+            this.emit('error', error);
+            throw error;
+        }
+        try {
+            await this.sendPushRegister(token);
+        } catch (e) {
+            this.emit('error', e);
+            throw e;
+        }
     }
 
-    public disconnect() {
+    public disconnect(): Promise<void> {
         this.safeDisconnect = true;
         return this.client.disconnect();
     }
@@ -178,15 +175,16 @@ export class FbnsClient {
         const payload: FbnsMessageData = JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8'));
 
         if (notUndefined(payload.fbpushnotif)) {
-            const notification = FbnsClient.createNotificationFromJson(payload.fbpushnotif);
-            this.push$.next(notification);
+            const notification = createNotificationFromJson(payload.fbpushnotif);
+            this.emit('push', notification);
+            if (notification.collapseKey) this.emit(notification.collapseKey, notification);
         } else {
             this.fbnsDebug(`Received a message without 'fbpushnotif': ${JSON.stringify(payload)}`);
-            this.message$.next(JSON.parse((await tryUnzipAsync(msg.payload)).toString('utf8')));
+            this.emit('message', payload);
         }
     }
 
-    public async sendPushRegister(token: string) {
+    public async sendPushRegister(token: string): Promise<StatusResponse> {
         const { body } = await this.ig.request.send({
             url: `/api/v1/push/register/`,
             method: 'POST',
@@ -203,80 +201,5 @@ export class FbnsClient {
             },
         });
         return body;
-    }
-
-    private static createNotificationFromJson(json: string): FbnsNotificationUnknown {
-        const data: FbPushNotif = JSON.parse(json);
-
-        const notification: FbnsNotificationUnknown = Object.defineProperty({}, 'description', {
-            enumerable: false,
-            value: data,
-        });
-
-        if (notUndefined(data.t)) {
-            notification.title = data.t;
-        }
-        if (notUndefined(data.m)) {
-            notification.message = data.m;
-        }
-        if (notUndefined(data.tt)) {
-            notification.tickerText = data.tt;
-        }
-        if (notUndefined(data.ig)) {
-            notification.igAction = data.ig;
-            const url = URL.parse(data.ig);
-            if (url.pathname) {
-                notification.actionPath = url.pathname;
-            }
-            if (url.query) {
-                notification.actionParams = querystring.decode(url.query);
-            }
-        }
-        if (notUndefined(data.collapse_key)) {
-            notification.collapseKey = data.collapse_key;
-        }
-        if (notUndefined(data.i)) {
-            notification.optionalImage = data.i;
-        }
-        if (notUndefined(data.a)) {
-            notification.optionalAvatarUrl = data.a;
-        }
-        if (notUndefined(data.sound)) {
-            notification.sound = data.sound;
-        }
-        if (notUndefined(data.pi)) {
-            notification.pushId = data.pi;
-        }
-        if (notUndefined(data.c)) {
-            notification.pushCategory = data.c;
-        }
-        if (notUndefined(data.u)) {
-            notification.intendedRecipientUserId = data.u;
-        }
-        if (notUndefined(data.s) && data.s !== 'None') {
-            notification.sourceUserId = data.s;
-        }
-        if (notUndefined(data.igo)) {
-            notification.igActionOverride = data.igo;
-        }
-        if (notUndefined(data.bc)) {
-            const badgeCount: FbnsBadgeCount = {};
-            const parsed = JSON.parse(data.bc);
-            if (notUndefined(parsed.di)) {
-                badgeCount.direct = parsed.di;
-            }
-            if (notUndefined(parsed.ds)) {
-                badgeCount.ds = parsed.ds;
-            }
-            if (notUndefined(parsed.ac)) {
-                badgeCount.activities = parsed.ac;
-            }
-            notification.badgeCount = badgeCount;
-        }
-        if (notUndefined(data.ia)) {
-            notification.inAppActors = data.ia;
-        }
-
-        return notification;
     }
 }

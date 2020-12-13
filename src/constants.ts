@@ -55,6 +55,7 @@ export const Topics = {
         parser: null,
     },
 };
+export const RealtimeTopicsArray: Topic[] = Object.values(Topics);
 
 export const INSTAGRAM_PACKAGE_NAME = 'com.instagram.android';
 
@@ -84,7 +85,7 @@ export const FbnsTopics = {
 export const FBNS = {
     PACKAGE: 'com.instagram.android',
     APP_ID: '567310203415052',
-    HOST_NAME_V6: 'mqtts://mqtt-mini.facebook.com:443',
+    HOST_NAME_V6: 'mqtt-mini.facebook.com',
     CLIENT_CAPABILITIES: 439,
     ENDPOINT_CAPABILITIES: 128,
     CLIENT_STACK: 3,
@@ -92,7 +93,7 @@ export const FBNS = {
 };
 
 export const REALTIME = {
-    HOST_NAME_V6: 'mqtts://edge-mqtt.facebook.com:443',
+    HOST_NAME_V6: 'edge-mqtt.facebook.com',
 };
 
 // TODO: exclude in release

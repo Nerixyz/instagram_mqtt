@@ -1,7 +1,8 @@
 import { Parser } from './realtime/parsers';
 
-export interface Topic {
-    id: string;
-    path: string;
-    parser?: Parser<unknown> | null;
+export interface Topic<T = unknown> {
+    id: string,
+    path: string,
+    parser: null | Parser<T>,
+    noParse?: boolean;
 }

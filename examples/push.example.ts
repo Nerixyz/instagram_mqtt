@@ -20,24 +20,29 @@ const {IG_USERNAME = '', IG_PASSWORD = ''} = process.env;
     await loginToInstagram(ig);
 
     // you received a notification
-    ig.fbns.push$.subscribe(logEvent('push'));
+    ig.fbns.on('push', logEvent('push'));
+
     // the client received auth data
     // the listener has to be added before connecting
-    ig.fbns.auth$.subscribe(async (auth) => {
+    ig.fbns.on('auth', async auth => {
         // logs the auth
         logEvent('auth')(auth);
 
         //saves the auth
         await saveState(ig);
     });
+
     // 'error' is emitted whenever the client experiences a fatal error
-    ig.fbns.error$.subscribe(logEvent('error'));
+    ig.fbns.on('error', logEvent('error'));
     // 'warning' is emitted whenever the client errors but the connection isn't affected
-    ig.fbns.warning$.subscribe(logEvent('warning'));
+    ig.fbns.on('warning', logEvent('warning'));
 
     // this sends the connect packet to the server and starts the connection
     // the promise will resolve once the client is fully connected (once /push/register/ is received)
     await ig.fbns.connect();
+
+    // you can pass in an object with socks proxy options to use this proxy
+    // await ig.fbns.connect({socksOptions: {host: '...', port: 12345, type: 4}});
 })();
 
 async function saveState(ig: IgApiClientExt) {

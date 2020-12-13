@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0 (alpha.2)
+ - Split `message` event to `message` and `threadUpdate`
+
+## 1.0 (alpha.1)
+ - Added Mixins - hook methods and extend functionality
+ - Removed deprecated methods/parameters
+ - Fix for `extend` - indexing instead of using `Object.defineProperty()`
+
+## 1.0 (alpha.0)
+ - _Note:_ Most if not all changes are **breaking** 
+ - Using `mqtts` version `1.0@alpha`
+ - Use `eventemitter3` instead of `rxjs` to handle events.
+
 ## 0.2.1
  - Removed initial raw mqtt subscriptions (disconnect)
  - Added proper keepAlive handling

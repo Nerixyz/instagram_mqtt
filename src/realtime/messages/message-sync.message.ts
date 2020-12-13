@@ -6,46 +6,47 @@ export interface MessageSyncMessageWrapper extends Partial<IrisParserData> {
 }
 
 export enum MessageSyncMessageTypes {
-    DELETION = 'deletion',
-    MEDIA = 'media',
-    TEXT = 'text',
-    LIKE = 'like',
-    HASHTAG = 'hashtag',
-    PROFILE = 'profile',
-    MEDIA_SHARE = 'media_share',
-    LOCATION = 'location',
-    ACTION_LOG = 'action_log',
-    TITLE = 'title',
-    USER_REACTION = 'user_reaction',
-    HISTORY_EDIT = 'history_edit',
-    REACTION_LOG = 'reaction_log',
-    REEL_SHARE = 'reel_share',
-    DEPRECATED_CHANNEL = 'deprecated_channel',
-    LINK = 'link',
-    RAVEN_MEDIA = 'raven_media',
-    LIVE_VIDEO_SHARE = 'live_video_share',
-    TEST = 'test',
-    STORY_SHARE = 'story_share',
-    REEL_REACT = 'reel_react',
-    LIVE_INVITE_GUEST = 'live_invite_guest',
-    LIVE_VIEWER_INVITE = 'live_viewer_invite',
-    TYPE_MAX = 'type_max',
-    PLACEHOLDER = 'placeholder',
-    PRODUCT = 'product',
-    PRODUCT_SHARE = 'product_share',
-    VIDEO_CALL_EVENT = 'video_call_event',
-    POLL_VOTE = 'poll_vote',
-    FELIX_SHARE = 'felix_share',
-    ANIMATED_MEDIA = 'animated_media',
-    CTA_LINK = 'cta_link',
-    VOICE_MEDIA = 'voice_media',
-    STATIC_STICKER = 'static_sticker',
-    AR_EFFECT = 'ar_effect',
-    SELFIE_STICKER = 'selfie_sticker',
+    Deletion = 'deletion',
+    Media = 'media',
+    Text = 'text',
+    Like = 'like',
+    Hashtag = 'hashtag',
+    Profile = 'profile',
+    MediaShare = 'media_share',
+    Location = 'location',
+    ActionLog = 'action_log',
+    Title = 'title',
+    UserReaction = 'user_reaction',
+    HistoryEdit = 'history_edit',
+    ReactionLog = 'reaction_log',
+    ReelShare = 'reel_share',
+    DeprecatedChannel = 'deprecated_channel',
+    Link = 'link',
+    RavenMedia = 'raven_media',
+    LiveVideoShare = 'live_video_share',
+    Test = 'test',
+    StoryShare = 'story_share',
+    ReelReact = 'reel_react',
+    LiveInviteGuest = 'live_invite_guest',
+    LiveViewerInvite = 'live_viewer_invite',
+    TypeMax = 'type_max',
+    Placeholder = 'placeholder',
+    Product = 'product',
+    ProductShare = 'product_share',
+    VideoCallEvent = 'video_call_event',
+    PollVote = 'poll_vote',
+    FelixShare = 'felix_share',
+    AnimatedMedia = 'animated_media',
+    CtaLink = 'cta_link',
+    VoiceMedia = 'voice_media',
+    StaticSticker = 'static_sticker',
+    ArEffect = 'ar_effect',
+    SelfieSticker = 'selfie_sticker',
 }
 
 export interface MessageSyncMessage {
-    thread_id: string;
+    thread_id?: string;
+    thread_v2_id?: string;
     op: 'add' | 'replace' | string;
     path: string;
     item_id: string;
@@ -68,6 +69,9 @@ export interface MessageSyncMessage {
     animated_media?: AnimatedMediaItem;
     visual_media?: VisualMedia;
     media_share?: MediaShareItem;
+
+    // op: 'replace' => added or left or removed
+
 }
 
 export interface ImageVersions {
@@ -161,10 +165,15 @@ export interface User {
     profile_pic_url: string;
     profile_pic_id: string;
     friendship_status: FriendshipStatus;
+    is_verified?: boolean;
+    has_threads_app?: boolean;
     has_anonymous_profile_picture: boolean;
-    is_unpublished: boolean;
+    is_unpublished?: boolean;
     is_favorite: boolean;
-    latest_reel_media: number;
+    latest_reel_media?: number;
+    is_using_unified_inbox_for_direct?: boolean;
+    interop_messaging_user_fbid?: boolean;
+    account_badges?: unknown[];
 }
 
 export interface FriendshipStatus {

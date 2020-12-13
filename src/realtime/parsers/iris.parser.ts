@@ -9,10 +9,12 @@ export class IrisParser implements Parser<IrisParserData> {
 
 export interface IrisParserData {
     event: 'patch' | string;
-    data: any[];
+    data?: any[];
     message_type: number;
     seq_id: number;
     mutation_token: null | string;
     realtime: boolean;
+    op?: 'add' | 'replace' | string;
+    path?: string;
     sampled?: boolean;
 }
