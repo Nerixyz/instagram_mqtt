@@ -4,17 +4,14 @@
 
 # Getting started
 
-You'll install the `alpha`-version of this library. It may not be stable.
-Make sure you've enabled [debugging](#debugging).
-
 -   Install the library
 
 ```
-npm i instagram_mqtt@alpha
+npm i instagram_mqtt
 
 OR 
 
-yarn add instagram_mqtt@alpha
+yarn add instagram_mqtt
 ```
 
 -   Extend the `IgApiClient`

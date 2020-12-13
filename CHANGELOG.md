@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0
+ - Added socks support
+
 ## 1.0 (alpha.2)
  - Split `message` event to `message` and `threadUpdate`
 
