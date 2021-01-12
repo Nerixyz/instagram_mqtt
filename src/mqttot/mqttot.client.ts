@@ -12,10 +12,10 @@ import {
     MqttMessageOutgoing,
     PacketFlowFunc,
     PacketType, SocksTlsTransport, TlsTransport
-} from "mqtts";
+} from 'mqtts';
 import { ConnectionFailedError, EmptyPacketError } from '../errors';
 import { MQTToTConnectResponsePacket, readConnectResponsePacket } from './mqttot.connect.response.packet';
-import { SocksProxy } from "socks";
+import { SocksProxy } from 'socks';
 
 type MQTToTReadMap = Omit<DefaultPacketReadResultMap, PacketType.ConnAck> & {
     [PacketType.ConnAck]: MQTToTConnectResponsePacket;

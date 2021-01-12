@@ -221,6 +221,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             data: {
                 seq_id,
                 snapshot_at_ms,
+                snapshot_app_version: this.ig.state.appVersion
             },
         });
     }
