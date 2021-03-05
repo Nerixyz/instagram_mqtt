@@ -19,6 +19,7 @@ import EventEmitter = require('eventemitter3');
 import { FbnsClientEvents } from './fbns.client.events';
 import { createNotificationFromJson } from './fbns.utilities';
 import { SocksProxy } from 'socks';
+import { ConnectionOptions } from 'tls';
 
 export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: string]: FbnsNotificationUnknown }>> {
     public get auth(): FbnsDeviceAuth {
@@ -71,8 +72,14 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
     public async connect({
         enableTrace,
         autoReconnect,
-        socksOptions
-    }: { enableTrace?: boolean; autoReconnect?: boolean, socksOptions?: SocksProxy } = {}): Promise<any> {
+        socksOptions,
+        additionalTlsOptions,
+    }: {
+        enableTrace?: boolean;
+        autoReconnect?: boolean;
+        socksOptions?: SocksProxy;
+        additionalTlsOptions?: ConnectionOptions;
+    } = {}): Promise<any> {
         this.fbnsDebug('Connecting to FBNS...');
         this.auth.update();
         this.client = new MQTToTClient({
@@ -84,7 +91,8 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
             enableTrace,
             autoReconnect: autoReconnect ?? true,
             requirePayload: true,
-            socksOptions
+            socksOptions,
+            additionalOptions: additionalTlsOptions,
         });
         this.client.on('warning', w => this.emit('warning', w));
         this.client.on('error', e => this.emit('error', e));
