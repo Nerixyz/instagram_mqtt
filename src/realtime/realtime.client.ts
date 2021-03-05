@@ -9,6 +9,7 @@ import EventEmitter = require('eventemitter3');
 import { RealtimeClientEvents } from './realtime.client.events';
 import { applyMixins, Mixin, MessageSyncMixin, RealtimeSubMixin } from './mixins';
 import { SocksProxy } from 'socks';
+import { ConnectionOptions } from "tls";
 
 export interface RealtimeClientInitOptions {
     graphQlSubs?: string[];
@@ -18,7 +19,8 @@ export interface RealtimeClientInitOptions {
     enableTrace?: boolean;
     autoReconnect?: boolean;
     mixins?: Mixin[];
-    socksOptions?: SocksProxy
+    socksOptions?: SocksProxy;
+    additionalTlsOptions?: ConnectionOptions;
 }
 
 export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>> {
@@ -120,7 +122,8 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             enableTrace: this.initOptions.enableTrace,
             autoReconnect: this.initOptions.autoReconnect ?? true,
             requirePayload: false,
-            socksOptions: this.initOptions.socksOptions
+            socksOptions: this.initOptions.socksOptions,
+            additionalOptions: this.initOptions.additionalTlsOptions,
         });
         this.commands = new Commands(this.mqtt);
         this.direct = new DirectCommands(this.mqtt);
