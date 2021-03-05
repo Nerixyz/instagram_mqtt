@@ -16,6 +16,7 @@ import {
 import { ConnectionFailedError, EmptyPacketError } from '../errors';
 import { MQTToTConnectResponsePacket, readConnectResponsePacket } from './mqttot.connect.response.packet';
 import { SocksProxy } from 'socks';
+import {ConnectionOptions} from 'tls';
 
 type MQTToTReadMap = Omit<DefaultPacketReadResultMap, PacketType.ConnAck> & {
     [PacketType.ConnAck]: MQTToTConnectResponsePacket;
@@ -38,6 +39,7 @@ export class MQTToTClient extends MqttClient<MQTToTReadMap, MQTToTWriteMap> {
         autoReconnect: boolean;
         requirePayload: boolean;
         socksOptions?: SocksProxy;
+        additionalOptions?: ConnectionOptions
     }) {
         super({
             autoReconnect: options.autoReconnect,
@@ -53,9 +55,11 @@ export class MQTToTClient extends MqttClient<MQTToTReadMap, MQTToTWriteMap> {
                 host: options.url,
                 port: 443,
                 proxyOptions: options.socksOptions,
+                additionalOptions: options.additionalOptions
             }) : new TlsTransport({
                 host: options.url,
                 port: 443,
+                additionalOptions: options.additionalOptions
             }),
         });
         this.mqttotDebug = (msg: string, ...args: string[]) =>
