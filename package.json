@@ -1,6 +1,6 @@
 {
   "name": "instagram_mqtt",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Realtime and Push Notification (FBNS) support for the instagram-private-api",
   "bugs": {
     "url": "https://github.com/Nerixyz/instagram_mqtt/issues"
