@@ -2,6 +2,7 @@ dist/
 node_modules/
 .git/
 .idea/
+.vscode
 src/main.ts
 src/reversing.ts
 dev/

@@ -9,7 +9,7 @@ import EventEmitter = require('eventemitter3');
 import { RealtimeClientEvents } from './realtime.client.events';
 import { applyMixins, Mixin, MessageSyncMixin, RealtimeSubMixin } from './mixins';
 import { SocksProxy } from 'socks';
-import { ConnectionOptions } from "tls";
+import { ConnectionOptions } from 'tls';
 
 export interface RealtimeClientInitOptions {
     graphQlSubs?: string[];

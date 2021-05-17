@@ -1,5 +1,4 @@
 import { RealtimeClient } from '../realtime.client';
-import { MQTToTClient } from '../../mqttot';
 import { IgApiClient } from 'instagram-private-api';
 
 export abstract class Mixin {
@@ -37,6 +36,7 @@ export function hook<K extends string, Fn extends (...args: any[]) => any>(
         if (!overrideReturn) returnValue = actualReturn;
 
         if (hooks.post) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- it's always defined
             const res = hooks.post.apply(target, [returnValue!, ...args]);
             if (typeof res === 'object' && res.overrideReturn) {
                 returnValue = res.returnValue;

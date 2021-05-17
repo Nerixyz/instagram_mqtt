@@ -23,7 +23,7 @@ export const QueryIDs = {
 
 export interface GraphQLSubscription {
     subscriptionQueryId: string;
-    inputParams: object;
+    inputParams: Record<string, any>;
 }
 
 export interface GraphQLSubBaseOptions {

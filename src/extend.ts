@@ -1,8 +1,7 @@
 import { IgApiClient } from 'instagram-private-api';
 import { FbnsClient } from './fbns';
-import { RealtimeClient, RealtimeClientInitOptions } from './realtime';
+import { RealtimeClient, Mixin } from './realtime';
 import { InvalidStateError } from './errors';
-import { Mixin } from './realtime/mixins/mixin';
 
 export interface StateHook<T> {
     name: string;

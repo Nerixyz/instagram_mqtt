@@ -1,13 +1,13 @@
 name: Node CI
 
-on: 
+on:
   push:
     tags:
       - '*'
     branches:
       - master
   pull_request:
-    branches: 
+    branches:
       - master
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.4.x]
+        node-version: [14.17.x]
 
     steps:
     - uses: actions/checkout@v1

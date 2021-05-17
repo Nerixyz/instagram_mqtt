@@ -13,7 +13,7 @@ export type ThriftSerializable =
     | bigint
     | Array<ThriftSerializable>
     | { [x: string]: ThriftSerializable }
-    | object;
+    | Record<string, any>;
 
 export const ThriftTypes = {
     STOP: 0x00,
