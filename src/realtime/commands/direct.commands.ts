@@ -203,7 +203,7 @@ export class DirectCommands {
                 node_type: 'item',
                 reaction_type: reactionType || 'like',
                 reaction_status: reactionStatus || 'created',
-                targetItemType,
+                target_item_type: targetItemType,
                 emoji: emoji || ''
             },
         });
