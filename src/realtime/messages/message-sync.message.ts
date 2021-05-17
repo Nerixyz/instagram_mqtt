@@ -65,7 +65,7 @@ export interface MessageSyncMessage {
             client_context: string;
         }[];
         likes_count: number;
-        emojis: {
+        emojis?: {
             sender_id: BigInteger;
             // not actually a user id but the type fits
             timestamp: BigInteger;
