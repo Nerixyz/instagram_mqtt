@@ -71,6 +71,7 @@ export interface MessageSyncMessage {
             timestamp: BigInteger;
             client_context: string;
             emoji: string
+            super_react_type: 'default' | 'none'
         }[];
     };
     animated_media?: AnimatedMediaItem;
