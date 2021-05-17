@@ -65,6 +65,13 @@ export interface MessageSyncMessage {
             client_context: string;
         }[];
         likes_count: number;
+        emojis: {
+            sender_id: BigInteger;
+            // not actually a user id but the type fits
+            timestamp: BigInteger;
+            client_context: string;
+            emoji: string
+        }[];
     };
     animated_media?: AnimatedMediaItem;
     visual_media?: VisualMedia;

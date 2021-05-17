@@ -185,11 +185,13 @@ export class DirectCommands {
         clientContext,
         threadId,
         reactionStatus,
+        targetItemType,
         emoji
     }: {
         itemId: string;
         reactionType?: 'like' | string;
         reactionStatus?: 'created' | 'deleted';
+        targetItemType?: string
         emoji?: string
     } & ItemBaseType) {
         return this.sendItem({
@@ -201,7 +203,8 @@ export class DirectCommands {
                 node_type: 'item',
                 reaction_type: reactionType || 'like',
                 reaction_status: reactionStatus || 'created',
-                emoji
+                targetItemType,
+                emoji: emoji || ''
             },
         });
     }
