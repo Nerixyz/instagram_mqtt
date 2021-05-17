@@ -6,7 +6,6 @@ import { QueryIDs } from './subscriptions';
 import { ThreadUpdateWrapper } from './messages/thread-update.message';
 
 type ReceiveEvent<T> = [Topic<T>, ParsedMessage<T>[]?];
-type QuerySub = {[x in keyof typeof QueryIDs]: string | Record<string, unknown>};
 export type RealtimeClientEvents = MergedRealtimeSubPayloads & {
     error: Error;
     warning: Error;

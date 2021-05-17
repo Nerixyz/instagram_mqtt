@@ -73,7 +73,7 @@ export type FuncArg<E, T> = [E, (e: T) => void];
  * The following events are emitted:
  */
 export type NotificationEventCallback =
-    | FuncArg<'warning' | 'error', Error | object>
+    | FuncArg<'warning' | 'error', Error | Record<string, any>>
 
     // the client is authenticated (state can be saved)
     | FuncArg<'auth', FbnsDeviceAuth>
