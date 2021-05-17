@@ -10,6 +10,7 @@ import {
     MqttClient,
     MqttMessage,
     MqttMessageOutgoing,
+    MqttsReconnectStrategy,
     PacketFlowFunc,
     PacketType, SocksTlsTransport, TlsTransport
 } from 'mqtts';
@@ -36,7 +37,7 @@ export class MQTToTClient extends MqttClient<MQTToTReadMap, MQTToTWriteMap> {
         url: string;
         payloadProvider: () => Promise<Buffer>;
         enableTrace?: boolean;
-        autoReconnect: boolean;
+        autoReconnect: MqttsReconnectStrategy;
         requirePayload: boolean;
         socksOptions?: SocksProxy;
         additionalOptions?: ConnectionOptions

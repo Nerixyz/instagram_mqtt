@@ -13,7 +13,7 @@ import {
 import { MQTToTConnection, MQTToTClient, MQTToTConnectResponsePacket } from '../mqttot';
 import { Chance } from 'chance';
 import { FbnsMessageData, FbnsNotificationUnknown } from './fbns.types';
-import { MqttMessage } from 'mqtts';
+import { MqttMessage, MqttsReconnectStrategy, MqttsReconnectStrategyDefault } from 'mqtts';
 import { ClientDisconnectedError, EmptyPacketError } from '../errors';
 import EventEmitter = require('eventemitter3');
 import { FbnsClientEvents } from './fbns.client.events';
@@ -76,7 +76,7 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
         additionalTlsOptions,
     }: {
         enableTrace?: boolean;
-        autoReconnect?: boolean;
+        autoReconnect?: MqttsReconnectStrategy;
         socksOptions?: SocksProxy;
         additionalTlsOptions?: ConnectionOptions;
     } = {}): Promise<any> {
@@ -89,7 +89,7 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
                 return compressDeflate(this.conn.toThrift());
             },
             enableTrace,
-            autoReconnect: autoReconnect ?? true,
+            autoReconnect: autoReconnect ?? new MqttsReconnectStrategyDefault(),
             requirePayload: true,
             socksOptions,
             additionalOptions: additionalTlsOptions,

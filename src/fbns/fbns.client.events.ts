@@ -10,7 +10,10 @@ export interface FbnsClientEvents extends ToClientEvents<FbnsNotificationEventPa
   message: FbnsMessageData;
   logging: { beacon_id: number };
   pp: string;
-  disconnect: string | undefined;
+  disconnect: {
+    reason?: string | Error;
+    reconnect: boolean;
+  } | undefined;
 }
 
 export type ToClientEvents<T> = {[x in keyof T]: FbnsNotification<T[x]>} 

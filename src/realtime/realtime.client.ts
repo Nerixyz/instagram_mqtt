@@ -3,7 +3,7 @@ import { REALTIME, RealtimeTopicsArray, Topics } from '../constants';
 import { Commands, DirectCommands } from './commands';
 import { compressDeflate, debugChannel, prepareLogString, ToEventFn, tryUnzipAsync } from '../shared';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
-import { MqttMessageOutgoing } from 'mqtts';
+import { MqttMessageOutgoing, MqttsReconnectStrategy, MqttsReconnectStrategyDefault } from 'mqtts';
 import { ClientDisconnectedError } from '../errors';
 import EventEmitter = require('eventemitter3');
 import { RealtimeClientEvents } from './realtime.client.events';
@@ -17,7 +17,7 @@ export interface RealtimeClientInitOptions {
     irisData?: { seq_id: number; snapshot_at_ms: number };
     connectOverrides?: MQTToTConnectionClientInfo;
     enableTrace?: boolean;
-    autoReconnect?: boolean;
+    autoReconnect?: MqttsReconnectStrategy;
     mixins?: Mixin[];
     socksOptions?: SocksProxy;
     additionalTlsOptions?: ConnectionOptions;
@@ -120,7 +120,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
                 return compressDeflate(this.connection.toThrift());
             },
             enableTrace: this.initOptions.enableTrace,
-            autoReconnect: this.initOptions.autoReconnect ?? true,
+            autoReconnect: this.initOptions.autoReconnect ?? new MqttsReconnectStrategyDefault(),
             requirePayload: false,
             socksOptions: this.initOptions.socksOptions,
             additionalOptions: this.initOptions.additionalTlsOptions,

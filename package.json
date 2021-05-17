@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "build": "./node_modules/rimraf/bin.js dist && tsc -p tsconfig.build.json",
     "prepare": "npm run build",
     "lint": "eslint --fix --ext .js,.ts src/**",
     "format": "prettier --write \"src/**/*.ts\" --loglevel warn",
@@ -33,7 +33,7 @@
     "debug": "^4.1.1",
     "eventemitter3": "^4.0.4",
     "instagram-private-api": "^1.41.0",
-    "mqtts": "^1.0.0",
+    "mqtts": "^1.4.0",
     "socks": "^2.5.0"
   },
   "devDependencies": {
