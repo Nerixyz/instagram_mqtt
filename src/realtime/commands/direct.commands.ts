@@ -1,6 +1,7 @@
 import { MQTToTClient } from '../../mqttot';
 import { Topics } from '../../constants';
 import { compressDeflate, debugChannel, notUndefined } from '../../shared';
+import { MessageSyncMessageTypes } from '../messages';
 import * as Chance from 'chance';
 import { ThriftDescriptors, ThriftPacketDescriptor, thriftWriteFromObject } from '../../thrift';
 import { MqttMessageOutgoing } from 'mqtts';
@@ -185,10 +186,14 @@ export class DirectCommands {
         clientContext,
         threadId,
         reactionStatus,
+        targetItemType,
+        emoji
     }: {
         itemId: string;
         reactionType?: 'like' | string;
         reactionStatus?: 'created' | 'deleted';
+        targetItemType?: MessageSyncMessageTypes
+        emoji?: string
     } & ItemBaseType) {
         return this.sendItem({
             itemType: 'reaction',
@@ -199,6 +204,8 @@ export class DirectCommands {
                 node_type: 'item',
                 reaction_type: reactionType || 'like',
                 reaction_status: reactionStatus || 'created',
+                target_item_type: targetItemType,
+                emoji: emoji || ''
             },
         });
     }
