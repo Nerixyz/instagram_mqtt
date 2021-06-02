@@ -64,13 +64,15 @@ Java.perform(function () {
     });
     const RawMqttHandler = Java.use(MESSAGE_ENCODER_SEND);
     RawMqttHandler.A00.implementation = function (thisObj, messageEncoder, message) {
-        console.log('\n\nSTART');
+        console.log('');
+        console.log('START');
         logOut = true;
         const res = this.A00(thisObj, messageEncoder, message);
         logOut = false;
         console.log(packetWriter.join(''));
         packetWriter = [];
-        console.log('END\n\n');
+        console.log('END');
+        console.log('');
         return res;
     }
 
