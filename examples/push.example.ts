@@ -66,5 +66,5 @@ async function loginToInstagram(ig: IgApiClientExt) {
  * @returns {(data) => void}
  */
 function logEvent(name: string) {
-    return (data: any) => console.log(name, data);
+    return (data: unknown) => console.log(name, data);
 }
