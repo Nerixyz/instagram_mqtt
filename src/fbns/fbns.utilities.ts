@@ -6,10 +6,10 @@ import * as URL from 'url';
 export function createNotificationFromJson(json: string): FbnsNotificationUnknown {
     const data: FbPushNotif = JSON.parse(json);
 
-    const notification: FbnsNotificationUnknown = Object.defineProperty({}, 'description', {
+    const notification = Object.defineProperty({}, 'description', {
         enumerable: false,
         value: data,
-    });
+    }) as FbnsNotificationUnknown;
 
     if (notUndefined(data.t)) {
         notification.title = data.t;
