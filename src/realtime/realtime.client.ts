@@ -156,7 +156,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
                 ? this.emit('disconnect')
                 : this.emitError(new ClientDisconnectedError('MQTToTClient got disconnected.')),
         );
-
+        console.log('Connected to Instagram MQTT')
         return new Promise((resolve, reject) => {
             this.mqtt.on('connect', async () => {
                 this.realtimeDebug('Connected. Checking initial subs.');
