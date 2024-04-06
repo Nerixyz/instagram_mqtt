@@ -1,50 +1,42 @@
 # Instagram Realtime and FBNS
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/nerixyz/instagram_mqtt/Node%20CI?style=flat)](https://github.com/Nerixyz/instagram_mqtt/actions)
+This library isn't actively maintained anymore. Only bug fixes are accepted.
 
-# Getting started
+## Getting started
 
 -  Install the library
 
-```
-npm i instagram_mqtt
-
-OR
-
-yarn add instagram_mqtt
-```
+   ```sh
+   npm i instagram_mqtt
+   ```
 
 -  Extend the `IgApiClient`
 
-```typescript
-import { IgApiClient } from 'instagram-private-api';
-import { withFbnsAndRealtime, withFbns, withRealtime } from 'instagram_mqtt';
+   ```typescript
+   import { value IgApiClient } from 'instagram-private-api';
+   import { value withFbnsAndRealtime, value withFbns, value withRealtime } from 'instagram_mqtt';
 
-// wrap the client
-// ig is now IgApiClientMQTT for typescript users
-const ig = withFbnsAndRealtime(new IgApiClient());
+   // wrap the client
+   // ig is now IgApiClientMQTT for typescript users
+   const ig = withFbnsAndRealtime(new IgApiClient());
 
-// OR if you only want fbns/realtime
-const igFbns = withFbns(new IgApiClient());
-const igRealtime = withRealtime(new IgApiClient());
+   // OR if you only want fbns/realtime
+   const igFbns = withFbns(new IgApiClient());
+   const igRealtime = withRealtime(new IgApiClient());
 
-// login like you usually do or load the state
+   // login like you usually do or load the state
 
-// use ig.realtime and ig.fbns
-```
+   // use ig.realtime and ig.fbns
+   ```
 
 -  [Look at the examples](examples)
 
-## Version Infos
-
-To see what's new, visit the [changelog](CHANGELOG.md).
-
-# RealtimeClient
+## RealtimeClient
 
 The RealtimeClient is used, as the name implies, for in-app communication.
 Everything using some kind of event is communicating over this client.
 
-#### Features
+### Features
 
 -  Typing Events
 -  Presence Events
@@ -52,7 +44,7 @@ Everything using some kind of event is communicating over this client.
 -  Live Comments
 -  Live Events
 
-## Events
+### Events
 
 Your IDE should be able to auto complete the event names for you as Typescript types are in the npm package.
 
@@ -66,7 +58,7 @@ Your IDE should be able to auto complete the event names for you as Typescript t
 | appPresence        | Presence updates                                                  | yes       |
 | \<keyof QueryIDs\> | Messages regarding the specified query id                         | no        |
 
-# FbnsClient
+## FbnsClient
 
 FBNS is for notifications (so it's readonly).
 You can subscribe to any notification using
@@ -84,7 +76,7 @@ ig.fbns.on(/* desired collapseKey */, /* your handler */)
 Note: this library provides the query (actionPath/Params) as an object (actionParams)
 so you can use `actionParams.YOUR_KEY`.
 
-# Debugging
+## Debugging
 
 In order to debug the clients you can set the environment variable `DEBUG`.
 Recommended is setting it to `ig:mqtt:*`. If you want to debug the entire **instagram-private-api**, set it to `ig:*`.
@@ -102,9 +94,9 @@ An example `.env` file would look like this:
 DEBUG=ig:mqtt:*
 ```
 
-# Extending
+## Extending
 
-## Mixins
+### Mixins
 
 Since version 1.0, there is support for basic mixins.
 A mixin is a class with an `apply()` method (extends [Mixin](src/realtime/mixins/mixin.ts) base class).
@@ -112,20 +104,20 @@ This method is called once the RealtimeClient is constructed.
 You can use the `hook()` function to hook into methods (pre and post) and override the return value.
 By default, the [`MessageSyncMixin`](src/realtime/mixins/message-sync.mixin.ts) and the [`RealtimeSubMixin`](src/realtime/mixins/realtime-sub.mixin.ts) are used.
 
-## TODO
+### TODO
 
 -  Proper descriptions for events
 -  Error handling
 -  Testing... a lot.
 
-# Research
+## Research
 
 All scripts to research the mqtt client are in the [`/frida/`](frida) directory.
 As the name suggests, you'll need [frida](https://frida.re/) for this.
 
 Start frida and connect to the process:
 
-```
+```sh
 # assume frida is running on remote device...
 
 frida -U -n com.instagram.android -l PATH_TO_SCRIPT
@@ -137,9 +129,9 @@ frida -U -n com.instagram.android -l PATH_TO_SCRIPT
 | :----------------------------------- | ------------------------------------------ |
 | [mqttListen.js](frida/mqttListen.js) | Prints all outgoing Realtime-MQTT messages |
 
-# Architecture
+## Architecture
 
-## MQTToT
+### MQTToT
 
 MQTToT is the underlying connection. It uses a modified version of MQTT 3.
 The modifications are small, but (at least for javascript) may not work with regular MQTT libraries
@@ -153,7 +145,7 @@ The modifications are small, but (at least for javascript) may not work with reg
 -  **The connack packet** can contain a payload. Regular clients would throw an error
    as the remaining length should be equal to 0 but in this case it's intended (the MQTT 3 standard doesn't specify a payload).
 
-## RealtimeClient
+### RealtimeClient
 
 In earlier versions, the realtime client used an old method (built on the MQTT standard) to connect
 (it's still being used in mgp25's library), but thr RealtimeClient is using MQTToT to connect.
@@ -162,7 +154,7 @@ old method.
 
 The RealtimeClient communicates on different MQTT-Topics 8most of the time one for requesting and one for a response).
 
-## FbnsClient
+### FbnsClient
 
 FBNS uses MQTToT to connect with a device-auth.
 A successful auth will return a payload in the CONNACK packet with values used for future connections.
@@ -172,16 +164,16 @@ This completes the auth.
 
 Now, push notifications are sent to `/fbns_msg`.
 
-# Collaborating
+## Collaborating
 
-## Setting up the environment
+### Setting up the environment
 
 If you're using x86, make sure to install ARM translations for yor device
 in order to get ProxyDroid to work.
 
 Instructions are [here](https://github.com/dilame/instagram-private-api/blob/master/CONTRIBUTING.md#capturing-tls-requests).
 
-# Thanks
+## Thanks
 
 Thanks to [valga](https://github.com/valga) for providing and maintaining the [PHP library](https://github.com/valga/fbns-react).
 This library integrates with the [instagram-private-api](https://github.com/dilame/instagram-private-api).
