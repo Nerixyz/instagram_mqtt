@@ -1,12 +1,5 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/reversing.ts",
-    "src/main.ts"
-  ],
-  "include": [
-    "src/**/*.ts"
-  ]
+   "extends": "./tsconfig.json",
+   "exclude": ["node_modules", "dist", "src/reversing.ts", "src/main.ts"],
+   "include": ["src/**/*.ts"]
 }

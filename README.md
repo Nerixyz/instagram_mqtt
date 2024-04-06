@@ -4,17 +4,17 @@
 
 # Getting started
 
--   Install the library
+-  Install the library
 
 ```
 npm i instagram_mqtt
 
-OR 
+OR
 
 yarn add instagram_mqtt
 ```
 
--   Extend the `IgApiClient`
+-  Extend the `IgApiClient`
 
 ```typescript
 import { IgApiClient } from 'instagram-private-api';
@@ -33,7 +33,7 @@ const igRealtime = withRealtime(new IgApiClient());
 // use ig.realtime and ig.fbns
 ```
 
--   [Look at the examples](examples)
+-  [Look at the examples](examples)
 
 ## Version Infos
 
@@ -46,16 +46,15 @@ Everything using some kind of event is communicating over this client.
 
 #### Features
 
--   Typing Events
--   Presence Events
--   Direct Messaging
--   Live Comments
--   Live Events
+-  Typing Events
+-  Presence Events
+-  Direct Messaging
+-  Live Comments
+-  Live Events
 
 ## Events
 
 Your IDE should be able to auto complete the event names for you as Typescript types are in the npm package.
-
 
 | Name               | Description                                                       | Typed?    |
 | ------------------ | ----------------------------------------------------------------- | --------- |
@@ -65,7 +64,7 @@ Your IDE should be able to auto complete the event names for you as Typescript t
 | message            | Direct messages                                                   | yes       |
 | clientConfigUpdate | Updates to quick experiments (may cause the client to disconnect) | yes       |
 | appPresence        | Presence updates                                                  | yes       |
-| \<keyof QueryIDs\>   | Messages regarding the specified query id                         | no        |
+| \<keyof QueryIDs\> | Messages regarding the specified query id                         | no        |
 
 # FbnsClient
 
@@ -91,9 +90,9 @@ In order to debug the clients you can set the environment variable `DEBUG`.
 Recommended is setting it to `ig:mqtt:*`. If you want to debug the entire **instagram-private-api**, set it to `ig:*`.
 Currently, the emitted "channels" are:
 
--   `ig:mqtt:realtime`
--   `ig:mqtt:fbns`
--   `ig:mqtt:mqttot`
+-  `ig:mqtt:realtime`
+-  `ig:mqtt:fbns`
+-  `ig:mqtt:mqttot`
 
 If you want to debug the `mqtts` library set it either to `*` or `ig:*,mqtts:*`.
 
@@ -104,18 +103,20 @@ DEBUG=ig:mqtt:*
 ```
 
 # Extending
+
 ## Mixins
-Since version 1.0, there is support for basic mixins. 
+
+Since version 1.0, there is support for basic mixins.
 A mixin is a class with an `apply()` method (extends [Mixin](src/realtime/mixins/mixin.ts) base class).
-This method is called once the RealtimeClient is constructed. 
+This method is called once the RealtimeClient is constructed.
 You can use the `hook()` function to hook into methods (pre and post) and override the return value.
 By default, the [`MessageSyncMixin`](src/realtime/mixins/message-sync.mixin.ts) and the [`RealtimeSubMixin`](src/realtime/mixins/realtime-sub.mixin.ts) are used.
 
 ## TODO
 
--   Proper descriptions for events
--   Error handling
--   Testing... a lot.
+-  Proper descriptions for events
+-  Error handling
+-  Testing... a lot.
 
 # Research
 
@@ -146,11 +147,11 @@ The modifications are small, but (at least for javascript) may not work with reg
 
 #### Changes
 
--   **The connect packet** doesn't contain a `clientId`. Instead,
-    it contains a zipped [thrift](https://people.apache.org/~thejas/thrift-0.9/javadoc/org/apache/thrift/protocol/TCompactProtocol.html)-payload.
-    The flags are set to contain a username and password which are in the payload and not as strings in the packet.
--   **The connack packet** can contain a payload. Regular clients would throw an error
-    as the remaining length should be equal to 0 but in this case it's intended (the MQTT 3 standard doesn't specify a payload).
+-  **The connect packet** doesn't contain a `clientId`. Instead,
+   it contains a zipped [thrift](https://people.apache.org/~thejas/thrift-0.9/javadoc/org/apache/thrift/protocol/TCompactProtocol.html)-payload.
+   The flags are set to contain a username and password which are in the payload and not as strings in the packet.
+-  **The connack packet** can contain a payload. Regular clients would throw an error
+   as the remaining length should be equal to 0 but in this case it's intended (the MQTT 3 standard doesn't specify a payload).
 
 ## RealtimeClient
 

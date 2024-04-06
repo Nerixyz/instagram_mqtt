@@ -1,24 +1,19 @@
 {
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "module": "commonjs",
-    "target": "es2018",
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "strictBindCallApply": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true
-  },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "include": [
-    "src"
-  ]
+   "compilerOptions": {
+      "experimentalDecorators": true,
+      "module": "commonjs",
+      "target": "es2018",
+      "sourceMap": true,
+      "outDir": "dist",
+      "rootDir": "src",
+      "declaration": true,
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "alwaysStrict": true,
+      "strictBindCallApply": true,
+      "strictNullChecks": true,
+      "strictFunctionTypes": true
+   },
+   "exclude": ["node_modules", "dist"],
+   "include": ["src"]
 }

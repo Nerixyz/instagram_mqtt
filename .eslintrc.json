@@ -1,45 +1,51 @@
 {
-  "parser": "@typescript-eslint/parser",
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
-  ],
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module",
-    "project": "./tsconfig.json",
-    "createDefaultProgram": true
-  },
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx"],
-      "rules": {
-        "@typescript-eslint/member-ordering": "off",
-        "@typescript-eslint/no-use-before-define": "off",
-        "@typescript-eslint/explicit-function-return-type": ["off", {
-          "allowExpressions": "true"
-        }],
-        "@typescript-eslint/camelcase": "off",
-        "@typescript-eslint/consistent-type-definitions": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/ban-ts-ignore": "off",
-        "@typescript-eslint/ban-ts-comment": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off"
+   "parser": "@typescript-eslint/parser",
+   "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+   ],
+   "parserOptions": {
+      "ecmaVersion": 2018,
+      "sourceType": "module",
+      "project": "./tsconfig.json",
+      "createDefaultProgram": true
+   },
+   "overrides": [
+      {
+         "files": ["*.ts", "*.tsx"],
+         "rules": {
+            "@typescript-eslint/member-ordering": "off",
+            "@typescript-eslint/no-use-before-define": "off",
+            "@typescript-eslint/explicit-function-return-type": [
+               "off",
+               {
+                  "allowExpressions": "true"
+               }
+            ],
+            "@typescript-eslint/camelcase": "off",
+            "@typescript-eslint/consistent-type-definitions": "off",
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/ban-ts-ignore": "off",
+            "@typescript-eslint/ban-ts-comment": "off",
+            "@typescript-eslint/explicit-module-boundary-types": "off"
+         }
       }
-    }
-  ],
-  "rules": {
-    "quotes": ["error", "single", { "allowTemplateLiterals": true }],
-    "max-len": ["error", {
-        "code": 150,
-        "comments": 200,
-        "ignoreTrailingComments": true
-      }],
-    "no-constant-condition": "off",
-    "no-use-before-define": "off",
-    "arrow-parens": ["error", "as-needed"],
-    "no-console": "warn"
-  }
+   ],
+   "rules": {
+      "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+      "max-len": [
+         "error",
+         {
+            "code": 150,
+            "comments": 200,
+            "ignoreTrailingComments": true
+         }
+      ],
+      "no-constant-condition": "off",
+      "no-use-before-define": "off",
+      "arrow-parens": ["error", "as-needed"],
+      "no-console": "warn"
+   }
 }
