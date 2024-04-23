@@ -13,9 +13,9 @@ import {
 import { MQTToTConnection, MQTToTClient, MQTToTConnectResponsePacket } from '../mqttot';
 import { Chance } from 'chance';
 import { FbnsMessageData, FbnsNotificationUnknown } from './fbns.types';
-import { MqttMessage } from 'mqtts';
-import { ClientDisconnectedError, EmptyPacketError } from '../errors';
-import EventEmitter = require('eventemitter3');
+import { IllegalStateError, MqttMessage } from 'mqtts';
+import { ClientDisconnectedError, EmptyPacketError, InvalidStateError } from '../errors';
+import { EventEmitter } from 'eventemitter3';
 import { FbnsClientEvents } from './fbns.client.events';
 import { createNotificationFromJson } from './fbns.utilities';
 import { SocksProxy } from 'socks';
@@ -31,8 +31,8 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
    }
 
    private fbnsDebug = debugChannel('fbns');
-   private client: MQTToTClient;
-   private conn: MQTToTConnection;
+   private client?: MQTToTClient;
+   private conn?: MQTToTConnection;
    private _auth: FbnsDeviceAuth;
    private safeDisconnect = false;
 
@@ -86,6 +86,9 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
          url: FBNS.HOST_NAME_V6,
          payloadProvider: () => {
             this.buildConnection();
+            if (!this.conn) {
+               throw new InvalidStateError("No connection created - can't build provider");
+            }
             return compressDeflate(this.conn.toThrift());
          },
          enableTrace,
@@ -117,6 +120,10 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
       this.client.listen<MqttMessage>(FbnsTopics.PP.id, msg => this.emit('pp', msg.payload.toString()));
 
       this.client.on('connect', async (res: MQTToTConnectResponsePacket) => {
+         if (!this.client) {
+            throw new IllegalStateError('No client registered but an event was received');
+         }
+
          this.fbnsDebug('Connected to MQTT');
          if (!res.payload?.length) {
             this.fbnsDebug(`Received empty connect packet. Reason: ${res.errorName}; Try resetting your fbns state!`);
@@ -169,13 +176,18 @@ export class FbnsClient extends EventEmitter<ToEventFn<FbnsClientEvents & { [x: 
       try {
          await this.sendPushRegister(token);
       } catch (e) {
-         this.emit('error', e);
+         if (e instanceof Error) {
+            this.emit('error', e);
+         }
          throw e;
       }
    }
 
    public disconnect(): Promise<void> {
       this.safeDisconnect = true;
+      if (!this.client) {
+         return Promise.resolve();
+      }
       return this.client.disconnect();
    }
 

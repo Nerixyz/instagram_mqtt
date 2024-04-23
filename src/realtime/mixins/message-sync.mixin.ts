@@ -3,11 +3,15 @@ import { RealtimeClient } from '../realtime.client';
 import { Topics } from '../../constants';
 import { tryUnzipAsync } from '../../shared';
 import { IrisParserData } from '../parsers';
+import { IllegalStateError } from 'mqtts';
 
 export class MessageSyncMixin extends Mixin {
    apply(client: RealtimeClient): void {
       hook(client, 'connect', {
          post: () => {
+            if (!client.mqtt) {
+               throw new IllegalStateError('No mqtt client created');
+            }
             client.mqtt.listen(
                {
                   topic: Topics.MESSAGE_SYNC.id,

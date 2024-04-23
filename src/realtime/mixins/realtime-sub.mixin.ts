@@ -5,11 +5,15 @@ import { tryUnzipAsync } from '../../shared';
 import { GraphQlMessage, ParsedMessage } from '../parsers';
 import { QueryIDs } from '../subscriptions';
 import { RealtimeSubDirectDataWrapper } from '../messages';
+import { IllegalStateError } from 'mqtts';
 
 export class RealtimeSubMixin extends Mixin {
    apply(client: RealtimeClient): void {
       hook(client, 'connect', {
          post: () => {
+            if (!client.mqtt) {
+               throw new IllegalStateError('No mqtt client created');
+            }
             client.mqtt.listen(
                {
                   topic: Topics.REALTIME_SUB.id,

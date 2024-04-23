@@ -6,6 +6,7 @@ import {
    DefaultPacketReadResultMap,
    DefaultPacketWriteMap,
    DefaultPacketWriteOptions,
+   IllegalStateError,
    isConnAck,
    MqttClient,
    MqttMessage,
@@ -15,7 +16,7 @@ import {
    SocksTlsTransport,
    TlsTransport,
 } from 'mqtts';
-import { ConnectionFailedError, EmptyPacketError } from '../errors';
+import { ConnectionFailedError, EmptyPacketError, IllegalArgumentError } from '../errors';
 import { MQTToTConnectResponsePacket, readConnectResponsePacket } from './mqttot.connect.response.packet';
 import { SocksProxy } from 'socks';
 import { ConnectionOptions } from 'tls';
@@ -29,7 +30,7 @@ type MQTToTWriteMap = Omit<DefaultPacketWriteOptions, PacketType.Connect> & {
 
 export class MQTToTClient extends MqttClient<MQTToTReadMap, MQTToTWriteMap> {
    protected connectPayloadProvider: () => Promise<Buffer>;
-   protected connectPayload: Buffer;
+   protected connectPayload?: Buffer;
    protected requirePayload: boolean;
 
    protected mqttotDebug: (msg: string) => void;
@@ -92,6 +93,9 @@ export class MQTToTClient extends MqttClient<MQTToTReadMap, MQTToTWriteMap> {
    }
 
    protected getConnectFlow(): PacketFlowFunc<MQTToTReadMap, MQTToTWriteMap, any> {
+      if (!this.connectPayload) {
+         throw new IllegalStateError('Called getConnectFlow() before calling connect()');
+      }
       return mqttotConnectFlow(this.connectPayload, this.requirePayload);
    }
 

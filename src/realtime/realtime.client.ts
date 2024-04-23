@@ -3,9 +3,9 @@ import { REALTIME, RealtimeTopicsArray, Topics } from '../constants';
 import { Commands, DirectCommands } from './commands';
 import { compressDeflate, debugChannel, prepareLogString, ToEventFn, tryUnzipAsync } from '../shared';
 import { MQTToTClient, MQTToTConnection, MQTToTConnectionClientInfo } from '../mqttot';
-import { MqttMessageOutgoing } from 'mqtts';
+import { IllegalStateError, MqttMessageOutgoing } from 'mqtts';
 import { ClientDisconnectedError } from '../errors';
-import EventEmitter = require('eventemitter3');
+import { EventEmitter } from 'eventemitter3';
 import { RealtimeClientEvents } from './realtime.client.events';
 import { applyMixins, Mixin, MessageSyncMixin, RealtimeSubMixin } from './mixins';
 import { SocksProxy } from 'socks';
@@ -24,22 +24,22 @@ export interface RealtimeClientInitOptions {
 }
 
 export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>> {
-   get mqtt(): MQTToTClient {
+   get mqtt(): MQTToTClient | undefined {
       return this._mqtt;
    }
 
    private realtimeDebug = debugChannel('realtime');
    private messageDebug = this.realtimeDebug.extend('message');
 
-   private _mqtt: MQTToTClient;
-   private connection: MQTToTConnection;
+   private _mqtt?: MQTToTClient;
+   private connection?: MQTToTConnection;
    private readonly ig: IgApiClient;
 
-   private initOptions: RealtimeClientInitOptions;
+   private initOptions?: RealtimeClientInitOptions;
    private safeDisconnect = false;
 
-   public commands: Commands;
-   public direct: DirectCommands;
+   public commands?: Commands;
+   public direct?: DirectCommands;
 
    /**
     *
@@ -88,7 +88,7 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             appId: BigInt(567067343352427),
             deviceSecret: '',
             clientStack: 3,
-            ...(this.initOptions.connectOverrides || {}),
+            ...(this.initOptions?.connectOverrides || {}),
          },
          password,
          appSpecificInfo: {
@@ -113,22 +113,25 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
    public async connect(initOptions?: RealtimeClientInitOptions | string[]): Promise<any> {
       this.realtimeDebug('Connecting to realtime-broker...');
       this.setInitOptions(initOptions);
-      this.realtimeDebug(`Overriding: ${Object.keys(this.initOptions.connectOverrides || {}).join(', ')}`);
+      this.realtimeDebug(`Overriding: ${Object.keys(this.initOptions?.connectOverrides || {}).join(', ')}`);
       this._mqtt = new MQTToTClient({
          url: REALTIME.HOST_NAME_V6,
          payloadProvider: () => {
             this.constructConnection();
+            if (!this.connection) {
+               throw new IllegalStateError("constructConnection() didn't create a connection");
+            }
             return compressDeflate(this.connection.toThrift());
          },
-         enableTrace: this.initOptions.enableTrace,
-         autoReconnect: this.initOptions.autoReconnect ?? true,
+         enableTrace: this.initOptions?.enableTrace,
+         autoReconnect: this.initOptions?.autoReconnect ?? true,
          requirePayload: false,
-         socksOptions: this.initOptions.socksOptions,
-         additionalOptions: this.initOptions.additionalTlsOptions,
+         socksOptions: this.initOptions?.socksOptions,
+         additionalOptions: this.initOptions?.additionalTlsOptions,
       });
-      this.commands = new Commands(this.mqtt);
-      this.direct = new DirectCommands(this.mqtt);
-      this.mqtt.on('message', async msg => {
+      this.commands = new Commands(this.mqtt!);
+      this.direct = new DirectCommands(this.mqtt!);
+      this.mqtt!.on('message', async msg => {
          const unzipped = await tryUnzipAsync(msg.payload);
          const topic = RealtimeTopicsArray.find(t => t.id === msg.topic);
          if (topic && topic.parser && !topic.noParse) {
@@ -148,16 +151,19 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
             this.emit('receiveRaw', msg);
          }
       });
-      this.mqtt.on('error', e => this.emitError(e));
-      this.mqtt.on('warning', w => this.emitWarning(w));
-      this.mqtt.on('disconnect', () =>
+      this.mqtt!.on('error', e => this.emitError(e));
+      this.mqtt!.on('warning', w => this.emitWarning(w));
+      this.mqtt!.on('disconnect', () =>
          this.safeDisconnect
             ? this.emit('disconnect')
             : this.emitError(new ClientDisconnectedError('MQTToTClient got disconnected.')),
       );
 
       return new Promise((resolve, reject) => {
-         this.mqtt.on('connect', async () => {
+         this.mqtt!.on('connect', async () => {
+            if (!this.initOptions) {
+               throw new IllegalStateError('No initi options given');
+            }
             this.realtimeDebug('Connected. Checking initial subs.');
             const { graphQlSubs, skywalkerSubs, irisData } = this.initOptions;
             await Promise.all([
@@ -166,17 +172,15 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
                irisData ? this.irisSubscribe(irisData) : null,
             ]).then(resolve);
          });
-         this.mqtt
-            .connect({
-               keepAlive: 20,
-               protocolLevel: 3,
-               clean: true,
-               connectDelay: 60 * 1000,
-            })
-            .catch(e => {
-               this.emitError(e);
-               reject(e);
-            });
+         this.mqtt!.connect({
+            keepAlive: 20,
+            protocolLevel: 3,
+            clean: true,
+            connectDelay: 60 * 1000,
+         }).catch(e => {
+            this.emitError(e);
+            reject(e);
+         });
       });
    }
 
@@ -185,11 +189,14 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
 
    public disconnect(): Promise<void> {
       this.safeDisconnect = true;
-      return this.mqtt.disconnect();
+      return this.mqtt?.disconnect() ?? Promise.resolve();
    }
 
    public graphQlSubscribe(sub: string | string[]): Promise<MqttMessageOutgoing> {
       sub = typeof sub === 'string' ? [sub] : sub;
+      if (!this.commands) {
+         throw new IllegalStateError('connect() must be called before graphQlSubscribe()');
+      }
       this.realtimeDebug(`Subscribing with GraphQL to ${sub.join(', ')}`);
       return this.commands.updateSubscriptions({
          topic: Topics.REALTIME_SUB,
@@ -201,6 +208,9 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
 
    public skywalkerSubscribe(sub: string | string[]): Promise<MqttMessageOutgoing> {
       sub = typeof sub === 'string' ? [sub] : sub;
+      if (!this.commands) {
+         throw new IllegalStateError('connect() must be called before skywalkerSubscribe()');
+      }
       this.realtimeDebug(`Subscribing with Skywalker to ${sub.join(', ')}`);
       return this.commands.updateSubscriptions({
          topic: Topics.PUBSUB,
@@ -217,6 +227,9 @@ export class RealtimeClient extends EventEmitter<ToEventFn<RealtimeClientEvents>
       seq_id: number;
       snapshot_at_ms: number;
    }): Promise<MqttMessageOutgoing> {
+      if (!this.commands) {
+         throw new IllegalStateError('connect() must be called before irisSubscribe()');
+      }
       this.realtimeDebug(`Iris Sub to: seqId: ${seq_id}, snapshot: ${snapshot_at_ms}`);
       return this.commands.updateSubscriptions({
          topic: Topics.IRIS_SUB,

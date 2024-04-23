@@ -10,8 +10,8 @@ export class FbnsDeviceAuth {
    public deviceId: string;
    public deviceSecret: string;
 
-   public sr: string;
-   public rc: string;
+   public sr?: string;
+   public rc?: string;
 
    private json?: string;
 
