@@ -16,7 +16,7 @@ import {
    SocksTlsTransport,
    TlsTransport,
 } from 'mqtts';
-import { ConnectionFailedError, EmptyPacketError, IllegalArgumentError } from '../errors';
+import { ConnectionFailedError, EmptyPacketError } from '../errors';
 import { MQTToTConnectResponsePacket, readConnectResponsePacket } from './mqttot.connect.response.packet';
 import { SocksProxy } from 'socks';
 import { ConnectionOptions } from 'tls';

@@ -3,8 +3,7 @@
    "extends": [
       "eslint:recommended",
       "plugin:@typescript-eslint/eslint-recommended",
-      "plugin:@typescript-eslint/recommended",
-      "prettier"
+      "plugin:@typescript-eslint/recommended"
    ],
    "parserOptions": {
       "ecmaVersion": 2018,
@@ -21,7 +20,7 @@
             "@typescript-eslint/explicit-function-return-type": [
                "off",
                {
-                  "allowExpressions": "true"
+                  "allowExpressions": true
                }
             ],
             "@typescript-eslint/camelcase": "off",
@@ -34,7 +33,7 @@
       }
    ],
    "rules": {
-      "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+      "quotes": "off",
       "max-len": [
          "error",
          {

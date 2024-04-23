@@ -18,7 +18,7 @@
       "build": "rimraf dist && tsc -p tsconfig.build.json",
       "prepare": "npm run build",
       "lint": "eslint --fix --ext .js,.ts src/**",
-      "format": "prettier -w . --loglevel warn",
+      "format": "prettier -w . --log-level warn",
       "check-format": "prettier -c .",
       "typecheck": "tsc -p tsconfig.build.json --noEmit",
       "precommit": "npm run typecheck && npm run lint && npm run format"
